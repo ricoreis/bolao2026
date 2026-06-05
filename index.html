@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bolão Copa 2026</title>
+    <!-- Tailwind CSS para Estilização -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Iconify para os Ícones do Olhinho (Sem bugs) -->
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        .password-container { position: relative; }
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .toggle-password:hover { color: #111827; }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen text-gray-800 antialiased font-sans">
+
+    <div class="w-full max-w-md p-8 bg-white border border-gray-100 rounded-xl shadow-sm">
+        
+        <!-- CABEÇALHO -->
+        <div class="mb-8 text-center">
+            <h1 class="text-2xl font-bold tracking-tight text-gray-900">Bolão Copa 2026</h1>
+            <p id="system-subtitle" class="text-sm text-gray-500 mt-1">Ambiente de teste de autenticação</p>
+        </div>
+
+        <!-- NOTIFICAÇÕES GERAIS (Sucesso/Erro) -->
+        <p id="global-msg" class="text-sm p-3 rounded-lg text-center hidden mb-4"></p>
+
+        <!-- 1. FORMULÁRIO DE LOGIN -->
+        <div id="login-container">
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">E-mail</label>
+                    <input type="email" id="email" required class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 text-sm" placeholder="seu-email@gmail.com">
+                </div>
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600">Senha</label>
+                        <button type="button" id="go-to-recovery" class="text-xs text-gray-500 hover:text-gray-900 underline">Esqueci minha senha</button>
+                    </div>
+                    <div class="password-container">
+                        <input type="password" id="password" required class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 text-sm pr-10" placeholder="••••••••">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('password', this)">
+                            <iconify-icon icon="lucide:eye" width="20" height="20"></iconify-icon>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg text-sm transition-colors duration-150">
+                    Entrar no Sistema
+                </button>
+                <p class="text-center text-sm text-gray-600 mt-4">
+                    Não tem uma conta? <button type="button" id="go-to-signup" class="text-gray-900 font-semibold underline">Cadastre-se</button>
+                </p>
+            </form>
+        </div>
+
+        <!-- 2. FORMULÁRIO DE CADASTRO (SIGN UP - SEM CONFIRMAÇÃO) -->
+        <div id="signup-container" class="hidden">
+            <form id="signup-form" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Seu Nome / Apelido</label>
+                    <input type="text" id="signup-name" required class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 text-sm" placeholder="Ex: LEO, DIGÃO">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">E-mail</label>
+                    <input type="email" id="signup-email" required class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 text-sm" placeholder="amigo@email.com">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Criar Senha (mín. 6 caracteres)</label>
+                    <div class="password-container">
+                        <input type="password" id="signup-password" required minlength="6" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 text-sm pr-10" placeholder="••••••••">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('signup-password', this)">
+                            <iconify-icon icon="lucide:eye" width="20" height="20"></iconify-icon>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg text-sm transition-colors duration-150">
+                    Criar Minha Conta
+                </button>
+                <button type="button" id="back-to-login-from-signup" class="w-full text-center text-sm text-gray-500 hover:text-gray-900 underline block mt-2">
+                    Já tenho conta, voltar para o Login
+                </button>
+            </form>
+        </div>
+
+        <!-- 3. FORMULÁRIO DE RECUPERAÇÃO (SOLICITAR LINK) -->
+        <div id="recovery-container" class="hidden space-y-5">
+            <p class="text-sm text-gray-600">Insira seu e-mail para receber um link de redefinição de senha.</p>
+            <form id="recovery-form" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">E-mail Cadastrado</label>
+                    <input type="email" id="recovery-email" required class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 text-sm" placeholder="seu-email@gmail.com">
+                </div>
+                <button type="submit" class="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg text-sm transition-colors duration-150">
+                    Enviar Link de Recuperação
+                </button>
+                <button type="button" id="back-to-login-from-rec" class="w-full text-center text-sm text-gray-500 hover:text-gray-900 underline block mt-2">
+                    Voltar para o Login
+                </button>
+            </form>
+        </div>
+
+        <!-- 4. FORMULÁRIO DE NOVA SENHA (APÓS CLICAR NO LINK DO E-MAIL) -->
+        <div id="new-password-container" class="hidden space-y-5">
+            <p class="text-sm text-gray-600">Digite sua nova senha de acesso abaixo.</p>
+            <form id="new-password-form" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-600 mb-1">Nova Senha</label>
+                    <div class="password-container">
+                        <input type="password" id="new-password" required minlength="6" class="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:border-gray-900 text-sm pr-10" placeholder="••••••••">
+                        <button type="button" class="toggle-password" onclick="togglePasswordVisibility('new-password', this)">
+                            <iconify-icon icon="lucide:eye" width="20" height="20"></iconify-icon>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg text-sm transition-colors duration-150">
+                    Atualizar Senha
+                </button>
+            </form>
+        </div>
+
+        <!-- 5. PAINEL DO USUÁRIO LOGADO -->
+        <div id="user-dashboard" class="hidden text-center space-y-6">
+            <div class="p-4 bg-gray-50 border border-gray-100 rounded-lg">
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Usuário Autenticado</p>
+                <h2 id="welcome-user" class="text-xl font-bold text-gray-900 mt-1">Carregando perfil...</h2>
+                <p id="user-id" class="text-[10px] text-gray-400 font-mono mt-2 break-all"></p>
+            </div>
+            <button id="logout-btn" class="w-full py-2.5 px-4 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 font-medium rounded-lg text-sm transition-colors duration-150">
+                Sair / Logout
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://rximgiwpqmshqaducvla.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4aW1naXdwcW1zaHFhZHVjdmxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MjgwNDYsImV4cCI6MjA5NjEwNDA0Nn0.O3Uy5fYgc7CedVThLza_yCvuM4wHd4IpHrXoCYW2w-I";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Containers
+        const loginContainer = document.getElementById('login-container');
+        const signupContainer = document.getElementById('signup-container');
+        const recoveryContainer = document.getElementById('recovery-container');
+        const newPasswordContainer = document.getElementById('new-password-container');
+        const userDashboard = document.getElementById('user-dashboard');
+        
+        // Elementos dinâmicos
+        const welcomeUser = document.getElementById('welcome-user');
+        const userIdText = document.getElementById('user-id');
+        const globalMsg = document.getElementById('global-msg');
+        const systemSubtitle = document.getElementById('system-subtitle');
+
+        // FUNÇÃO INTERATIVA DO OLHINHO COM ICONIFY
+        function togglePasswordVisibility(inputId, buttonElement) {
+            const input = document.getElementById(inputId);
+            const icon = buttonElement.querySelector('iconify-icon');
+            
+            if (input.type === "password") {
+                input.type = "text";
+                icon.setAttribute('icon', 'lucide:eye-off');
+            } else {
+                input.type = "password";
+                icon.setAttribute('icon', 'lucide:eye');
+            }
+        }
+
+        // Alternâncias de telas (UX)
+        document.getElementById('go-to-signup').addEventListener('click', () => {
+            loginContainer.classList.add('hidden');
+            signupContainer.classList.remove('hidden');
+            showMsg("");
+        });
+        document.getElementById('back-to-login-from-signup').addEventListener('click', () => {
+            signupContainer.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+            showMsg("");
+        });
+        document.getElementById('go-to-recovery').addEventListener('click', () => {
+            loginContainer.classList.add('hidden');
+            recoveryContainer.classList.remove('hidden');
+            showMsg("");
+        });
+        document.getElementById('back-to-login-from-rec').addEventListener('click', () => {
+            recoveryContainer.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+            showMsg("");
+        });
+
+        function showMsg(text, isError = false, isSuccess = false) {
+            if (!text) {
+                globalMsg.classList.add('hidden');
+                return;
+            }
+            globalMsg.innerText = text;
+            globalMsg.classList.remove('hidden', 'bg-red-50', 'text-red-600', 'bg-green-50', 'text-green-600');
+            if (isError) globalMsg.classList.add('bg-red-50', 'text-red-600');
+            if (isSuccess) globalMsg.classList.add('bg-green-50', 'text-green-600');
+        }
+
+        // Botão de Logout
+        document.getElementById('logout-btn').addEventListener('click', async (e) => {
+            e.preventDefault();
+            await supabaseClient.auth.signOut();
+        });
+
+        // ========================================================
+        // 1. MONITOR DE ALTERAÇÃO DE ESTADO (AUTH CHANGE)
+        // ========================================================
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            console.log("Evento Auth:", event);
+
+            if (event === "PASSWORD_RECOVERY") {
+                loginContainer.classList.add('hidden');
+                signupContainer.classList.add('hidden');
+                recoveryContainer.classList.add('hidden');
+                userDashboard.classList.add('hidden');
+                newPasswordContainer.classList.remove('hidden');
+                systemSubtitle.innerText = "Defina sua nova senha de acesso";
+                showMsg("Link validado! Digite sua nova senha abaixo.", false, true);
+                return;
+            }
+
+            if (session && session.user) {
+                const user = session.user;
+                if (!newPasswordContainer.classList.contains('hidden')) return;
+
+                loginContainer.classList.add('hidden');
+                signupContainer.classList.add('hidden');
+                recoveryContainer.classList.add('hidden');
+                userDashboard.classList.remove('hidden');
+                userIdText.innerText = `ID do Banco: ${user.id}`;
+                
+                if (welcomeUser.innerText === "Carregando perfil...") {
+                    buscarNomeDoPerfil(user.id);
+                }
+            } else {
+                if (newPasswordContainer.classList.contains('hidden')) {
+                    if (signupContainer.classList.contains('hidden') && recoveryContainer.classList.contains('hidden')) {
+                        loginContainer.classList.remove('hidden');
+                    }
+                    userDashboard.classList.add('hidden');
+                    welcomeUser.innerText = "Carregando perfil...";
+                }
+            }
+        });
+
+        async function buscarNomeDoPerfil(uid) {
+            try {
+                const { data, error } = await supabaseClient.from('usuarios').select('nome').eq('id', uid);
+                if (!error && data && data.length > 0) {
+                    welcomeUser.innerText = `Bem-vindo, ${data[0].nome}!`;
+                } else {
+                    welcomeUser.innerText = "Bem-vindo, Jogador!";
+                }
+            } catch (err) {
+                welcomeUser.innerText = "Bem-vindo, Jogador!";
+            }
+        }
+
+        // ========================================================
+        // 2. ENVIAR FORMULÁRIO DE LOGIN
+        // ========================================================
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showMsg("");
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) showMsg(`Erro no login: ${error.message}`, true);
+        });
+
+        // ========================================================
+        // 3. CADASTRO (SIGN UP) SÓ COM 1 CAMPO DE SENHA + VALIDAÇÕES
+        // ========================================================
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showMsg("");
+            
+            const name = document.getElementById('signup-name').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value;
+
+            if (!name) {
+                showMsg("Por favor, informe o seu Nome ou Apelido.", true);
+                return;
+            }
+
+            if (password.length < 6) {
+                showMsg("A senha escolhida precisa ter pelo menos 6 caracteres.", true);
+                return;
+            }
+
+            console.log("Iniciando fluxo linear de cadastro...");
+            const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password
+            });
+
+            if (authError) {
+                showMsg(`Erro no cadastro: ${authError.message}`, true);
+                return;
+            }
+
+            // CORRIGIDO: Agora valida corretamente usando 'authData'
+            if (authData && authData.user) {
+                const newUserId = authData.user.id;
+                console.log("Credencial criada. Gravando nome na tabela pública...");
+
+                const { error: dbError } = await supabaseClient
+                    .from('usuarios')
+                    .insert([{ id: newUserId, nome: name, pontos_totais: 0 }]);
+
+                if (dbError) {
+                    console.error("Erro na gravação pública:", dbError.message);
+                    showMsg("Conta criada, mas houve uma falha ao registrar o seu nome.", true);
+                } else {
+                    showMsg("Sua conta foi criada com sucesso!", false, true);
+                    
+                    document.getElementById('signup-name').value = "";
+                    document.getElementById('signup-email').value = "";
+                    document.getElementById('signup-password').value = "";
+                    
+                    buscarNomeDoPerfil(newUserId);
+                }
+            }
+        });
+
+        // ========================================================
+        // 4. SOLICITAR LINK DE RECUPERAÇÃO DE SENHA
+        // ========================================================
+        document.getElementById('recovery-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showMsg("");
+            const email = document.getElementById('recovery-email').value.trim();
+
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.href, 
+            });
+
+            if (error) {
+                showMsg(`Erro: ${error.message}`, true);
+            } else {
+                showMsg("E-mail de recuperação enviado! Verifique sua caixa de entrada.", false, true);
+            }
+        });
+
+        // ========================================================
+        // 5. ATUALIZAR NOVA SENHA DEFINITIVA
+        // ========================================================
+        document.getElementById('new-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            showMsg("");
+            const newPassword = document.getElementById('new-password').value;
+
+            if (newPassword.length < 6) {
+                showMsg("A nova senha precisa ter pelo menos 6 caracteres.", true);
+                return;
+            }
+
+            const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+
+            if (error) {
+                showMsg(`Erro ao atualizar: ${error.message}`, true);
+            } else {
+                showMsg("Senha updated com sucesso! Você já pode entrar.", false, true);
+                setTimeout(() => {
+                    newPasswordContainer.classList.add('hidden');
+                    loginContainer.classList.remove('hidden');
+                    systemSubtitle.innerText = "Ambiente de teste de autenticação";
+                    showMsg("");
+                    supabaseClient.auth.signOut();
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
