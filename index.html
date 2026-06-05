@@ -217,9 +217,7 @@
             await supabaseClient.auth.signOut();
         });
 
-        // ========================================================
         // 1. MONITOR DE ALTERAÇÃO DE ESTADO (AUTH CHANGE)
-        // ========================================================
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
             console.log("Evento Auth:", event);
 
@@ -268,9 +266,7 @@
             }
         }
 
-        // ========================================================
         // 2. ENVIAR FORMULÁRIO DE LOGIN
-        // ========================================================
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             showMsg("");
@@ -313,7 +309,6 @@
                 return;
             }
 
-            // CORRIGIDO: Agora valida corretamente usando 'authData'
             if (authData && authData.user) {
                 const newUserId = authData.user.id;
                 console.log("Credencial criada. Gravando nome na tabela pública...");
@@ -337,9 +332,7 @@
             }
         });
 
-        // ========================================================
         // 4. SOLICITAR LINK DE RECUPERAÇÃO DE SENHA
-        // ========================================================
         document.getElementById('recovery-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             showMsg("");
@@ -356,9 +349,7 @@
             }
         });
 
-        // ========================================================
         // 5. ATUALIZAR NOVA SENHA DEFINITIVA
-        // ========================================================
         document.getElementById('new-password-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             showMsg("");
