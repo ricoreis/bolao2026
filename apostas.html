@@ -119,60 +119,91 @@
         }
 
         function renderizarJogos(jogos, mapaPalpites) {
+            const container = document.getElementById('jogos-container'); // Ajuste o ID se o seu container tiver outro nome
+            if (!container) return;
+
+            // Limpa o container antes de renderizar a lista
+            container.innerHTML = '';
+
             if (jogos.length === 0) {
-                containerJogos.innerHTML = `<p class="text-gray-500 italic text-center py-8">Nenhum jogo cadastrado ainda.</p>`;
+                container.innerHTML = `<p class="text-gray-400 text-center py-8">Nenhum jogo encontrado para esta rodada.</p>`;
                 return;
             }
 
-            containerJogos.innerHTML = "";
             jogos.forEach(jogo => {
-            const nomeTimeA = jogo.time_a ? jogo.time_a.nome : (jogo.texto_auxiliar || "A definir");
-            const siglaTimeA = jogo.time_a ? jogo.time_a.sigla : "";
+                // 1. Formatação amigável da data do jogo usando o fuso horário local do navegador
+                const horarioJogo = new Date(jogo.data_jogo);
+                const dataFormatada = horarioJogo.toLocaleDateString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    weekday: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).replace('.', ''); // Remove o ponto que alguns navegadores colocam no dia da semana
 
-            const nomeTimeB = jogo.time_b ? jogo.time_b.nome : (jogo.texto_auxiliar || "A definir");
-            const siglaTimeB = jogo.time_b ? jogo.time_b.sigla : "";
+                // 2. Extrai os textos corretos das tabelas relacionadas (Evita o [object Object])
+                const nomeTimeA = jogo.time_a ? jogo.time_a.nome : (jogo.texto_auxiliar || "A definir");
+                const siglaTimeA = jogo.time_a ? jogo.time_a.sigla : "";
 
-                const palpiteExistente = mapaPalpites[jogo.id];
-                const golAVal = palpiteExistente ? palpiteExistente.palpite_gols_a : "";
-                const golBVal = palpiteExistente ? palpiteExistente.palpite_gols_b : "";
-                const dataFormatada = new Date(jogo.data_jogo).toLocaleDateString('pt-BR', {
-                    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-                });
+                const nomeTimeB = jogo.time_b ? jogo.time_b.nome : (jogo.texto_auxiliar || "A definir");
+                const siglaTimeB = jogo.time_b ? jogo.time_b.sigla : "";
 
-            // 2. Monta o HTML usando as novas variáveis de texto puro e os spans de sigla
-            const cardHtml = `
-                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div class="text-center sm:text-left">
-                        <span class="text-xs font-mono text-gray-500">${dataFormatada}</span>
-                        <div class="flex items-center gap-3 mt-1 justify-center sm:justify-start">
-                            <span class="font-semibold text-base">
-                                ${nomeTimeA} <span class="text-xs text-gray-400 font-normal ml-1">${siglaTimeA}</span>
-                            </span>
-                            <span class="text-xs text-gray-500 font-bold">VS</span>
-                            <span class="font-semibold text-base">
-                                ${nomeTimeB} <span class="text-xs text-gray-400 font-normal ml-1">${siglaTimeB}</span>
-                            </span>
+                // 3. Recupera os palpites já salvos para este jogo (se existirem)
+                const palpiteExistente = mapaPalpites && mapaPalpites[jogo.id] ? mapaPalpites[jogo.id] : null;
+                const golAVal = palpiteExistente && palpiteExistente.gols_a !== null ? palpiteExistente.gols_a : '';
+                const golBVal = palpiteExistente && palpiteExistente.gols_b !== null ? palpiteExistente.gols_b : '';
+
+                // 4. VALIDAÇÃO DE HORÁRIO: Bloquear palpites 1 hora antes do chute inicial
+                const agora = new Date();
+                const diferencaMinutos = (horarioJogo - agora) / (1000 * 60);
+                const palpiteBloqueado = diferencaMinutos < 60;
+
+                // 5. Configura os atributos e estilos dinâmicos do Tailwind para o bloqueio
+                const atributoDisabled = palpiteBloqueado ? "disabled" : "";
+                
+                const classeBotao = palpiteBloqueado 
+                    ? "ml-2 bg-gray-700 text-gray-400 font-medium text-xs px-3 py-2.5 rounded-lg opacity-50 cursor-not-allowed" 
+                    : "ml-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-medium text-xs px-3 py-2.5 rounded-lg transition-all cursor-pointer";
+
+                // 6. Montagem do HTML com hierarquia visual e tags de status
+                const cardHtml = `
+                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4 transition-all hover:border-gray-600">
+                        <div class="text-center sm:text-left">
+                            <span class="text-xs font-mono text-gray-500 capitalize">${dataFormatada}</span>
+                            <div class="flex items-center gap-3 mt-1 justify-center sm:justify-start">
+                                <span class="font-semibold text-base text-white">
+                                    ${nomeTimeA} <span class="text-xs text-gray-400 font-normal ml-1">${siglaTimeA}</span>
+                                </span>
+                                <span class="text-xs text-gray-500 font-bold">VS</span>
+                                <span class="font-semibold text-base text-white">
+                                    ${nomeTimeB} <span class="text-xs text-gray-400 font-normal ml-1">${siglaTimeB}</span>
+                                </span>
+                            </div>
+                            ${jogo.gols_a !== null && jogo.gols_b !== null ? 
+                                `<span class="inline-block mt-1 text-xs bg-gray-700 text-amber-400 px-2 py-0.5 rounded font-mono">Placar Real: ${jogo.gols_a} x ${jogo.gols_b}</span>` : 
+                                (palpiteBloqueado ? 
+                                    `<span class="inline-block mt-1 text-xs bg-red-950/40 text-red-400 border border-red-900/50 px-2 py-0.5 rounded">Palpites encerrados</span>` :
+                                    `<span class="inline-block mt-1 text-xs bg-gray-900 text-gray-500 px-2 py-0.5 rounded">Aguardando partida</span>`
+                                )
+                            }
                         </div>
-                        ${jogo.gols_a !== null && jogo.gols_b !== null ? 
-                            `<span class="inline-block mt-1 text-xs bg-gray-700 text-amber-400 px-2 py-0.5 rounded font-mono">Placar Real: ${jogo.gols_a} x ${jogo.gols_b}</span>` : 
-                            `<span class="inline-block mt-1 text-xs bg-gray-900 text-gray-500 px-2 py-0.5 rounded">Aguardando partida</span>`
-                        }
-                    </div>
 
-                    <div class="flex items-center gap-2">
-                        <input type="number" id="input-a-${jogo.id}" min="0" value="${golAVal}" placeholder="0" 
-                            class="w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                        <span class="text-gray-600 font-bold">x</span>
-                        <input type="number" id="input-b-${jogo.id}" min="0" value="${golBVal}" placeholder="0" 
-                            class="w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                        <button onclick="salvarPalpite(${jogo.id})" 
-                            class="ml-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-medium text-xs px-3 py-2.5 rounded-lg transition-all cursor-pointer">
-                            Salvar
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="input-a-${jogo.id}" min="0" value="${golAVal}" placeholder="0" ${atributoDisabled}
+                                class="w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-30 disabled:text-gray-500 disabled:border-gray-800">
+                            <span class="text-gray-600 font-bold">x</span>
+                            <input type="number" id="input-b-${jogo.id}" min="0" value="${golBVal}" placeholder="0" ${atributoDisabled}
+                                class="w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-30 disabled:text-gray-500 disabled:border-gray-800">
+                            <button onclick="salvarPalpite(${jogo.id})" ${atributoDisabled}
+                                class="${classeBotao}">
+                                ${palpiteBloqueado ? 'Bloqueado' : 'Salvar'}
+                            </button>
+                        </div>
                     </div>
-                </div>
-            `;
-                containerJogos.insertAdjacentHTML('beforeend', cardHtml);
+                `;
+
+                // Injeta o card estruturado dentro do container da página
+                container.insertAdjacentHTML('beforeend', cardHtml);
             });
         }
 
