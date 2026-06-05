@@ -144,9 +144,9 @@
                         <div class="text-center sm:text-left">
                             <span class="text-xs font-mono text-gray-500">${dataFormatada}</span>
                             <div class="flex items-center gap-3 mt-1 justify-center sm:justify-start">
-                                <span class="font-semibold text-base">${jogo.time_a}</span>
+                                <div class="time-nome">${nomeTimeA} <span class="sigla">${siglaTimeA}</span></div>
                                 <span class="text-xs text-gray-500 font-bold">VS</span>
-                                <span class="font-semibold text-base">${jogo.time_b}</span>
+                                <div class="time-nome">${nomeTimeB} <span class="sigla">${siglaTimeB}</span></div>
                             </div>
                             ${jogo.gols_a !== null && jogo.gols_b !== null ? 
                                 `<span class="inline-block mt-1 text-xs bg-gray-700 text-amber-400 px-2 py-0.5 rounded font-mono">Placar Real: ${jogo.gols_a} x ${jogo.gols_b}</span>` : 
