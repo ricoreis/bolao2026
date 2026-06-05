@@ -126,6 +126,12 @@
 
             containerJogos.innerHTML = "";
             jogos.forEach(jogo => {
+                const nomeTimeA = jogo.time_a ? jogo.time_a.nome : (jogo.texto_auxiliar || "A definir");
+                const nomeTimeB = jogo.time_b ? jogo.time_b.nome : (jogo.texto_auxiliar || "A definir");
+
+                const siglaTimeA = jogo.time_a ? jogo.time_a.sigla : "";
+                const siglaTimeB = jogo.time_b ? jogo.time_b.sigla : "";
+
                 const palpiteExistente = mapaPalpites[jogo.id];
                 const golAVal = palpiteExistente ? palpiteExistente.palpite_gols_a : "";
                 const golBVal = palpiteExistente ? palpiteExistente.palpite_gols_b : "";
