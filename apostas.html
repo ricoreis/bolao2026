@@ -94,7 +94,14 @@
         async function carregarJogosEPalpites() {
             try {
                 const [jogosRes, palpitesRes] = await Promise.all([
-                    supabaseClient.from('jogos').select('*').order('data_jogo', { ascending: true }),
+                    supabaseClient
+                        .from('jogos')
+                        .select(`
+                            id, gols_a, gols_b, data_jogo, fase, texto_auxiliar,
+                            time_a:paises!jogos_time_a_id_fkey(nome, sigla),
+                            time_b:paises!jogos_time_b_id_fkey(nome, sigla)
+                        `)
+                        .order('data_jogo', { ascending: true }),
                     supabaseClient.from('palpites').select('*').eq('usuario_id', usuarioLogadoId)
                 ]);
 
