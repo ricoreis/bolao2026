@@ -126,11 +126,11 @@
 
             containerJogos.innerHTML = "";
             jogos.forEach(jogo => {
-                const nomeTimeA = jogo.time_a ? jogo.time_a.nome : (jogo.texto_auxiliar || "A definir");
-                const nomeTimeB = jogo.time_b ? jogo.time_b.nome : (jogo.texto_auxiliar || "A definir");
+            const nomeTimeA = jogo.time_a ? jogo.time_a.nome : (jogo.texto_auxiliar || "A definir");
+            const siglaTimeA = jogo.time_a ? jogo.time_a.sigla : "";
 
-                const siglaTimeA = jogo.time_a ? jogo.time_a.sigla : "";
-                const siglaTimeB = jogo.time_b ? jogo.time_b.sigla : "";
+            const nomeTimeB = jogo.time_b ? jogo.time_b.nome : (jogo.texto_auxiliar || "A definir");
+            const siglaTimeB = jogo.time_b ? jogo.time_b.sigla : "";
 
                 const palpiteExistente = mapaPalpites[jogo.id];
                 const golAVal = palpiteExistente ? palpiteExistente.palpite_gols_a : "";
@@ -139,34 +139,39 @@
                     day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
                 });
 
-                const cardHtml = `
-                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div class="text-center sm:text-left">
-                            <span class="text-xs font-mono text-gray-500">${dataFormatada}</span>
-                            <div class="flex items-center gap-3 mt-1 justify-center sm:justify-start">
-                                <div class="time-nome">${nomeTimeA} <span class="sigla">${siglaTimeA}</span></div>
-                                <span class="text-xs text-gray-500 font-bold">VS</span>
-                                <div class="time-nome">${nomeTimeB} <span class="sigla">${siglaTimeB}</span></div>
-                            </div>
-                            ${jogo.gols_a !== null && jogo.gols_b !== null ? 
-                                `<span class="inline-block mt-1 text-xs bg-gray-700 text-amber-400 px-2 py-0.5 rounded font-mono">Placar Real: ${jogo.gols_a} x ${jogo.gols_b}</span>` : 
-                                `<span class="inline-block mt-1 text-xs bg-gray-900 text-gray-500 px-2 py-0.5 rounded">Aguardando partida</span>`
-                            }
+            // 2. Monta o HTML usando as novas variáveis de texto puro e os spans de sigla
+            const cardHtml = `
+                <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="text-center sm:text-left">
+                        <span class="text-xs font-mono text-gray-500">${dataFormatada}</span>
+                        <div class="flex items-center gap-3 mt-1 justify-center sm:justify-start">
+                            <span class="font-semibold text-base">
+                                ${nomeTimeA} <span class="text-xs text-gray-400 font-normal ml-1">${siglaTimeA}</span>
+                            </span>
+                            <span class="text-xs text-gray-500 font-bold">VS</span>
+                            <span class="font-semibold text-base">
+                                ${nomeTimeB} <span class="text-xs text-gray-400 font-normal ml-1">${siglaTimeB}</span>
+                            </span>
                         </div>
-
-                        <div class="flex items-center gap-2">
-                            <input type="number" id="input-a-${jogo.id}" min="0" value="${golAVal}" placeholder="0" 
-                                class="w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                            <span class="text-gray-600 font-bold">x</span>
-                            <input type="number" id="input-b-${jogo.id}" min="0" value="${golBVal}" placeholder="0" 
-                                class="w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                            <button onclick="salvarPalpite(${jogo.id})" 
-                                class="ml-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-medium text-xs px-3 py-2.5 rounded-lg transition-all cursor-pointer">
-                                Salvar
-                            </button>
-                        </div>
+                        ${jogo.gols_a !== null && jogo.gols_b !== null ? 
+                            `<span class="inline-block mt-1 text-xs bg-gray-700 text-amber-400 px-2 py-0.5 rounded font-mono">Placar Real: ${jogo.gols_a} x ${jogo.gols_b}</span>` : 
+                            `<span class="inline-block mt-1 text-xs bg-gray-900 text-gray-500 px-2 py-0.5 rounded">Aguardando partida</span>`
+                        }
                     </div>
-                `;
+
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="input-a-${jogo.id}" min="0" value="${golAVal}" placeholder="0" 
+                            class="w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                        <span class="text-gray-600 font-bold">x</span>
+                        <input type="number" id="input-b-${jogo.id}" min="0" value="${golBVal}" placeholder="0" 
+                            class="w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                        <button onclick="salvarPalpite(${jogo.id})" 
+                            class="ml-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-medium text-xs px-3 py-2.5 rounded-lg transition-all cursor-pointer">
+                            Salvar
+                        </button>
+                    </div>
+                </div>
+            `;
                 containerJogos.insertAdjacentHTML('beforeend', cardHtml);
             });
         }
