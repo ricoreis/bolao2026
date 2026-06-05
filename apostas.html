@@ -119,10 +119,10 @@
         }
 
         function renderizarJogos(jogos, mapaPalpites) {
-            const container = document.getElementById('jogos-container'); // Ajuste o ID se o seu container tiver outro nome
+            const container = document.getElementById('jogos-container');
             if (!container) return;
 
-            // Limpa o container antes de renderizar a lista
+            // 1. Limpa o container de uma vez
             container.innerHTML = '';
 
             if (jogos.length === 0) {
@@ -130,46 +130,50 @@
                 return;
             }
 
-            jogos.forEach(jogo => {
-                // 1. Formatação amigável da data do jogo usando o fuso horário local do navegador
-                const horarioJogo = new Date(jogo.data_jogo);
-                const dataFormatada = horarioJogo.toLocaleDateString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    weekday: 'short',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }).replace('.', ''); // Remove o ponto que alguns navegadores colocam no dia da semana
+            // Criamos uma única string gigante na memória para injetar no DOM de uma só vez (Máxima Performance)
+            let htmlCompleto = '';
 
-                // 2. Extrai os textos corretos das tabelas relacionadas (Evita o [object Object])
+            // Pegamos o "agora" uma única vez fora do loop para economizar processamento
+            const agora = new Date();
+
+            jogos.forEach(jogo => {
+                const horarioJogo = new Date(jogo.data_jogo);
+                
+                // Formatação ultra rápida de data e hora
+                const diaMes = horarioJogo.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                const horaMin = horarioJogo.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+                const diaSemana = diasSemana[horarioJogo.getDay()];
+                
+                const dataFormatada = `${diaSemana}, ${diaMes} - ${horaMin}`;
+
+                // 2. Extrai os nomes e siglas de forma segura
                 const nomeTimeA = jogo.time_a ? jogo.time_a.nome : (jogo.texto_auxiliar || "A definir");
                 const siglaTimeA = jogo.time_a ? jogo.time_a.sigla : "";
 
                 const nomeTimeB = jogo.time_b ? jogo.time_b.nome : (jogo.texto_auxiliar || "A definir");
                 const siglaTimeB = jogo.time_b ? jogo.time_b.sigla : "";
 
-                // 3. Recupera os palpites já salvos para este jogo (se existirem)
+                // 3. Recupera os palpites existentes
                 const palpiteExistente = mapaPalpites && mapaPalpites[jogo.id] ? mapaPalpites[jogo.id] : null;
                 const golAVal = palpiteExistente && palpiteExistente.gols_a !== null ? palpiteExistente.gols_a : '';
                 const golBVal = palpiteExistente && palpiteExistente.gols_b !== null ? palpiteExistente.gols_b : '';
 
-                // 4. VALIDAÇÃO DE HORÁRIO: Bloquear palpites 1 hora antes do chute inicial
-                const agora = new Date();
+                // 4. VALIDAÇÃO DE HORÁRIO (Trava de 1 hora)
                 const diferencaMinutos = (horarioJogo - agora) / (1000 * 60);
                 const palpiteBloqueado = diferencaMinutos < 60;
 
-                // 5. Configura os atributos e estilos dinâmicos do Tailwind para o bloqueio
                 const atributoDisabled = palpiteBloqueado ? "disabled" : "";
                 
                 const classeBotao = palpiteBloqueado 
                     ? "ml-2 bg-gray-700 text-gray-400 font-medium text-xs px-3 py-2.5 rounded-lg opacity-50 cursor-not-allowed" 
                     : "ml-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-medium text-xs px-3 py-2.5 rounded-lg transition-all cursor-pointer";
 
-                // 6. Montagem do HTML com hierarquia visual e tags de status
-                const cardHtml = `
+                // 5. Acumula o HTML na string
+                htmlCompleto += `
                     <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4 transition-all hover:border-gray-600">
                         <div class="text-center sm:text-left">
-                            <span class="text-xs font-mono text-gray-500 capitalize">${dataFormatada}</span>
+                            <span class="text-xs font-mono text-gray-500">${dataFormatada}</span>
                             <div class="flex items-center gap-3 mt-1 justify-center sm:justify-start">
                                 <span class="font-semibold text-base text-white">
                                     ${nomeTimeA} <span class="text-xs text-gray-400 font-normal ml-1">${siglaTimeA}</span>
@@ -201,10 +205,10 @@
                         </div>
                     </div>
                 `;
-
-                // Injeta o card estruturado dentro do container da página
-                container.insertAdjacentHTML('beforeend', cardHtml);
             });
+
+            // 6. Faz uma única inserção no DOM (renderização instantânea)
+            container.innerHTML = htmlCompleto;
         }
 
         async function salvarPalpite(jogoId) {
