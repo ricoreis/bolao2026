@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bolão 2026 - Meus Palpites</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
+
+    <!-- BARRA DE NAVEGAÇÃO -->
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="text-center sm:text-left">
+            <h1 class="text-xl font-bold tracking-wide text-emerald-400">🏆 BOLÃO 2026</h1>
+            <p id="saudacao-user" class="text-xs text-gray-400 mt-1">Carregando perfil...</p>
+        </div>
+        
+        <!-- Links de Navegação entre as Telas -->
+        <div class="flex items-center gap-2 bg-gray-900/50 p-1 rounded-xl border border-gray-700">
+            <a href="apostas.html" class="bg-emerald-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                ⚽ Meus Palpites
+            </a>
+            <a href="ranking.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                📊 Ranking Geral
+            </a>
+        </div>
+
+        <button id="btn-logout" class="bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer w-full sm:w-auto">
+            Sair
+        </button>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL (Foco total nos jogos) -->
+    <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+        <div class="flex justify-between items-center border-b border-gray-700 pb-2">
+            <h2 class="text-lg font-semibold text-gray-300">📅 Partidas da Rodada</h2>
+            <span class="text-xs text-gray-500 italic">Seus palpites salvam individualmente</span>
+        </div>
+        
+        <!-- Feed de Jogos Dinâmico -->
+        <div id="container-jogos" class="space-y-4">
+            <p class="text-gray-500 animate-pulse text-center py-8">Buscando partidas do banco...</p>
+        </div>
+    </main>
+
+    <!-- NOTIFICAÇÃO FLUTUANTE (FEEDBACK VISUAL TOAST) -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-emerald-600 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        Palpite salvo com sucesso!
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://rximgiwpqmshqaducvla.supabase.co"; 
+        const SUPABASE_ANON_KEY = "SUA_ANON_KEY_AQUI"; // << COLOQUE SUA CHAVE AQUI
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let usuarioLogadoId = null;
+
+        const saudacaoUser = document.getElementById('saudacao-user');
+        const btnLogout = document.getElementById('btn-logout');
+        const containerJogos = document.getElementById('container-jogos');
+        const toast = document.getElementById('toast');
+
+        async function verificarSessao() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = "index.html";
+                return;
+            }
+            usuarioLogadoId = session.user.id;
+            
+            const { data: userData } = await supabaseClient
+                .from('usuarios')
+                .select('nome')
+                .eq('id', usuarioLogadoId)
+                .single();
+
+            if (userData) {
+                saudacaoUser.innerText = `Boa sorte nas apostas, ${userData.nome}!`;
+            }
+            carregarJogosEPalpites();
+        }
+
+        function showToast(mensagem, isError = false) {
+            toast.innerText = mensaje = mensagem;
+            toast.className = `fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-0 opacity-100 transition-all duration-300 pointer-events-none ${isError ? 'bg-red-600' : 'bg-emerald-600'}`;
+            setTimeout(() => {
+                toast.className = "fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300 pointer-events-none";
+            }, 3000);
+        }
+
+        async function carregarJogosEPalpites() {
+            try {
+                const [jogosRes, palpitesRes] = await Promise.all([
+                    supabaseClient.from('jogos').select('*').order('data_jogo', { ascending: true }),
+                    supabaseClient.from('palpites').select('*').eq('usuario_id', usuarioLogadoId)
+                ]);
+
+                if (jogosRes.error) throw jogosRes.error;
+                if (palpitesRes.error) throw palpitesRes.error;
+
+                const mapaPalpites = {};
+                palpitesRes.data.forEach(p => { mapaPalpites[p.jogo_id] = p; });
+
+                renderizarJogos(jogosRes.data, mapaPalpites);
+            } catch (err) {
+                console.error(err.message);
+                containerJogos.innerHTML = `<p class="text-red-400 text-center">Erro ao sincronizar informações.</p>`;
+            }
+        }
+
+        function renderizarJogos(jogos, mapaPalpites) {
+            if (jogos.length === 0) {
+                containerJogos.innerHTML = `<p class="text-gray-500 italic text-center py-8">Nenhum jogo cadastrado ainda.</p>`;
+                return;
+            }
+
+            containerJogos.innerHTML = "";
+            jogos.forEach(jogo => {
+                const palpiteExistente = mapaPalpites[jogo.id];
+                const golAVal = palpiteExistente ? palpiteExistente.palpite_gols_a : "";
+                const golBVal = palpiteExistente ? palpiteExistente.palpite_gols_b : "";
+                const dataFormatada = new Date(jogo.data_jogo).toLocaleDateString('pt-BR', {
+                    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                });
+
+                const cardHtml = `
+                    <div class="bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="text-center sm:text-left">
+                            <span class="text-xs font-mono text-gray-500">${dataFormatada}</span>
+                            <div class="flex items-center gap-3 mt-1 justify-center sm:justify-start">
+                                <span class="font-semibold text-base">${jogo.time_a}</span>
+                                <span class="text-xs text-gray-500 font-bold">VS</span>
+                                <span class="font-semibold text-base">${jogo.time_b}</span>
+                            </div>
+                            ${jogo.gols_a !== null && jogo.gols_b !== null ? 
+                                `<span class="inline-block mt-1 text-xs bg-gray-700 text-amber-400 px-2 py-0.5 rounded font-mono">Placar Real: ${jogo.gols_a} x ${jogo.gols_b}</span>` : 
+                                `<span class="inline-block mt-1 text-xs bg-gray-900 text-gray-500 px-2 py-0.5 rounded">Aguardando partida</span>`
+                            }
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="input-a-${jogo.id}" min="0" value="${golAVal}" placeholder="0" 
+                                class="w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <span class="text-gray-600 font-bold">x</span>
+                            <input type="number" id="input-b-${jogo.id}" min="0" value="${golBVal}" placeholder="0" 
+                                class="w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                            <button onclick="salvarPalpite(${jogo.id})" 
+                                class="ml-2 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-medium text-xs px-3 py-2.5 rounded-lg transition-all cursor-pointer">
+                                Salvar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                containerJogos.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
+
+        async function salvarPalpite(jogoId) {
+            const golsA = document.getElementById(`input-a-${jogoId}`).value.trim();
+            const golsB = document.getElementById(`input-b-${jogoId}`).value.trim();
+
+            if (golsA === "" || golsB === "") {
+                showToast("Preencha os dois campos do placar.", true);
+                return;
+            }
+
+            const { error } = await supabaseClient.from('palpites').upsert({
+                usuario_id: usuarioLogadoId,
+                jogo_id: jogoId,
+                palpite_gols_a: parseInt(golsA),
+                palpite_gols_b: parseInt(golsB),
+                atualizado_em: new Date().toISOString()
+            }, { onConflict: 'usuario_id,jogo_id' });
+
+            if (error) {
+                showToast("Erro ao salvar palpite.", true);
+            } else {
+                showToast("Palpite registrado! 🎉");
+            }
+        }
+
+        btnLogout.addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = "index.html";
+        });
+
+        verificarSessao();
+    </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bolão 2026 - Ranking Geral</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
+
+    <!-- BARRA DE NAVEGAÇÃO -->
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="text-center sm:text-left">
+            <h1 class="text-xl font-bold tracking-wide text-emerald-400">🏆 BOLÃO 2026</h1>
+            <p id="saudacao-user" class="text-xs text-gray-400 mt-1">Carregando classificação...</p>
+        </div>
+        
+        <!-- Links de Navegação entre as Telas -->
+        <div class="flex items-center gap-2 bg-gray-900/50 p-1 rounded-xl border border-gray-700">
+            <a href="apostas.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                ⚽ Meus Palpites
+            </a>
+            <a href="ranking.html" class="bg-emerald-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">
+                📊 Ranking Geral
+            </a>
+        </div>
+
+        <button id="btn-logout" class="bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer w-full sm:w-auto">
+            Sair
+        </button>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL (Tabela Minimalista) -->
+    <main class="max-w-2xl mx-auto px-4 py-8 space-y-6">
+        <h2 class="text-lg font-semibold border-b border-gray-700 pb-2 text-gray-300">📊 Classificação Dos Amigos</h2>
+
+        <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-hidden p-4 shadow-2xl">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="border-b border-gray-700 text-xs text-gray-400 uppercase">
+                        <th class="pb-3 w-16 text-center">Posição</th>
+                        <th class="pb-3">Participante</th>
+                        <th class="pb-3 text-right">Pontos Totais</th>
+                    </tr>
+                </thead>
+                <tbody id="container-ranking" class="divide-y divide-gray-700/50 text-base">
+                    <tr>
+                        <td colspan="3" class="py-8 text-center text-gray-500 animate-pulse">Carregando classificação do servidor...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        const SUPABASE_URL = "https://rximgiwpqmshqaducvla.supabase.co"; 
+        const SUPABASE_ANON_KEY = "SUA_ANON_KEY_AQUI"; // << COLOQUE SUA CHAVE AQUI
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let usuarioLogadoId = null;
+
+        const containerRanking = document.getElementById('container-ranking');
+        const btnLogout = document.getElementById('btn-logout');
+
+        async function verificarSessaoERanking() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = "index.html";
+                return;
+            }
+            usuarioLogadoId = session.user.id;
+            
+            carregarRankingGeral();
+        }
+
+        async function carregarRankingGeral() {
+            try {
+                // Puxa a lista ordenada por quem tem mais pontos
+                const { data: ranking, error } = await supabaseClient
+                    .from('usuarios')
+                    .select('id, nome, pontos_totais')
+                    .order('pontos_totais', { ascending: false });
+
+                if (error) throw error;
+
+                renderizarRanking(ranking);
+            } catch (err) {
+                console.error(err.message);
+                containerRanking.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-red-400">Falha ao gerar classificação.</td></tr>`;
+            }
+        }
+
+        function renderizarRanking(ranking) {
+            if (ranking.length === 0) {
+                containerRanking.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-gray-500 italic">Nenhum participante encontrado.</td></tr>`;
+                return;
+            }
+
+            containerRanking.innerHTML = "";
+            ranking.forEach((usr, index) => {
+                // Se a linha for do usuário logado, destaca com fundo esverdeado
+                const isMe = usr.id === usuarioLogadoId;
+                const classeDestaque = isMe ? 'bg-emerald-950/30 text-emerald-300 font-semibold' : '';
+
+                const trHtml = `
+                    <tr class="${classeDestaque} hover:bg-gray-700/20 transition-colors">
+                        <td class="py-4 text-center font-mono text-sm text-gray-400">${index + 1}º</td>
+                        <td class="py-4 font-medium">${usr.nome} ${isMe ? '<span class="text-xs bg-emerald-800 text-emerald-200 px-1.5 py-0.5 rounded ml-1 font-normal">Você</span>' : ''}</td>
+                        <td class="py-4 text-right font-mono font-bold text-amber-400">${usr.pontos_totais} pts</td>
+                    </tr>
+                `;
+                containerRanking.insertAdjacentHTML('beforeend', trHtml);
+            });
+        }
+
+        btnLogout.addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            window.location.href = "index.html";
+        });
+
+        verificarSessaoERanking();
+    </script>
+</body>
+</html>

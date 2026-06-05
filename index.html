@@ -223,37 +223,34 @@
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
             console.log("Evento Auth:", event);
 
+            // Se o usuário veio pelo link de recuperação de senha
             if (event === "PASSWORD_RECOVERY") {
                 loginContainer.classList.add('hidden');
                 signupContainer.classList.add('hidden');
                 recoveryContainer.classList.add('hidden');
-                userDashboard.classList.add('hidden');
+                if (window.userDashboard) userDashboard.classList.add('hidden');
                 newPasswordContainer.classList.remove('hidden');
                 systemSubtitle.innerText = "Defina sua nova senha de acesso";
                 showMsg("Link validado! Digite sua nova senha abaixo.", false, true);
                 return;
             }
 
+            // Se o usuário está logado com sucesso
             if (session && session.user) {
-                const user = session.user;
+                // Se ele ainda estiver vendo a tela de definir nova senha, não redireciona
                 if (!newPasswordContainer.classList.contains('hidden')) return;
 
-                loginContainer.classList.add('hidden');
-                signupContainer.classList.add('hidden');
-                recoveryContainer.classList.add('hidden');
-                userDashboard.classList.remove('hidden');
-                userIdText.innerText = `ID do Banco: ${user.id}`;
+                console.log("Usuário autenticado! Redirecionando para a tela de apostas...");
                 
-                if (welcomeUser.innerText === "Carregando perfil...") {
-                    buscarNomeDoPerfil(user.id);
-                }
+                // REDIRECIONAMENTO PARA A NOVA TELA:
+                window.location.href = "apostas.html";
             } else {
+                // Se não houver sessão, garante que exibe o formulário de login
                 if (newPasswordContainer.classList.contains('hidden')) {
                     if (signupContainer.classList.contains('hidden') && recoveryContainer.classList.contains('hidden')) {
                         loginContainer.classList.remove('hidden');
                     }
-                    userDashboard.classList.add('hidden');
-                    welcomeUser.innerText = "Carregando perfil...";
+                    if (window.userDashboard) userDashboard.classList.add('hidden');
                 }
             }
         });
