@@ -18,10 +18,10 @@ async function verificarSessao() {
     
     const { data: userData } = await supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single();
     if (userData) saudacaoUser.innerText = `Boa sorte nas apostas, ${userData.nome}!`;
-    carregarJogosEPalpites();
+    carregarJogosEApostas();
 }
 
-async function carregarJogosEPalpites() {
+async function carregarJogosEApostas() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return;
 
@@ -36,25 +36,25 @@ async function carregarJogosEPalpites() {
 
     if (erroJogos) { console.error(erroJogos); return; }
 
-    const { data: palpites } = await supabaseClient
-        .from('palpites')
+    const { data: apostas } = await supabaseClient
+        .from('apostas')
         .select('*')
         .eq('usuario_id', session.user.id);
 
-    const mapaPalpites = {};
-    if (palpites) palpites.forEach(p => mapaPalpites[p.jogo_id] = p);
+    const mapaApostas = {};
+    if (apostas) apostas.forEach(p => mapaApostas[p.jogo_id] = p);
 
-    renderizarJogos(jogos, mapaPalpites);
+    renderizarJogos(jogos, mapaApostas);
 }
 
-function renderizarJogos(jogos, mapaPalpites) {
+function renderizarJogos(jogos, mapaApostas) {
     const container = document.getElementById('container-jogos');
     const template = document.getElementById('template-jogo');
     if (!container || !template) return;
     container.innerHTML = ''; 
 
     jogos.forEach(jogo => {
-        const palpite = mapaPalpites ? mapaPalpites[jogo.id] : null;
+        const aposta = mapaApostas ? mapaApostas[jogo.id] : null;
         const card = template.content.cloneNode(true);
 
         const dataLocal = new Date(jogo.data_jogo);
@@ -68,8 +68,8 @@ function renderizarJogos(jogos, mapaPalpites) {
         card.querySelector('.sigla-b').innerText = jogo.time_b?.sigla || '';
 
         // Exibir pontuação apenas se o jogo tiver resultado real
-        if (jogo.gols_a !== null && jogo.gols_b !== null && palpite) {
-            const pontos = calcularPontos(palpite.gols_a, palpite.gols_b, jogo.gols_a, jogo.gols_b);
+        if (jogo.gols_a !== null && jogo.gols_b !== null && aposta) {
+            const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b);
             const statusBadge = card.querySelector('.status-badge');
             statusBadge.innerText = `Pontos: ${pontos}`;
             statusBadge.classList.add('bg-emerald-900', 'text-emerald-400');
@@ -79,21 +79,21 @@ function renderizarJogos(jogos, mapaPalpites) {
         const inputB = card.querySelector('.input-b');
         inputA.id = `golsA_${jogo.id}`;
         inputB.id = `golsB_${jogo.id}`;
-        inputA.value = palpite?.gols_a ?? '';
-        inputB.value = palpite?.gols_b ?? '';
+        inputA.value = aposta?.gols_a ?? '';
+        inputB.value = aposta?.gols_b ?? '';
 
-        card.querySelector('.btn-salvar').onclick = () => salvarPalpite(jogo.id);
+        card.querySelector('.btn-salvar').onclick = () => salvarAposta(jogo.id);
         container.appendChild(card);
     });
 }
 
-async function salvarPalpite(jogoId) {
+async function salvarAposta(jogoId) {
     const golsA = document.getElementById(`golsA_${jogoId}`).value;
     const golsB = document.getElementById(`golsB_${jogoId}`).value;
     const { data: { user } } = await supabaseClient.auth.getUser();
 
     const { error } = await supabaseClient
-        .from('palpites')
+        .from('apostas')
         .upsert({ 
             usuario_id: user.id, 
             jogo_id: jogoId, 
@@ -102,7 +102,7 @@ async function salvarPalpite(jogoId) {
         }, { onConflict: 'usuario_id, jogo_id' });
     
     if (error) showToast("Erro ao salvar", true);
-    else showToast("Palpite salvo!");
+    else showToast("Aposta salva!");
 }
 
 btnLogout.addEventListener('click', async () => { 

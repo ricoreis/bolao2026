@@ -19,12 +19,14 @@ async function verificarSessao() {
 async function carregarRankingGeral(usuarioLogadoId) {
     try {
         const { data: usuarios } = await supabaseClient.from('usuarios').select('id, nome');
-        const { data: palpites } = await supabaseClient.from('palpites').select('usuario_id, jogo_id, gols_a, gols_b');
+        // Alterado aqui para 'apostas'
+        const { data: apostas } = await supabaseClient.from('apostas').select('usuario_id, jogo_id, gols_a, gols_b');
         const { data: jogos } = await supabaseClient.from('jogos').select('id, gols_a, gols_b').not('gols_a', 'is', null);
 
         const rankingCalculado = usuarios.map(usr => {
             let total = 0;
-            palpites.filter(p => p.usuario_id === usr.id).forEach(p => {
+            // Alterado aqui para usar o array 'apostas'
+            apostas.filter(p => p.usuario_id === usr.id).forEach(p => {
                 const jogoReal = jogos.find(j => j.id === p.jogo_id);
                 if (jogoReal) {
                     total += calcularPontos(p.gols_a, p.gols_b, jogoReal.gols_a, jogoReal.gols_b);
