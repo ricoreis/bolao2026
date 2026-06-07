@@ -3,18 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bolão 2026 - Apostas Mata-Mata</title>
+    <title>Bolão 2026 - Apostas Finais</title>
+    <!-- Tailwind CSS (Mantendo o padrão injetado do seu projeto) -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Iconify para Ícones de Pênaltis e UX -->
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
 
+    <!-- NAV BARRA SUPERIOR (Com link correto ativo em verde) -->
     <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div>
             <h1 class="text-xl font-bold tracking-wide text-emerald-400">BOLÃO 2026</h1>
             <p id="saudacao-user" class="text-xs text-gray-400 mt-1">Carregando perfil...</p>
         </div>
-        <div class="flex items-center gap-2 bg-gray-900/50 p-1 rounded-xl border border-gray-700">
+        <div class="flex flex-wrap items-center justify-center gap-2 bg-gray-900/50 p-1 rounded-xl border border-gray-700">
             <a href="dashboard.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg">Início</a>
             <a href="apostas-grupos.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg">Jogos Grupos</a>
             <a href="apostas-finais.html" class="bg-emerald-600 text-white text-sm font-medium px-4 py-2 rounded-lg">Jogos Mata-Mata</a>
@@ -25,40 +30,70 @@
         <button id="btn-logout" class="bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg w-full sm:w-auto">Sair</button>
     </nav>
 
-    <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
-        <h2 class="text-lg font-semibold text-gray-300 border-b border-gray-700 pb-2">📅 Partidas da Rodada</h2>
-        <div id="container-jogos" class="space-y-4">
-            <p class="text-gray-500 animate-pulse text-center py-8">Buscando partidas do banco...</p>
+    <!-- CONTEÚDO CONTAINER -->
+    <main class="max-w-3xl mx-auto px-4 py-8 space-y-8">
+        <h2 class="text-lg font-semibold text-gray-300 border-b border-gray-700 pb-2 flex items-center gap-2">
+            <iconify-icon icon="lucide:git-commit" class="text-emerald-400"></iconify-icon> Fase Eliminatória (Mata-Mata)
+        </h2>
+        
+        <!-- Os Headers das Fases e os cards de jogos serão injetados aqui em ordem sequencial de ID -->
+        <div id="container-jogos" class="space-y-6">
+            <p class="text-gray-500 animate-pulse text-center py-8">Buscando chaveamento eliminatório...</p>
         </div>
     </main>
 
+    <!-- TEMPLATE DO CARD DE JOGO (Modificado para Finais) -->
     <template id="template-jogo">
-        <div class="card-jogo bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col gap-2">
-            <span class="data-jogo text-xs font-mono text-gray-500"></span>
-            <div class="flex justify-between items-center">
+        <div class="card-jogo bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col gap-3">
+            
+            <!-- Linha Superior: Data + Número FIFA de referência -->
+            <div class="flex justify-between items-center border-b border-gray-700/50 pb-2">
+                <span class="data-jogo text-xs font-mono text-gray-500"></span>
+                <span class="jogo-fifa-badge bg-gray-900 border border-gray-700 text-gray-400 font-mono text-[10px] px-2 py-0.5 rounded-md font-bold"></span>
+            </div>
+
+            <!-- Linha Central: Times e Inputs -->
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                 <div class="flex items-center gap-2">
                     <span class="time-a font-bold text-white"></span>
                     <span class="sigla-a text-xs text-gray-500 font-bold"></span>
-                    <span class="text-gray-600 font-bold px-2">VS</span>
+                    <span class="text-gray-600 font-bold px-1">VS</span>
                     <span class="time-b font-bold text-white"></span>
                     <span class="sigla-b text-xs text-gray-500 font-bold"></span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <input type="number" class="input-a w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
+                
+                <div class="flex items-center justify-end gap-2">
+                    <input type="number" min="0" class="input-a w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
                     <span class="text-gray-600 font-bold">x</span>
-                    <input type="number" class="input-b w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
-                    <button class="btn-salvar ml-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg transition">Salvar</button>
+                    <input type="number" min="0" class="input-b w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
+                    <button class="btn-salvar ml-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg transition text-sm">Salvar</button>
                 </div>
             </div>
+
+            <!-- COMPONENTE DE DESEMPATE (PÊNALTIS): Oculto por padrão via utility flex/hidden -->
+            <div class="container-penaltis bg-gray-900/60 border border-amber-500/20 rounded-lg p-2 flex items-center justify-between hidden">
+                <span class="text-[11px] text-amber-400 font-medium flex items-center gap-1">
+                    <iconify-icon icon="lucide:info"></iconify-icon> Jogo empatado! Quem se classifica?
+                </span>
+                <div class="flex gap-2">
+                    <button class="btn-classifica-a text-xs px-2.5 py-1 rounded bg-gray-800 border border-gray-700 text-gray-300 hover:text-white transition font-medium"></button>
+                    <button class="btn-classifica-b text-xs px-2.5 py-1 rounded bg-gray-800 border border-gray-700 text-gray-300 hover:text-white transition font-medium"></button>
+                </div>
+            </div>
+
+            <!-- Badge de Status Inferior -->
             <div class="status-badge bg-gray-900 text-gray-500 text-[10px] px-2 py-1 rounded w-fit">
-                Aguardando partida
+                Aguardando definição de chaves
             </div>
         </div>
     </template>
 
+    <!-- Toast flutuante de alertas -->
     <div id="toast" class="fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"></div>
 
+<!-- Final do body de apostas-finais.html -->
     <script src="regras.js"></script>
-    <script src="apostas.js"></script>
+    <script src="apostas.js"></script> <!-- Mantém o seu motor atual -->
+    <script src="apostas-finais.js"></script> <!-- Lógica nova isolada -->
 </body>
 </html>
