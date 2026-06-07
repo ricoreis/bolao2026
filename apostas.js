@@ -6,7 +6,7 @@ const saudacaoUser = document.getElementById('saudacao-user');
 const btnLogout = document.getElementById('btn-logout');
 const toast = document.getElementById('toast');
 
-// Mapeamento amigável para os títulos das divisões do Mata-Mata
+// Mapeamento para os títulos das divisões do Mata-Mata
 const mapeamentoFases = {
     'R16': '16-Avos de Final',
     'OITAVAS': 'Oitavas de Final',
@@ -35,11 +35,11 @@ async function carregarJogosEApostas() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return;
 
-    // Detecta dinamicamente qual tela o usuário está acessando
+    // Detecta se o usuário está na página de grupos ou de finais
     const ehPaginaFinais = window.location.pathname.includes('apostas-finais.html');
     const tipoFaseFiltro = ehPaginaFinais ? 'mata_mata' : 'grupos';
 
-    // Monta a query filtrando pelo tipo de fase correspondente à página
+    // Busca os jogos com relacionamentos
     let query = supabaseClient
         .from('jogos')
         .select(`
@@ -49,7 +49,6 @@ async function carregarJogosEApostas() {
         `)
         .eq('tipo_fase', tipoFaseFiltro);
 
-    // Se forem as finais, ordena por ID sequencial para respeitar o chaveamento da árvore
     if (ehPaginaFinais) {
         query = query.order('id', { ascending: true });
     } else {
@@ -79,7 +78,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
     let faseAtualRegistrada = "";
 
     jogos.forEach(jogo => {
-        // Se for a página de finais, injeta os Headers Separadores de Fase dinamicamente antes do card
         if (ehPaginaFinais && jogo.fase !== faseAtualRegistrada) {
             faseAtualRegistrada = jogo.fase;
             const tituloFase = mapeamentoFases[jogo.fase] || jogo.fase;
@@ -93,17 +91,23 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         const aposta = mapaApostas ? mapaApostas[jogo.id] : null;
         const card = template.content.cloneNode(true);
 
-        // Tratamento da Data Local
         const dataLocal = new Date(jogo.data_jogo);
         card.querySelector('.data-jogo').innerText = dataLocal.toLocaleString('pt-BR', {
             weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
         }).replace(':', 'h').replace(' ', ' – ').toUpperCase();
 
-        // Injeta a referência numérica FIFA (se o elemento existir na tela)
         const badgeFifa = card.querySelector('.jogo-fifa-badge');
         if (badgeFifa) badgeFifa.innerText = `JOGO ${jogo.jogo_fifa}`;
 
-        // Lógica de Prioridade: Se houver time real no banco, exibe o time. Caso contrário, exibe placeholder.
+        // TRAVA 1: BLOQUEIO POR HORÁRIO (1 HORA ANTES)
+        const agora = new Date();
+        const diferencaMinutos = (dataLocal - agora) / (1000 * 60);
+        const tempoEsgotado = diferencaMinutos < 60;
+
+        // TRAVA 2: CHAVEAMENTO DO MATA-MATA
+        const timesDefinidos = !ehPaginaFinais || (jogo.time_a_id && jogo.time_b_id);
+        const jogoLiberado = timesDefinidos && !tempoEsgotado;
+
         const campoTimeA = card.querySelector('.time-a');
         const campoTimeB = card.querySelector('.time-b');
         const campoSiglaA = card.querySelector('.sigla-a');
@@ -115,7 +119,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             if (campoSiglaA) campoSiglaA.innerText = jogo.time_a?.sigla || '';
             if (campoSiglaB) campoSiglaB.innerText = jogo.time_b?.sigla || '';
         } else {
-            // Aplica os placeholders de chave (Ex: 1º Grupo A) salvos no seu banco de dados
             campoTimeA.innerText = jogo.time_a_placeholder || 'A definir';
             campoTimeB.innerText = jogo.time_b_placeholder || 'A definir';
             campoTimeA.classList.add('text-gray-500');
@@ -124,7 +127,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             if (campoSiglaB) campoSiglaB.innerText = '';
         }
 
-        // Exibir pontuação calculada se o jogo tiver resultado final lançado
         if (jogo.gols_a !== null && jogo.gols_b !== null && aposta) {
             const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b);
             const statusBadge = card.querySelector('.status-badge');
@@ -136,23 +138,43 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
         const inputA = card.querySelector('.input-a');
         const inputB = card.querySelector('.input-b');
+        const btnSalvar = card.querySelector('.btn-salvar');
+
         inputA.id = `golsA_${jogo.id}`;
         inputB.id = `golsB_${jogo.id}`;
         inputA.value = aposta?.gols_a ?? '';
         inputB.value = aposta?.gols_b ?? '';
 
-        // LÓGICA DE PÊNALTIS (Exclusivo para o Mata-Mata)
-        if (ehPaginaFinais) {
+        if (!jogoLiberado) {
+            inputA.disabled = true;
+            inputB.disabled = true;
+            btnSalvar.disabled = true;
+
+            inputA.className = "input-a w-12 h-10 bg-gray-800/50 border border-gray-700 text-center rounded-lg font-bold text-lg text-gray-600 cursor-not-allowed";
+            inputB.className = "input-b w-12 h-10 bg-gray-800/50 border border-gray-700 text-center rounded-lg font-bold text-lg text-gray-600 cursor-not-allowed";
+            btnSalvar.className = "btn-salvar ml-2 bg-gray-700 text-gray-500 font-bold px-4 py-2 rounded-lg cursor-not-allowed text-sm opacity-50";
+            
+            const statusBadge = card.querySelector('.status-badge');
+            if (statusBadge && (jogo.gols_a === null || jogo.gols_b === null)) {
+                if (tempoEsgotado) {
+                    statusBadge.innerText = "🚨 Apostas encerradas (Limite de 1h antes do jogo expirado)";
+                    statusBadge.className = "status-badge bg-red-950 text-red-400 text-[10px] px-2 py-1 rounded w-fit font-medium border border-red-900/50";
+                } else {
+                    statusBadge.innerText = "Apostas bloqueadas – Aguardando definição dos times";
+                    statusBadge.className = "status-badge bg-gray-900 text-amber-500/70 text-[10px] px-2 py-1 rounded w-fit font-medium";
+                }
+            }
+        }
+
+        if (ehPaginaFinais && jogoLiberado) {
             const containerPenaltis = card.querySelector('.container-penaltis');
             const btnClassificaA = card.querySelector('.btn-classifica-a');
             const btnClassificaB = card.querySelector('.btn-classifica-b');
 
             if (containerPenaltis && btnClassificaA && btnClassificaB) {
-                // Nomeia os botões com as siglas ou placeholders correspondentes
                 btnClassificaA.innerText = jogo.time_a_id ? (jogo.time_a?.sigla || "TIME A") : (jogo.time_a_placeholder || "A");
                 btnClassificaB.innerText = jogo.time_b_id ? (jogo.time_b?.sigla || "TIME B") : (jogo.time_b_placeholder || "B");
 
-                // Restaura o estado visual se o usuário já tiver escolhido um vencedor nos pênaltis antes
                 if (aposta?.penaltis_vencedor === 'A') {
                     btnClassificaA.className = "btn-classifica-a text-xs px-2.5 py-1 rounded bg-amber-500 text-gray-950 font-bold";
                     btnClassificaA.dataset.selecionado = "true";
@@ -161,7 +183,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                     btnClassificaB.dataset.selecionado = "true";
                 }
 
-                // Exibe o painel de pênaltis caso os inputs de placar estejam empatados
                 const checarEmpate = () => {
                     if (inputA.value !== "" && inputB.value !== "" && inputA.value === inputB.value) {
                         containerPenaltis.classList.remove('hidden');
@@ -176,9 +197,8 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
                 inputA.addEventListener('input', checarEmpate);
                 inputB.addEventListener('input', checarEmpate);
-                checarEmpate(); // Execução inicial preventiva
+                checarEmpate();
 
-                // Listeners de clique para os botões de pênalti
                 btnClassificaA.onclick = () => {
                     btnClassificaA.className = "btn-classifica-a text-xs px-2.5 py-1 rounded bg-amber-500 text-gray-950 font-bold";
                     btnClassificaB.className = "btn-classifica-b text-xs px-2.5 py-1 rounded bg-gray-800 border border-gray-700 text-gray-300 font-medium";
@@ -195,55 +215,83 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             }
         }
 
-        // Passa uma arrow function ou referência para o clique do botão salvar
-        card.querySelector('.btn-salvar').onclick = (e) => {
-            const cardElement = e.target.closest('.card-jogo');
-            salvarAposta(jogo.id, cardElement, ehPaginaFinais);
-        };
+        if (jogoLiberado) {
+            card.querySelector('.btn-salvar').onclick = (e) => {
+                const cardElement = e.target.closest('.card-jogo');
+                salvarAposta(jogo.id, cardElement, ehPaginaFinais);
+            };
+        }
 
         container.appendChild(card);
     });
 }
 
 async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
-    const golsA = document.getElementById(`golsA_${jogoId}`).value;
-    const golsB = document.getElementById(`golsB_${jogoId}`).value;
-    const { data: { user } } = await supabaseClient.auth.getUser();
+    try {
+        // RE-CHECAGEM DE SEGURANÇA EM TEMPO REAL
+        const { data: jogo, error: errCheck } = await supabaseClient
+            .from('jogos')
+            .select('data_jogo')
+            .eq('id', jogoId)
+            .single();
 
-    // Objeto padrão de payload para upsert
-    const dadosAposta = { 
-        usuario_id: user.id, 
-        jogo_id: jogoId, 
-        gols_a: parseInt(golsA || 0), 
-        gols_b: parseInt(golsB || 0) 
-    };
+        if (!errCheck && jogo) {
+            const agora = new Date();
+            const dataPartida = new Date(jogo.data_jogo);
+            const diferencaMinutos = (dataPartida - agora) / (1000 * 60);
 
-    // Se estivermos nas finais e houver empate no placar, valida e anexa quem passou nos pênaltis
-    if (ehPaginaFinais && golsA !== "" && golsB !== "" && golsA === golsB) {
-        const btnA = cardElement.querySelector('.btn-classifica-a');
-        const btnB = cardElement.querySelector('.btn-classifica-b');
-        
-        if (btnA?.dataset.selecionado === "true") {
-            dadosAposta.penaltis_vencedor = 'A';
-        } else if (btnB?.dataset.selecionado === "true") {
-            dadosAposta.penaltis_vencedor = 'B';
-        } else {
-            showToast("Por favor, selecione quem se classifica nos pênaltis!", true);
-            return;
+            if (diferencaMinutos < 60) {
+                showToast("🚨 Prazo encerrado! As apostas fecham 1 hora antes do jogo.", true);
+                setTimeout(() => { window.location.reload(); }, 2000);
+                return; 
+            }
         }
-    } else {
-        dadosAposta.penaltis_vencedor = null; // Reseta se não for empate ou não for finais
-    }
 
-    const { error } = await supabaseClient
-        .from('apostas')
-        .upsert(dadosAposta, { onConflict: 'usuario_id, jogo_id' });
-    
-    if (error) {
-        console.error(error);
-        showToast("Erro ao salvar", true);
-    } else {
-        showToast("Aposta salva com sucesso!");
+        const golsA = document.getElementById(`golsA_${jogoId}`).value;
+        const golsB = document.getElementById(`golsB_${jogoId}`).value;
+        const { data: { user } } = await supabaseClient.auth.getUser();
+
+        // Objeto base limpo (Salva em qualquer fase do campeonato!)
+        const dadosAposta = { 
+            usuario_id: user.id, 
+            jogo_id: jogoId, 
+            gols_a: parseInt(golsA || 0), 
+            gols_b: parseInt(golsB || 0) 
+        };
+
+        // CORREÇÃO CIRÚRGICA: Só insere a propriedade de pênaltis se for a página das finais
+        if (ehPaginaFinais) {
+            if (golsA !== "" && golsB !== "" && golsA === golsB) {
+                const btnA = cardElement.querySelector('.btn-classifica-a');
+                const btnB = cardElement.querySelector('.btn-classifica-b');
+                
+                if (btnA?.dataset.selecionado === "true") {
+                    dadosAposta.penaltis_vencedor = 'A';
+                } else if (btnB?.dataset.selecionado === "true") {
+                    dadosAposta.penaltis_vencedor = 'B';
+                } else {
+                    showToast("Selecione quem se classifica nos pênaltis!", true);
+                    return;
+                }
+            } else {
+                dadosAposta.penaltis_vencedor = null;
+            }
+        }
+
+        const { error } = await supabaseClient
+            .from('apostas')
+            .upsert(dadosAposta, { onConflict: 'usuario_id, jogo_id' });
+        
+        if (error) {
+            console.error(error);
+            showToast("Erro ao salvar", true);
+        } else {
+            showToast("Aposta salva com sucesso!");
+        }
+
+    } catch (e) {
+        console.error(e);
+        showToast("Erro crítico ao validar o horário da aposta.", true);
     }
 }
 
