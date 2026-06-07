@@ -6,14 +6,14 @@ const saudacaoUser = document.getElementById('saudacao-user');
 const btnLogout = document.getElementById('btn-logout');
 const toast = document.getElementById('toast');
 
-// Mapeamento para os títulos das divisões do Mata-Mata
+// Mapeamento rigorosamente idêntico aos termos da nova imagem do banco
 const mapeamentoFases = {
-    'R16': '16-Avos de Final',
-    'OITAVAS': 'Oitavas de Final',
-    'QUARTAS': 'Quartas de Final',
-    'SEMI': 'Semifinais',
-    'TERCEIRO': 'Disputa de 3º Lugar',
-    'FINAL': 'Grande Final'
+    'Fase de Grupos': 'Fase de Grupos',
+    'Décima-Sextas de Final': 'Décima-Sextas de Final',
+    'Oitavas de Final': 'Oitavas de Final',
+    'Quartas de Final': 'Quartas de Final',
+    'Semifinais': 'Semifinais',
+    'Final': 'Final'
 };
 
 function showToast(mensagem, isError = false) {
@@ -35,11 +35,9 @@ async function carregarJogosEApostas() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return;
 
-    // Detecta se o usuário está na página de grupos ou de finais
     const ehPaginaFinais = window.location.pathname.includes('apostas-finais.html');
     const tipoFaseFiltro = ehPaginaFinais ? 'mata_mata' : 'grupos';
 
-    // Busca os jogos com relacionamentos
     let query = supabaseClient
         .from('jogos')
         .select(`
@@ -99,12 +97,13 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         const badgeFifa = card.querySelector('.jogo-fifa-badge');
         if (badgeFifa) badgeFifa.innerText = `JOGO ${jogo.jogo_fifa}`;
 
-        // TRAVA 1: BLOQUEIO POR HORÁRIO (1 HORA ANTES)
+        // =================================================================
+        // TRAVAS DE SEGURANÇA ATIVADAS (PRODUÇÃO)
+        // =================================================================
         const agora = new Date();
         const diferencaMinutos = (dataLocal - agora) / (1000 * 60);
         const tempoEsgotado = diferencaMinutos < 60;
 
-        // TRAVA 2: CHAVEAMENTO DO MATA-MATA
         const timesDefinidos = !ehPaginaFinais || (jogo.time_a_id && jogo.time_b_id);
         const jogoLiberado = timesDefinidos && !tempoEsgotado;
 
@@ -131,7 +130,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b);
             const statusBadge = card.querySelector('.status-badge');
             if (statusBadge) {
-                statusBadge.innerText = `Pontos: ${pontos}`;
+                statusBadge.innerText = `Pontos: --`; 
                 statusBadge.className = "status-badge bg-emerald-900 text-emerald-400 text-[10px] px-2 py-1 rounded w-fit font-bold";
             }
         }
@@ -166,57 +165,55 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             }
         }
 
+        // COMPONENTE DE PÊNALTIS DE PRODUÇÃO
         if (ehPaginaFinais && jogoLiberado) {
             const containerPenaltis = card.querySelector('.container-penaltis');
-            const btnClassificaA = card.querySelector('.btn-classifica-a');
-            const btnClassificaB = card.querySelector('.btn-classifica-b');
+            
+            if (containerPenaltis) {
+                const labelTextoA = jogo.time_a_id ? (jogo.time_a?.sigla || "TIME A") : (jogo.time_a_placeholder || "A");
+                const labelTextoB = jogo.time_b_id ? (jogo.time_b?.sigla || "TIME B") : (jogo.time_b_placeholder || "B");
 
-            if (containerPenaltis && btnClassificaA && btnClassificaB) {
-                btnClassificaA.innerText = jogo.time_a_id ? (jogo.time_a?.sigla || "TIME A") : (jogo.time_a_placeholder || "A");
-                btnClassificaB.innerText = jogo.time_b_id ? (jogo.time_b?.sigla || "TIME B") : (jogo.time_b_placeholder || "B");
+                containerPenaltis.innerHTML = `
+                    <span class="text-[11px] text-amber-400 font-medium flex items-center gap-1">
+                        <iconify-icon icon="lucide:info"></iconify-icon> Empate! Quem avança?
+                    </span>
+                    <div class="flex gap-4 bg-gray-950/40 p-1.5 rounded-lg border border-gray-700/50">
+                        <label class="flex items-center gap-2 text-xs font-semibold text-gray-300 cursor-pointer hover:text-white px-2 py-1 rounded">
+                            <input type="radio" name="penaltis_${jogo.id}" value="${jogo.time_a_id}" class="radio-penalti-a accent-emerald-500 w-4 h-4">
+                            <span>${labelTextoA}</span>
+                        </label>
+                        <label class="flex items-center gap-2 text-xs font-semibold text-gray-300 cursor-pointer hover:text-white px-2 py-1 rounded">
+                            <input type="radio" name="penaltis_${jogo.id}" value="${jogo.time_b_id}" class="radio-penalti-b accent-emerald-500 w-4 h-4">
+                            <span>${labelTextoB}</span>
+                        </label>
+                    </div>
+                `;
 
-                if (aposta?.penaltis_vencedor === 'A') {
-                    btnClassificaA.className = "btn-classifica-a text-xs px-2.5 py-1 rounded bg-amber-500 text-gray-950 font-bold";
-                    btnClassificaA.dataset.selecionado = "true";
-                } else if (aposta?.penaltis_vencedor === 'B') {
-                    btnClassificaB.className = "btn-classifica-b text-xs px-2.5 py-1 rounded bg-amber-500 text-gray-950 font-bold";
-                    btnClassificaB.dataset.selecionado = "true";
-                }
+                const radioA = containerPenaltis.querySelector('.radio-penalti-a');
+                const radioB = containerPenaltis.querySelector('.radio-penalti-b');
+
+                if (aposta?.penaltis_vencedor_id && jogo.time_a_id && aposta.penaltis_vencedor_id === jogo.time_a_id) radioA.checked = true;
+                if (aposta?.penaltis_vencedor_id && jogo.time_b_id && aposta.penaltis_vencedor_id === jogo.time_b_id) radioB.checked = true;
 
                 const checarEmpate = () => {
                     if (inputA.value !== "" && inputB.value !== "" && inputA.value === inputB.value) {
-                        containerPenaltis.classList.remove('hidden');
+                        containerPenaltis.style.display = "flex";
+                        containerPenaltis.className = "container-penaltis bg-gray-900/60 border border-amber-500/20 rounded-lg p-2.5 flex items-center justify-between mt-2";
                     } else {
-                        containerPenaltis.classList.add('hidden');
-                        btnClassificaA.className = "btn-classifica-a text-xs px-2.5 py-1 rounded bg-gray-800 border border-gray-700 text-gray-300 font-medium";
-                        btnClassificaB.className = "btn-classifica-b text-xs px-2.5 py-1 rounded bg-gray-800 border border-gray-700 text-gray-300 font-medium";
-                        btnClassificaA.removeAttribute('data-selecionado');
-                        btnClassificaB.removeAttribute('data-selecionado');
+                        containerPenaltis.style.display = "none";
+                        radioA.checked = false;
+                        radioB.checked = false;
                     }
                 };
 
                 inputA.addEventListener('input', checarEmpate);
                 inputB.addEventListener('input', checarEmpate);
                 checarEmpate();
-
-                btnClassificaA.onclick = () => {
-                    btnClassificaA.className = "btn-classifica-a text-xs px-2.5 py-1 rounded bg-amber-500 text-gray-950 font-bold";
-                    btnClassificaB.className = "btn-classifica-b text-xs px-2.5 py-1 rounded bg-gray-800 border border-gray-700 text-gray-300 font-medium";
-                    btnClassificaA.dataset.selecionado = "true";
-                    btnClassificaB.removeAttribute('data-selecionado');
-                };
-
-                btnClassificaB.onclick = () => {
-                    btnClassificaB.className = "btn-classifica-b text-xs px-2.5 py-1 rounded bg-amber-500 text-gray-950 font-bold";
-                    btnClassificaA.className = "btn-classifica-a text-xs px-2.5 py-1 rounded bg-gray-800 border border-gray-700 text-gray-300 font-medium";
-                    btnClassificaB.dataset.selecionado = "true";
-                    btnClassificaA.removeAttribute('data-selecionado');
-                };
             }
         }
 
         if (jogoLiberado) {
-            card.querySelector('.btn-salvar').onclick = (e) => {
+            btnSalvar.onclick = (e) => {
                 const cardElement = e.target.closest('.card-jogo');
                 salvarAposta(jogo.id, cardElement, ehPaginaFinais);
             };
@@ -228,7 +225,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
 async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
     try {
-        // RE-CHECAGEM DE SEGURANÇA EM TEMPO REAL
         const { data: jogo, error: errCheck } = await supabaseClient
             .from('jogos')
             .select('data_jogo')
@@ -251,7 +247,6 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
         const golsB = document.getElementById(`golsB_${jogoId}`).value;
         const { data: { user } } = await supabaseClient.auth.getUser();
 
-        // Objeto base limpo (Salva em qualquer fase do campeonato!)
         const dadosAposta = { 
             usuario_id: user.id, 
             jogo_id: jogoId, 
@@ -259,22 +254,18 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
             gols_b: parseInt(golsB || 0) 
         };
 
-        // CORREÇÃO CIRÚRGICA: Só insere a propriedade de pênaltis se for a página das finais
         if (ehPaginaFinais) {
             if (golsA !== "" && golsB !== "" && golsA === golsB) {
-                const btnA = cardElement.querySelector('.btn-classifica-a');
-                const btnB = cardElement.querySelector('.btn-classifica-b');
+                const radioSelecionado = cardElement.querySelector(`input[name="penaltis_${jogoId}"]:checked`);
                 
-                if (btnA?.dataset.selecionado === "true") {
-                    dadosAposta.penaltis_vencedor = 'A';
-                } else if (btnB?.dataset.selecionado === "true") {
-                    dadosAposta.penaltis_vencedor = 'B';
+                if (radioSelecionado) {
+                    dadosAposta.penaltis_vencedor_id = parseInt(radioSelecionado.value);
                 } else {
-                    showToast("Selecione quem se classifica nos pênaltis!", true);
+                    showToast("Por favor, selecione quem vence nos pênaltis!", true);
                     return;
                 }
             } else {
-                dadosAposta.penaltis_vencedor = null;
+                dadosAposta.penaltis_vencedor_id = null;
             }
         }
 
@@ -284,14 +275,14 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
         
         if (error) {
             console.error(error);
-            showToast("Erro ao salvar", true);
+            showToast("Erro ao salvar aposta.", true);
         } else {
             showToast("Aposta salva com sucesso!");
         }
 
     } catch (e) {
         console.error(e);
-        showToast("Erro crítico ao validar o horário da aposta.", true);
+        showToast("Erro crítico ao validar o horário.", true);
     }
 }
 
