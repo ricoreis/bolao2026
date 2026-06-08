@@ -23,7 +23,7 @@ function showToast(mensagem, isError = false) {
 }
 
 async function verificarSessao() {
-    await carregarRegras(); // Regras carregadas antes de qualquer renderização
+    await carregarRegras(); 
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) { window.location.href = "index.html"; return; }
     
@@ -88,16 +88,13 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         const card = template.content.cloneNode(true);
         const cardElement = card.querySelector('.card-jogo');
 
-        // Configuração de dados
         const dataLocal = new Date(jogo.data_jogo);
         card.querySelector('.data-jogo').innerText = dataLocal.toLocaleString('pt-BR', {
             weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
         }).replace(':', 'h').replace(' ', ' – ').toUpperCase();
 
-        const campoTimeA = card.querySelector('.time-a');
-        const campoTimeB = card.querySelector('.time-b');
-        campoTimeA.innerText = jogo.time_a?.nome || jogo.time_a_placeholder || 'A definir';
-        campoTimeB.innerText = jogo.time_b?.nome || jogo.time_b_placeholder || 'A definir';
+        card.querySelector('.time-a').innerText = jogo.time_a?.nome || jogo.time_a_placeholder || 'A definir';
+        card.querySelector('.time-b').innerText = jogo.time_b?.nome || jogo.time_b_placeholder || 'A definir';
 
         const inputA = card.querySelector('.input-a');
         const inputB = card.querySelector('.input-b');
@@ -108,15 +105,19 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         inputA.value = aposta?.gols_a ?? '';
         inputB.value = aposta?.gols_b ?? '';
 
-        // Cálculo dinâmico usando as regras carregadas do banco
+        // Cálculo dinâmico com Multiplicador
         if (jogo.gols_a !== null && jogo.gols_b !== null && aposta) {
-            // Chamada atualizada passando a variável global 'configRegras'
-            const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras);
+            // Se fase_id > 1 (Mata-mata), multiplicador é 2, senão é 1
+            const multiplicador = (jogo.fase_id > 1) ? 2 : 1;
+            
+            // Chama a função global calcularPontos (definida em regras.js)
+            const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, multiplicador);
+            
             const divInfo = document.createElement('div');
             divInfo.className = "mt-3 p-2 bg-gray-950/50 rounded text-center text-xs";
             divInfo.innerHTML = `
                 <div class="text-gray-400">Placar Oficial: ${jogo.gols_a} x ${jogo.gols_b}</div>
-                <div class="font-bold text-emerald-400 mt-1">Pontos: ${pontos}</div>
+                <div class="font-bold text-emerald-400 mt-1">Pontos: ${pontos} ${multiplicador > 1 ? '(Dobrado!)' : ''}</div>
             `;
             cardElement.appendChild(divInfo);
         }
