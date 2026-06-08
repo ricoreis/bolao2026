@@ -70,14 +70,21 @@
                 </div>
             </div>
 
-            <!-- COMPONENTE DE DESEMPATE (PÊNALTIS): Oculto por padrão via utility flex/hidden -->
-            <div class="container-penaltis bg-gray-900/60 border border-amber-500/20 rounded-lg p-2 flex items-center justify-between hidden">
-                <span class="text-[11px] text-amber-400 font-medium flex items-center gap-1">
-                    <iconify-icon icon="lucide:info"></iconify-icon> Jogo empatado! Quem se classifica?
+            <div class="container-penaltis bg-gray-900/60 border border-amber-500/20 rounded-lg p-3 hidden">
+                <span class="text-[11px] text-amber-400 font-medium block mb-2">
+                    <iconify-icon icon="lucide:info"></iconify-icon> Empate! Quem vence nos pênaltis?
                 </span>
-                <div class="flex gap-2">
-                    <button class="btn-classifica-a text-xs px-2.5 py-1 rounded bg-gray-800 border border-gray-700 text-gray-300 hover:text-white transition font-medium"></button>
-                    <button class="btn-classifica-b text-xs px-2.5 py-1 rounded bg-gray-800 border border-gray-700 text-gray-300 hover:text-white transition font-medium"></button>
+                <div class="flex gap-4">
+                    <!-- Envolvido em label -->
+                    <label class="flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="radio" value="time_a_id" class="radio-penaltis-a">
+                        <span class="nome-time-a">Time A</span>
+                    </label>
+                    
+                    <label class="flex items-center gap-2 cursor-pointer text-sm">
+                        <input type="radio" value="time_b_id" class="radio-penaltis-b">
+                        <span class="nome-time-b">Time B</span>
+                    </label>
                 </div>
             </div>
 

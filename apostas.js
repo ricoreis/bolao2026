@@ -132,6 +132,45 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             btnSalvar.onclick = (e) => salvarAposta(jogo.id, cardElement, ehPaginaFinais);
         }
 
+        // --- Lógica de Pênaltis (Injeção Cirúrgica) ---
+        const containerPenaltis = card.querySelector('.container-penaltis');
+        if (containerPenaltis && ehPaginaFinais && jogo.fase_id > 1) {
+            // 1. Configura os nomes dos radios para serem únicos por jogo
+            const radioA = card.querySelector('.radio-penaltis-a'); // Ajuste o nome da classe se necessário
+            const radioB = card.querySelector('.radio-penaltis-b');
+            card.querySelector('.nome-time-a').innerText = jogo.time_a?.nome || 'Time A';
+            card.querySelector('.nome-time-b').innerText = jogo.time_b?.nome || 'Time B';
+
+            if (radioA && radioB) {
+                radioA.name = `penaltis_${jogo.id}`;
+                radioB.name = `penaltis_${jogo.id}`;
+                radioA.value = jogo.time_a_id;
+                radioB.value = jogo.time_b_id;
+
+                // 2. Visibilidade baseada no empate
+                const checkEmpate = () => {
+                    const vA = inputA.value;
+                    const vB = inputB.value;
+                    if (vA !== '' && vB !== '' && vA === vB) {
+                        containerPenaltis.classList.remove('hidden');
+                    } else {
+                        containerPenaltis.classList.add('hidden');
+                    }
+                };
+
+                // 3. Monitora os inputs já existentes
+                inputA.addEventListener('input', checkEmpate);
+                inputB.addEventListener('input', checkEmpate);
+                checkEmpate(); // Estado inicial
+
+                // 4. Carrega seleção prévia
+                if (aposta?.penaltis_vencedor_id) {
+                    const radioSel = card.querySelector(`input[value="${aposta.penaltis_vencedor_id}"]`);
+                    if (radioSel) radioSel.checked = true;
+                }
+            }
+        }
+
         container.appendChild(card);
     });
 }
@@ -139,24 +178,44 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
     try {
         const { data: { user } } = await supabaseClient.auth.getUser();
-        const golsA = document.getElementById(`golsA_${jogoId}`).value;
-        const golsB = document.getElementById(`golsB_${jogoId}`).value;
+        const inputA = cardElement.querySelector('.input-a');
+        const inputB = cardElement.querySelector('.input-b');
+        const golsA = parseInt(inputA.value || 0);
+        const golsB = parseInt(inputB.value || 0);
 
         const dadosAposta = { 
             usuario_id: user.id, 
             jogo_id: jogoId, 
-            gols_a: parseInt(golsA || 0), 
-            gols_b: parseInt(golsB || 0) 
+            gols_a: golsA, 
+            gols_b: golsB 
         };
 
         if (ehPaginaFinais) {
-            const radio = cardElement.querySelector(`input[name="penaltis_${jogoId}"]:checked`);
-            dadosAposta.penaltis_vencedor_id = radio ? parseInt(radio.value) : null;
+            // Verifica se o jogo é um empate
+            const ehEmpate = (inputA.value !== '' && inputB.value !== '' && golsA === golsB);
+            
+            if (ehEmpate) {
+                // Se é empate, tenta pegar a escolha do radio
+                const radio = cardElement.querySelector(`input[name="penaltis_${jogoId}"]:checked`);
+                dadosAposta.penaltis_vencedor_id = radio ? parseInt(radio.value) : null;
+            } else {
+                // SE NÃO É EMPATE, FORÇA O NULL
+                dadosAposta.penaltis_vencedor_id = null;
+            }
         }
 
         const { error } = await supabaseClient.from('apostas').upsert(dadosAposta, { onConflict: 'usuario_id, jogo_id' });
-        if (error) showToast("Erro ao salvar.", true); else showToast("Aposta salva!");
-    } catch (e) { showToast("Erro ao processar.", true); }
+        
+        if (error) {
+            console.error("Erro Supabase:", error);
+            showToast("Erro ao salvar.", true);
+        } else {
+            showToast("Aposta salva!");
+        }
+    } catch (e) { 
+        console.error(e);
+        showToast("Erro ao processar.", true); 
+    }
 }
 
 btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
