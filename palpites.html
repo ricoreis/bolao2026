@@ -26,6 +26,13 @@
     </nav>
 
     <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+        
+        <!-- Box de Bônus de Pontuação -->
+        <div id="box-bonus" class="bg-gray-800 p-4 rounded-xl border border-emerald-500/30 mb-6 space-y-2 hidden">
+            <h3 class="text-sm font-bold text-emerald-400 mb-3 border-b border-gray-700 pb-1">🏆 Minha Pontuação nos Extras</h3>
+            <div id="lista-bonus" class="text-xs text-gray-300 space-y-1"></div>
+        </div>
+
         <h2 class="text-lg font-semibold text-gray-300 border-b border-gray-700 pb-2">🎯 Palpites de Longo Prazo</h2>
         
         <div class="space-y-6">
@@ -36,10 +43,12 @@
                     <div>
                         <label class="text-xs text-gray-400">1º Gol do Brasil</label>
                         <select id="sel-gol" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                        <span id="pts-gol-brasil" class="block text-[10px] font-bold text-emerald-400 mt-1"></span>
                     </div>
                     <div>
                         <label class="text-xs text-gray-400">Fase que o Brasil para</label>
                         <select id="sel-fase" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                        <span id="pts-fase-brasil" class="block text-[10px] font-bold text-emerald-400 mt-1"></span>
                     </div>
                 </div>
             </div>
@@ -51,60 +60,72 @@
                     <div>
                         <label class="text-xs text-gray-400">Campeão</label>
                         <select id="sel-campeao" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                        <span id="pts-campeao" class="block text-[10px] font-bold text-amber-400 mt-1"></span>
                     </div>
                     <div>
                         <label class="text-xs text-gray-400">Vice-Campeão</label>
                         <select id="sel-vice" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                        <span id="pts-vice" class="block text-[10px] font-bold text-amber-400 mt-1"></span>
                     </div>
                     <div>
                         <label class="text-xs text-gray-400">3º Lugar</label>
                         <select id="sel-terceiro" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                        <span id="pts-terceiro" class="block text-[10px] font-bold text-amber-400 mt-1"></span>
                     </div>
                     <div>
                         <label class="text-xs text-gray-400">4º Lugar</label>
                         <select id="sel-quarto" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                        <span id="pts-quarto" class="block text-[10px] font-bold text-amber-400 mt-1"></span>
                     </div>
                 </div>
             </div>
 
-            <!-- Extras (CR7/Messi + Total de Gols) -->
+            <!-- Extras -->
             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
                 <h3 class="text-blue-400 font-bold mb-4">📊 Outros Palpites</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs text-gray-400">Pior time do torneio</label>
                         <select id="sel-pior" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                        <span id="pts-pior" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
                     </div>
                     <div>
                         <label class="text-xs text-gray-400">País do Artilheiro</label>
                         <select id="sel-artilheiro-pais" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                        <span id="pts-artilheiro" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-400">Quem faz mais gols (CR7 vs Messi)?</label>
-                        <select id="sel-cr7-messi" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1">
-                            <option value="">Selecione...</option>
+                        <label class="text-xs text-gray-400">Duelo de Gigantes (CR7 vs Messi)</label>
+                        <select id="sel-cr7-messi" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
                             <option value="CR7">Cristiano Ronaldo</option>
                             <option value="MESSI">Lionel Messi</option>
                         </select>
+                        <!-- O span precisa estar aqui! -->
+                        <span id="pts-cr7-messi" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
                     </div>
                     <div>
                         <label class="text-xs text-gray-400">Total de gols na Copa</label>
-                        <input type="number" id="inp-total-gols" min="0" max="400" placeholder="Ex: 270" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
+                        <input type="number" id="inp-total-gols" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
+                        <span id="pts-total-gols" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
                     </div>
                 </div>
             </div>
             
-            <!-- Estatísticas -->
+            <!-- Detalhes Brasil -->
             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
                 <h3 class="text-purple-400 font-bold mb-4">📊 Detalhes do Brasil</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="text-xs text-gray-400">Gols que o Brasil faz</label>
                         <input type="number" id="inp-gols-pro" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
+                        <!-- Adicione esta linha -->
+                        <span id="pts-gols-pro" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
                     </div>
                     <div>
                         <label class="text-xs text-gray-400">Gols que o Brasil leva</label>
                         <input type="number" id="inp-gols-contra" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
+                        <!-- Adicione esta linha -->
+                        <span id="pts-gols-contra" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
                     </div>
                 </div>
             </div>

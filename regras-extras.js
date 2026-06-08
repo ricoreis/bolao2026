@@ -1,32 +1,31 @@
-/**
- * regras-extras.js
- * Lógica de cálculo para palpites de longo prazo (Extras).
- */
-
 export const RegrasExtras = {
-    
-    // Calcula pontos do Duelo de Gigantes (CR7/Messi)
-    // palpite: 'CR7' ou 'MESSI' | gabarito: 'CR7' ou 'MESSI'
+    // Acerto exato (IDs ou Valores numéricos)
+    calcularSimples: (palpite, gabarito, pontosBase) => {
+        return (parseInt(palpite) === parseInt(gabarito)) ? pontosBase : 0;
+    },
+
+    // Duelo Gigantes (String)
     calcularDueloGigantes: (palpite, gabarito, pontosBase) => {
+        // Aqui comparamos a string diretamente, sem parseInt
         return (palpite === gabarito) ? pontosBase : 0;
     },
 
-    // Calcula pontos do Total de Gols (ALLGOLS) com margem de erro
-    // palpite: int | gabarito: int
+    // Total de Gols (Regra de aproximação)
     calcularTotalGols: (palpite, gabarito, pontosBase) => {
-        const diferenca = Math.abs(palpite - gabarito);
-
-        if (diferenca === 0) return pontosBase;           // Acerto exato
-        if (diferenca <= 5)  return Math.floor(pontosBase * 0.7); // Margem 5
-        if (diferenca <= 10) return Math.floor(pontosBase * 0.4); // Margem 10
-        if (diferenca <= 20) return Math.floor(pontosBase * 0.2); // Margem 20
-        
-        return 0; // Muito longe
+        const p = parseInt(palpite);
+        const g = parseInt(gabarito);
+        if (isNaN(p) || isNaN(g)) return 0;
+        const diferenca = Math.abs(p - g);
+        if (diferenca === 0) return pontosBase;
+        if (diferenca <= 5) return Math.floor(pontosBase * 0.7);
+        if (diferenca <= 10) return Math.floor(pontosBase * 0.4);
+        if (diferenca <= 20) return Math.floor(pontosBase * 0.2);
+        return 0;
     },
 
-    // Função genérica para buscar pontuação de qualquer categoria
-    obterPontos: (nomeReduzido, configRegras) => {
-        const regra = configRegras.find(r => r.nome_reduzido === nomeReduzido);
+    // Busca o valor de pontos configurado no banco
+    obterPontos: (codigo, configRegras) => {
+        const regra = configRegras.find(r => r.nome_reduzido === codigo);
         return regra ? regra.pontos : 0;
     }
 };

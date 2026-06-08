@@ -1,5 +1,5 @@
 /**
- * palpites.js - Motor de Palpites de Longo Prazo
+ * palpites.js - Motor Completo e Corrigido
  */
 import { RegrasExtras } from './regras-extras.js';
 
@@ -23,27 +23,23 @@ async function carregarDadosIniciais() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) { window.location.href = "index.html"; return; }
 
-    // Carrega Regras do Banco
-    const { data: regras } = await supabaseClient.from('pontuacao').select('*');
-    configRegras = regras || [];
-
-    const { data: userData } = await supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single();
-    if (userData) saudacaoUser.innerText = `Olá, ${userData.nome}! Preencha seus palpites.`;
-
-    // Carrega dados para selects
-    const [jogadores, fases, paises] = await Promise.all([
+    const [regras, jogadores, fases, paises, userData] = await Promise.all([
+        supabaseClient.from('pontuacao').select('*'),
         supabaseClient.from('jogadores').select('id, nome, clube').order('nome'),
         supabaseClient.from('fases').select('id, nome'),
-        supabaseClient.from('paises').select('id, nome').order('nome')
+        supabaseClient.from('paises').select('id, nome').order('nome'),
+        supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single()
     ]);
+
+    configRegras = regras.data || [];
+    if (userData.data) saudacaoUser.innerText = `Olá, ${userData.data.nome}! Preencha seus palpites.`;
 
     popularSelect('sel-gol', jogadores.data, (j) => `${j.nome} (${j.clube})`);
     popularSelect('sel-fase', fases.data, (f) => f.nome);
-    
     const paisesSelects = ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'];
     paisesSelects.forEach(id => popularSelect(id, paises.data, (p) => p.nome));
     
-    carregarPalpitesExistentes();
+    carregarPalpitesEComparar();
 }
 
 function popularSelect(id, dados, formatter) {
@@ -58,37 +54,66 @@ function popularSelect(id, dados, formatter) {
     });
 }
 
-async function carregarPalpitesExistentes() {
+async function carregarPalpitesEComparar() {
     const { data: { user } } = await supabaseClient.auth.getUser();
-    const { data: palpite } = await supabaseClient.from('palpites').select('*').eq('usuario_id', user.id).single();
     
-    if (palpite) {
-        document.getElementById('sel-gol').value = palpite.primeiro_gol_brasil_id || '';
-        document.getElementById('sel-fase').value = palpite.fase_brasil_id || '';
-        document.getElementById('sel-campeao').value = palpite.campeao_id || '';
-        document.getElementById('sel-vice').value = palpite.vice_id || '';
-        document.getElementById('sel-terceiro').value = palpite.terceiro_id || '';
-        document.getElementById('sel-quarto').value = palpite.quarto_id || '';
-        document.getElementById('sel-pior').value = palpite.pior_time_id || '';
-        document.getElementById('sel-artilheiro-pais').value = palpite.artilheiro_pais_id || '';
-        document.getElementById('inp-gols-pro').value = palpite.gols_feitos_brasil || 0;
-        document.getElementById('inp-gols-contra').value = palpite.gols_sofridos_brasil || 0;
-        
-        // Novos campos
-        document.getElementById('sel-cr7-messi').value = palpite.duelo_gigantes || '';
-        document.getElementById('inp-total-gols').value = palpite.total_gols || 0;
+    const [p, g] = await Promise.all([
+        supabaseClient.from('palpites').select('*').eq('usuario_id', user.id).single(),
+        supabaseClient.from('resultados').select('*').eq('id', 1).single()
+    ]);
+    
+    if (p.data) {
+        document.getElementById('sel-gol').value = p.data.primeiro_gol_brasil_id || '';
+        document.getElementById('sel-fase').value = p.data.fase_brasil_id || '';
+        document.getElementById('sel-campeao').value = p.data.campeao_id || '';
+        document.getElementById('sel-vice').value = p.data.vice_id || '';
+        document.getElementById('sel-terceiro').value = p.data.terceiro_id || '';
+        document.getElementById('sel-quarto').value = p.data.quarto_id || '';
+        document.getElementById('sel-pior').value = p.data.pior_time_id || '';
+        document.getElementById('sel-artilheiro-pais').value = p.data.artilheiro_pais_id || '';
+        document.getElementById('inp-gols-pro').value = p.data.gols_feitos_brasil || 0;
+        document.getElementById('inp-gols-contra').value = p.data.gols_sofridos_brasil || 0;
+        document.getElementById('sel-cr7-messi').value = p.data.duelo_gigantes || '';
+        document.getElementById('inp-total-gols').value = p.data.total_gols || 0;
+
+        if (g.data) {
+            document.getElementById('box-bonus').classList.remove('hidden');
+            exibirPontos(p.data, g.data);
+        }
     }
+}
+
+function exibirPontos(palpite, gabarito) {
+    const extrair = (val) => (val && typeof val === 'object' && 'id' in val) ? parseInt(val.id) : parseInt(val);
+
+    const map = [
+        { id: 'pts-gol-brasil', p: palpite.primeiro_gol_brasil_id, g: gabarito.primeiro_gol_brasil_id, pts: RegrasExtras.obterPontos('BRGOL', configRegras), tipo: 'simples' },
+        { id: 'pts-fase-brasil', p: palpite.fase_brasil_id, g: gabarito.fase_brasil_id, pts: RegrasExtras.obterPontos('BRFASE', configRegras), tipo: 'simples' },
+        { id: 'pts-gols-pro', p: palpite.gols_feitos_brasil, g: gabarito.gols_feitos_brasil, pts: RegrasExtras.obterPontos('BRG+', configRegras), tipo: 'simples' },
+        { id: 'pts-gols-contra', p: palpite.gols_sofridos_brasil, g: gabarito.gols_sofridos_brasil, pts: RegrasExtras.obterPontos('BRG-', configRegras), tipo: 'simples' },
+        { id: 'pts-artilheiro', p: palpite.artilheiro_pais_id, g: gabarito.artilheiro_pais_id, pts: RegrasExtras.obterPontos('ARTILH', configRegras), tipo: 'simples' },
+        { id: 'pts-campeao', p: palpite.campeao_id, g: gabarito.campeao_id, pts: RegrasExtras.obterPontos('CAMP', configRegras), tipo: 'simples' },
+        { id: 'pts-vice', p: palpite.vice_id, g: gabarito.vice_id, pts: RegrasExtras.obterPontos('VICE', configRegras), tipo: 'simples' },
+        { id: 'pts-terceiro', p: palpite.terceiro_id, g: gabarito.terceiro_id, pts: RegrasExtras.obterPontos('TERC', configRegras), tipo: 'simples' },
+        { id: 'pts-quarto', p: palpite.quarto_id, g: gabarito.quarto_id, pts: RegrasExtras.obterPontos('QUAR', configRegras), tipo: 'simples' },
+        { id: 'pts-pior', p: palpite.pior_time_id, g: gabarito.pior_time_id, pts: RegrasExtras.obterPontos('PIOR', configRegras), tipo: 'simples' },
+        { id: 'pts-cr7-messi', p: palpite.duelo_gigantes, g: gabarito.duelo_gigantes, pts: RegrasExtras.obterPontos('CR7M10', configRegras), tipo: 'duelo' },
+        { id: 'pts-total-gols', p: palpite.total_gols, g: gabarito.total_gols, pts: RegrasExtras.obterPontos('ALLGOLS', configRegras), tipo: 'total' }
+    ];
+
+    map.forEach(item => {
+        let pontos = 0;
+        if (item.tipo === 'simples') pontos = RegrasExtras.calcularSimples(extrair(item.p), extrair(item.g), item.pts);
+        else if (item.tipo === 'duelo') pontos = RegrasExtras.calcularDueloGigantes(item.p, item.g, item.pts);
+        else if (item.tipo === 'total') pontos = RegrasExtras.calcularTotalGols(item.p, item.g, item.pts);
+        
+        const el = document.getElementById(item.id);
+        if (el) el.textContent = `+${pontos} pts`;
+    });
 }
 
 async function salvarPalpites() {
     const { data: { user } } = await supabaseClient.auth.getUser();
-    
-    // Validação
-    if (!document.getElementById('sel-campeao').value || !document.getElementById('sel-cr7-messi').value) {
-        showToast("Preencha ao menos Campeão e Duelo de Gigantes!", true);
-        return;
-    }
-
     const dados = {
         usuario_id: user.id,
         primeiro_gol_brasil_id: parseInt(document.getElementById('sel-gol').value) || null,
@@ -110,10 +135,6 @@ async function salvarPalpites() {
     else showToast("Palpites salvos com sucesso!");
 }
 
-btnLogout.addEventListener('click', async () => { 
-    await supabaseClient.auth.signOut(); 
-    window.location.href = "index.html"; 
-});
-
+btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
 document.getElementById('btn-salvar-palpites').addEventListener('click', salvarPalpites);
 document.addEventListener('DOMContentLoaded', carregarDadosIniciais);
