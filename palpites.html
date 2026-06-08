@@ -67,7 +67,7 @@
                 </div>
             </div>
 
-            <!-- Extras -->
+            <!-- Extras (CR7/Messi + Total de Gols) -->
             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
                 <h3 class="text-blue-400 font-bold mb-4">📊 Outros Palpites</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -78,6 +78,18 @@
                     <div>
                         <label class="text-xs text-gray-400">País do Artilheiro</label>
                         <select id="sel-artilheiro-pais" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400">Quem faz mais gols (CR7 vs Messi)?</label>
+                        <select id="sel-cr7-messi" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1">
+                            <option value="">Selecione...</option>
+                            <option value="CR7">Cristiano Ronaldo</option>
+                            <option value="MESSI">Lionel Messi</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400">Total de gols na Copa</label>
+                        <input type="number" id="inp-total-gols" min="0" max="400" placeholder="Ex: 270" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
                     </div>
                 </div>
             </div>
@@ -97,21 +109,6 @@
                 </div>
             </div>
 
-            <!-- Final da Copa -->
-            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                <h3 class="text-rose-400 font-bold mb-4">🌍 Final da Copa</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs text-gray-400">Finalista 1</label>
-                        <select id="sel-finalista-1" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-400">Finalista 2</label>
-                        <select id="sel-finalista-2" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
-                    </div>
-                </div>
-            </div>
-
             <button id="btn-salvar-palpites" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition">
                 Salvar Todos os Palpites
             </button>
@@ -120,6 +117,6 @@
 
     <div id="toast" class="fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"></div>
 
-    <script src="palpites.js"></script>
+    <script type="module" src="palpites.js"></script>
 </body>
 </html>

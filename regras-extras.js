@@ -1,36 +1,32 @@
 /**
- * REGRAS-EXTRAS.JS
- * Motor dinâmico de apostas extras e punições.
- * 
- * Como usar:
- * Passar a sigla correspondente à regra (ex: 'CAMP16') 
- * e o array de regras vindo do Supabase.
+ * regras-extras.js
+ * Lógica de cálculo para palpites de longo prazo (Extras).
  */
 
 export const RegrasExtras = {
     
-    /**
-     * Busca o valor de uma pontuação específica no banco de dados.
-     * @param {string} sigla - O identificador (nome_reduzido) no banco.
-     * @param {Array} tabelaRegras - O array completo vindo da tabela 'pontuacao'.
-     * @returns {number} - O valor da pontuação (ou 0 se não encontrar).
-     */
-    obterPontos: (sigla, tabelaRegras) => {
-        const regra = tabelaRegras.find(r => r.nome_reduzido === sigla);
-        return regra ? regra.pontos : 0;
+    // Calcula pontos do Duelo de Gigantes (CR7/Messi)
+    // palpite: 'CR7' ou 'MESSI' | gabarito: 'CR7' ou 'MESSI'
+    calcularDueloGigantes: (palpite, gabarito, pontosBase) => {
+        return (palpite === gabarito) ? pontosBase : 0;
     },
 
-    /**
-     * Valida se um palpite de Campeão deve sofrer punição.
-     * @param {string} sigla - A sigla da punição aplicada (ex: 'CAMP8').
-     * @param {Array} tabelaRegras - O array completo vindo da tabela 'pontuacao'.
-     * @returns {number} - O valor negativo da punição.
-     */
-    aplicarPunicaoCampeao: (sigla, tabelaRegras) => {
-        // Busca a regra pelo código oficial do banco
-        const regra = tabelaRegras.find(r => r.nome_reduzido === sigla);
+    // Calcula pontos do Total de Gols (ALLGOLS) com margem de erro
+    // palpite: int | gabarito: int
+    calcularTotalGols: (palpite, gabarito, pontosBase) => {
+        const diferenca = Math.abs(palpite - gabarito);
+
+        if (diferenca === 0) return pontosBase;           // Acerto exato
+        if (diferenca <= 5)  return Math.floor(pontosBase * 0.7); // Margem 5
+        if (diferenca <= 10) return Math.floor(pontosBase * 0.4); // Margem 10
+        if (diferenca <= 20) return Math.floor(pontosBase * 0.2); // Margem 20
         
-        // Retorna o valor (que já deve estar negativo no banco)
+        return 0; // Muito longe
+    },
+
+    // Função genérica para buscar pontuação de qualquer categoria
+    obterPontos: (nomeReduzido, configRegras) => {
+        const regra = configRegras.find(r => r.nome_reduzido === nomeReduzido);
         return regra ? regra.pontos : 0;
     }
 };
