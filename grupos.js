@@ -24,7 +24,6 @@ async function carregarEstrutura() {
     Object.entries(grupos).forEach(([letra, lista]) => {
         const clone = document.importNode(document.getElementById('template-grupo').content, true);
         clone.querySelector('.grupo-titulo').textContent = `Grupo ${letra}`;
-        
         const divPrincipal = clone.querySelector('div');
         divPrincipal.id = `card-grupo-${letra}`;
         
@@ -53,7 +52,8 @@ async function carregarDados() {
         supabaseClient.from('pontuacao').select('*')
     ]);
 
-    // Limpar spans de pontuação anterior
+    const TOTAL_GRUPOS = g.data ? g.data.length : 0;
+
     document.querySelectorAll('.pontos-individuais').forEach(s => s.textContent = '');
 
     if (p.data?.palpites_grupos) {
@@ -65,35 +65,62 @@ async function carregarDados() {
         });
     }
 
+    const contagemAcertos = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    const gruposPerfeitos = [];
+
     if (g.data) {
         g.data.forEach(grupoDB => {
             const card = document.getElementById(`card-grupo-${grupoDB.grupo}`);
-            const badge = card ? card.querySelector('.pontuacao-grupo') : null;
-            if (!card || !badge) return;
+            if (!card) return;
 
             const gabarito = typeof grupoDB.classificacao === 'string' ? JSON.parse(grupoDB.classificacao) : grupoDB.classificacao;
             const palpite = {};
             card.querySelectorAll('.grp-input').forEach(i => palpite[i.dataset.pais] = parseInt(i.value) || 0);
 
-            // Calcular pontos totais
-            const pontosTotais = RegrasGrupos.calcularPontos(palpite, gabarito, r.data || []);
-            badge.textContent = `Total do Grupo: ${pontosTotais} pts`;
-
-            // Calcular e exibir pontos individuais por país
+            let acertosNoGrupo = 0;
             Object.entries(palpite).forEach(([pais, pos]) => {
                 if (gabarito[pais] && pos === gabarito[pais]) {
+                    acertosNoGrupo++;
+                    contagemAcertos[pos]++;
                     const regra = r.data.find(reg => reg.nome_reduzido === `${pos}ºGRP`);
-                    const pts = regra ? regra.pontos : 0;
                     const inputEl = card.querySelector(`.grp-input[data-pais="${pais}"]`);
-                    if (inputEl) {
-                        const span = inputEl.nextElementSibling; // Assume que o span de pontos está logo após o input
-                        if (span && span.classList.contains('pontos-individuais')) {
-                            span.textContent = `+${pts}`;
-                        }
-                    }
+                    if (inputEl) inputEl.nextElementSibling.textContent = `+${regra ? regra.pontos : 0}`;
                 }
             });
+            if (acertosNoGrupo === 4) gruposPerfeitos.push(grupoDB.grupo);
         });
+    }
+
+    atualizarBoxBonus(contagemAcertos, gruposPerfeitos, r.data, TOTAL_GRUPOS);
+}
+
+function atualizarBoxBonus(contagem, gruposPerfeitos, regras, totalGrupos) {
+    const listaBonus = document.getElementById('lista-bonus');
+    if (!listaBonus) return;
+    listaBonus.innerHTML = '';
+
+    [1, 2, 3, 4].forEach(pos => {
+        const codigo = `ALL${pos}º`; 
+        const regra = regras.find(r => r.nome_reduzido === codigo);
+        
+        if (regra && contagem[pos] === totalGrupos) {
+            const p = document.createElement('p');
+            p.className = "text-yellow-400 font-bold";
+            p.textContent = `+${regra.pontos} | ${regra.nome}`;
+            listaBonus.appendChild(p);
+        }
+    });
+
+    if (gruposPerfeitos.length > 0) {
+        const regraGrupo = regras.find(r => r.nome_reduzido === 'ALLGRP');
+        if (regraGrupo) {
+            const totalBonus = gruposPerfeitos.length * regraGrupo.pontos;
+            const p = document.createElement('p');
+            p.className = "text-emerald-400 font-bold mt-2";
+            const gruposOrdenados = gruposPerfeitos.sort().join(', ');
+            p.textContent = `+${totalBonus} | ${regraGrupo.nome}: ${gruposOrdenados}`;
+            listaBonus.appendChild(p);
+        }
     }
 }
 
