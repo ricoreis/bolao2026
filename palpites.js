@@ -12,7 +12,8 @@ const btnLogout = document.getElementById('btn-logout');
 const toast = document.getElementById('toast');
 
 let configRegras = [];
-let listaFases = []; 
+let listaFases = [];
+let todosJogos = [];
 
 function showToast(mensagem, isError = false) {
     toast.innerText = mensagem;
@@ -20,20 +21,117 @@ function showToast(mensagem, isError = false) {
     setTimeout(() => { toast.className = "fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"; }, 3000);
 }
 
+// --- FUNÇÕES AUXILIARES DE MOTOR ---
+
+const faseEstaCompleta = (faseId) => {
+    const jogos = todosJogos.filter(j => parseInt(j.fase_id) === parseInt(faseId));
+    return jogos.length > 0 && jogos.every(j => j.time_a_id !== null && j.time_b_id !== null);
+};
+
+const timeNaFase = (faseId, idNum) => {
+    return todosJogos.some(j => parseInt(j.fase_id) === parseInt(faseId) && 
+        (parseInt(j.time_a_id) === idNum || parseInt(j.time_b_id) === idNum));
+};
+
+const mapearFaseParaCodigo = (fId) => {
+    const mapa = { 6: 'CAMPS', 5: 'CAMP4', 4: 'CAMP8', 3: 'CAMP16', 2: 'CAMPGR', 1: 'CAMPGR' };
+    return mapa[fId] || 'CAMPGR';
+};
+
+// --- MOTOR DE VERIFICAÇÃO DE PENALIDADES ---
+
+async function verificarPenalidadeCampeao(idNum) {
+    if (!idNum) return;
+
+    console.log(`--- [Motor] Iniciando verificação para Time ID: ${idNum} ---`);
+
+    // 1. Diagnóstico do estado das fases
+    const todasFases = [1, 2, 3, 4, 5, 6, 7];
+    const statusFases = todasFases.map(fId => ({
+        fase: fId,
+        completa: faseEstaCompleta(fId),
+        participa: timeNaFase(fId, idNum)
+    }));
+    console.table(statusFases);
+
+    const fasesQueTimeParticipou = statusFases
+        .filter(s => s.completa && s.participa)
+        .map(s => s.fase);
+
+    if (fasesQueTimeParticipou.length === 0) return;
+
+    const faseMaximaAtingida = Math.max(...fasesQueTimeParticipou);
+    console.log(`%c Fase máxima atingida: ${faseMaximaAtingida}`, 'background: #222; color: #bada55; font-size: 14px');
+
+    // 2. Final (Fase 7)
+    if (faseMaximaAtingida === 7) {
+        const jogoFinal = todosJogos.find(j => parseInt(j.fase_id) === 7);
+        if (jogoFinal?.vencedor_final_id !== null && parseInt(jogoFinal.vencedor_final_id) !== idNum) {
+            console.log("[Motor] Final detectada: Perdeu. Aplicando CAMPVICE.");
+            const faseObj = listaFases.find(f => parseInt(f.id) === 7);
+            aplicarPenalidade('CAMPVICE', faseObj?.nome || 'Final');
+        }
+        return;
+    }
+
+    // 3. Eliminação (Fases 1 a 6)
+    const proximaFase = faseMaximaAtingida + 1;
+    if (faseEstaCompleta(proximaFase) && !timeNaFase(proximaFase, idNum)) {
+        
+        // BUSCA CRÍTICA:
+        const faseObj = listaFases.find(f => parseInt(f.id) === parseInt(faseMaximaAtingida));
+        
+        // Se este log mostrar codigo_regra como undefined, 
+        // o problema é que o select no seu carregamento não está trazendo a coluna.
+        console.log("Debug faseObj atual:", faseObj);
+        
+        const codigoRegra = faseObj?.codigo_regra || 'CAMPGR';
+        
+        console.log(`[Motor] Punição disparada: ${codigoRegra} por parar na fase ${faseMaximaAtingida}`);
+        aplicarPenalidade(codigoRegra, faseObj?.nome || `Fase ${faseMaximaAtingida}`);
+    }
+}
+
+// --- UI / EXIBIÇÃO ---
+
+function aplicarPenalidade(codigoRegra, nomeFase) {
+    const regra = configRegras.find(r => r.nome_reduzido === codigoRegra);
+    
+    // Se não encontrou a regra ou a regra não tem pontos negativos, ignora
+    if (!regra || regra.pontos >= 0) {
+        console.warn(`[UI] Regra '${codigoRegra}' inválida ou sem penalidade.`);
+        return;
+    }
+
+    const listaBonus = document.getElementById('lista-bonus');
+    const item = document.createElement('div');
+    item.className = "text-red-400 font-bold";
+    item.textContent = `${regra.pontos} pts - Seu campeão foi eliminado na(s) ${nomeFase}`;
+    
+    listaBonus.appendChild(item);
+    console.log(`[UI] Exibido com sucesso: "${item.textContent}"`);
+}
+
+// --- DADOS E FLUXO ---
+
 async function carregarDadosIniciais() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) { window.location.href = "index.html"; return; }
 
-    const [regras, jogadores, fases, paises, userData] = await Promise.all([
+    const [regras, jogadores, fases, paises, userData, jogos] = await Promise.all([
         supabaseClient.from('pontuacao').select('*'),
         supabaseClient.from('jogadores').select('id, nome, clube').order('nome'),
-        supabaseClient.from('fases').select('id, nome'),
+        // AQUI ESTAVA O ERRO: Adicionado 'codigo_regra' no select
+        supabaseClient.from('fases').select('id, nome, codigo_regra'), 
         supabaseClient.from('paises').select('id, nome').order('nome'),
-        supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single()
+        supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single(),
+        supabaseClient.from('jogos').select('fase_id, time_a_id, time_b_id, vencedor_final_id')
     ]);
 
     configRegras = regras.data || [];
     listaFases = fases.data || [];
+    todosJogos = jogos.data || []; 
+    
     if (userData.data) saudacaoUser.innerText = `Olá, ${userData.data.nome}! Preencha seus palpites.`;
 
     popularSelect('sel-gol', jogadores.data, (j) => `${j.nome} (${j.clube})`);
@@ -88,7 +186,6 @@ async function carregarPalpitesEComparar() {
 
 function exibirPontos(palpite, gabarito) {
     const extrair = (val) => (val && typeof val === 'object' && 'id' in val) ? parseInt(val.id) : parseInt(val);
-
     const map = [
         { id: 'pts-gol-brasil', p: palpite.primeiro_gol_brasil_id, g: gabarito.primeiro_gol_brasil_id, pts: RegrasExtras.obterPontos('BRGOL', configRegras), tipo: 'simples' },
         { id: 'pts-fase-brasil', p: palpite.fase_brasil_id, g: gabarito.fase_brasil_id, pts: RegrasExtras.obterPontos('BRFASE', configRegras), tipo: 'simples' },
@@ -109,7 +206,6 @@ function exibirPontos(palpite, gabarito) {
         if (item.tipo === 'simples') pontos = RegrasExtras.calcularSimples(extrair(item.p), extrair(item.g), item.pts);
         else if (item.tipo === 'duelo') pontos = RegrasExtras.calcularDueloGigantes(item.p, item.g, item.pts);
         else if (item.tipo === 'total') pontos = RegrasExtras.calcularTotalGols(item.p, item.g, item.pts);
-        
         const el = document.getElementById(item.id);
         if (el) el.textContent = `+${pontos} pts`;
     });
@@ -120,88 +216,11 @@ function exibirPontos(palpite, gabarito) {
     });
 }
 
-async function verificarPenalidadeCampeao(timeId) {
-    if (!timeId) return;
-
-    const { data: todosJogos, error } = await supabaseClient
-        .from('jogos')
-        .select('fase_id, time_a_id, time_b_id, vencedor_final_id');
-
-    if (error) {
-        console.error("Erro ao buscar jogos:", error);
-        return;
-    }
-
-    const idNum = parseInt(timeId);
-    const jogosDoTime = todosJogos.filter(j => 
-        parseInt(j.time_a_id) === idNum || 
-        parseInt(j.time_b_id) === idNum
-    );
-
-    if (jogosDoTime.length === 0) {
-        aplicarPenalidade('CAMPGR', getNomeFase(1, listaFases), maxFase);
-        return;
-    }
-
-    const fases = jogosDoTime.map(j => parseInt(j.fase_id)).filter(f => !isNaN(f));
-    const maxFase = Math.max(...fases);
-
-    if (maxFase === 7) { 
-        const jogoFinal = jogosDoTime.find(j => parseInt(j.fase_id) === 7);
-        const vencedorDoBanco = jogoFinal ? parseInt(jogoFinal.vencedor_final_id) : NaN;
-        if (!isNaN(vencedorDoBanco) && vencedorDoBanco !== idNum) {
-            aplicarPenalidade('CAMPVICE', getNomeFase(maxFase, listaFases), maxFase); 
-        }
-    } 
-    else if (maxFase === 6) { 
-        aplicarPenalidade('CAMPS', getNomeFase(5, listaFases), maxFase); 
-    }
-    else if (maxFase === 5) { 
-        aplicarPenalidade('CAMPS', getNomeFase(maxFase, listaFases), maxFase); 
-    }
-    else if (maxFase === 4) { aplicarPenalidade('CAMP4', getNomeFase(maxFase, listaFases), maxFase); }
-    else if (maxFase === 3) { aplicarPenalidade('CAMP8', getNomeFase(maxFase, listaFases), maxFase); }
-    else if (maxFase === 2) { aplicarPenalidade('CAMP16', getNomeFase(maxFase, listaFases)), maxFase; }
-    else { aplicarPenalidade('CAMPGR', getNomeFase(maxFase, listaFases), maxFase); }
-}
-
 async function obterPontosCampeao(palpiteId) {
     if (!palpiteId) return 0;
-    const { data, error } = await supabaseClient
-        .from('jogos')
-        .select('vencedor_final_id')
-        .eq('fase_id', 7)
-        .single();
-
-    if (error || !data || data.vencedor_final_id === null) return 0;
-    return (parseInt(data.vencedor_final_id) === parseInt(palpiteId)) ? RegrasExtras.obterPontos('CAMP', configRegras) : 0;
-}
-
-function getNomeFase(faseId, todasAsFases) {
-    const fase = todasAsFases.find(f => parseInt(f.id) === parseInt(faseId));
-    return fase ? fase.nome : "fase " + faseId;
-}
-
-function aplicarPenalidade(codigoRegra, nomeFase, faseId) {
-    const regra = configRegras.find(r => r.nome_reduzido === codigoRegra);
-    if (regra && regra.pontos < 0) {
-        const listaBonus = document.getElementById('lista-bonus');
-        const item = document.createElement('div');
-        item.className = "text-red-400 font-bold";
-        
-        // Lógica para definir a preposição
-        // fase 1 e 7 = "na"
-        // fases 2, 3, 4, 5, 6 = "nas"
-        const fId = parseInt(faseId);
-        const preposicao = (fId === 1 || fId === 5 || fId === 6 || fId === 7) ? "na" : "nas";
-        
-        if (fId === 7) {
-            item.textContent = `${regra.pontos} pts Seu palpite de campeão perdeu a ${nomeFase}`;
-        } else {
-            item.textContent = `${regra.pontos} pts Seu palpite de campeão foi eliminado ${preposicao} ${nomeFase}`;
-        }
-        listaBonus.appendChild(item);
-    }
+    const jogoFinal = todosJogos.find(j => parseInt(j.fase_id) === 7);
+    if (!jogoFinal || jogoFinal.vencedor_final_id === null) return 0;
+    return (parseInt(jogoFinal.vencedor_final_id) === parseInt(palpiteId)) ? RegrasExtras.obterPontos('CAMP', configRegras) : 0;
 }
 
 async function salvarPalpites() {
