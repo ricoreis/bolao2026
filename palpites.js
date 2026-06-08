@@ -1,5 +1,5 @@
 /**
- * palpites.js - Motor Completo e Corrigido
+ * palpites.js - Motor Completo de Palpites
  */
 import { RegrasExtras } from './regras-extras.js';
 
@@ -12,6 +12,7 @@ const btnLogout = document.getElementById('btn-logout');
 const toast = document.getElementById('toast');
 
 let configRegras = [];
+let listaFases = []; 
 
 function showToast(mensagem, isError = false) {
     toast.innerText = mensagem;
@@ -32,6 +33,7 @@ async function carregarDadosIniciais() {
     ]);
 
     configRegras = regras.data || [];
+    listaFases = fases.data || [];
     if (userData.data) saudacaoUser.innerText = `Olá, ${userData.data.nome}! Preencha seus palpites.`;
 
     popularSelect('sel-gol', jogadores.data, (j) => `${j.nome} (${j.clube})`);
@@ -79,6 +81,7 @@ async function carregarPalpitesEComparar() {
         if (g.data) {
             document.getElementById('box-bonus').classList.remove('hidden');
             exibirPontos(p.data, g.data);
+            verificarPenalidadeCampeao(p.data.campeao_id);
         }
     }
 }
@@ -110,6 +113,95 @@ function exibirPontos(palpite, gabarito) {
         const el = document.getElementById(item.id);
         if (el) el.textContent = `+${pontos} pts`;
     });
+
+    obterPontosCampeao(palpite.campeao_id).then(pts => {
+        const el = document.getElementById('pts-campeao');
+        if (el) el.textContent = `+${pts} pts`;
+    });
+}
+
+async function verificarPenalidadeCampeao(timeId) {
+    if (!timeId) return;
+
+    const { data: todosJogos, error } = await supabaseClient
+        .from('jogos')
+        .select('fase_id, time_a_id, time_b_id, vencedor_final_id');
+
+    if (error) {
+        console.error("Erro ao buscar jogos:", error);
+        return;
+    }
+
+    const idNum = parseInt(timeId);
+    const jogosDoTime = todosJogos.filter(j => 
+        parseInt(j.time_a_id) === idNum || 
+        parseInt(j.time_b_id) === idNum
+    );
+
+    if (jogosDoTime.length === 0) {
+        aplicarPenalidade('CAMPGR', getNomeFase(1, listaFases), maxFase);
+        return;
+    }
+
+    const fases = jogosDoTime.map(j => parseInt(j.fase_id)).filter(f => !isNaN(f));
+    const maxFase = Math.max(...fases);
+
+    if (maxFase === 7) { 
+        const jogoFinal = jogosDoTime.find(j => parseInt(j.fase_id) === 7);
+        const vencedorDoBanco = jogoFinal ? parseInt(jogoFinal.vencedor_final_id) : NaN;
+        if (!isNaN(vencedorDoBanco) && vencedorDoBanco !== idNum) {
+            aplicarPenalidade('CAMPVICE', getNomeFase(maxFase, listaFases), maxFase); 
+        }
+    } 
+    else if (maxFase === 6) { 
+        aplicarPenalidade('CAMPS', getNomeFase(5, listaFases), maxFase); 
+    }
+    else if (maxFase === 5) { 
+        aplicarPenalidade('CAMPS', getNomeFase(maxFase, listaFases), maxFase); 
+    }
+    else if (maxFase === 4) { aplicarPenalidade('CAMP4', getNomeFase(maxFase, listaFases), maxFase); }
+    else if (maxFase === 3) { aplicarPenalidade('CAMP8', getNomeFase(maxFase, listaFases), maxFase); }
+    else if (maxFase === 2) { aplicarPenalidade('CAMP16', getNomeFase(maxFase, listaFases)), maxFase; }
+    else { aplicarPenalidade('CAMPGR', getNomeFase(maxFase, listaFases), maxFase); }
+}
+
+async function obterPontosCampeao(palpiteId) {
+    if (!palpiteId) return 0;
+    const { data, error } = await supabaseClient
+        .from('jogos')
+        .select('vencedor_final_id')
+        .eq('fase_id', 7)
+        .single();
+
+    if (error || !data || data.vencedor_final_id === null) return 0;
+    return (parseInt(data.vencedor_final_id) === parseInt(palpiteId)) ? RegrasExtras.obterPontos('CAMP', configRegras) : 0;
+}
+
+function getNomeFase(faseId, todasAsFases) {
+    const fase = todasAsFases.find(f => parseInt(f.id) === parseInt(faseId));
+    return fase ? fase.nome : "fase " + faseId;
+}
+
+function aplicarPenalidade(codigoRegra, nomeFase, faseId) {
+    const regra = configRegras.find(r => r.nome_reduzido === codigoRegra);
+    if (regra && regra.pontos < 0) {
+        const listaBonus = document.getElementById('lista-bonus');
+        const item = document.createElement('div');
+        item.className = "text-red-400 font-bold";
+        
+        // Lógica para definir a preposição
+        // fase 1 e 7 = "na"
+        // fases 2, 3, 4, 5, 6 = "nas"
+        const fId = parseInt(faseId);
+        const preposicao = (fId === 1 || fId === 5 || fId === 6 || fId === 7) ? "na" : "nas";
+        
+        if (fId === 7) {
+            item.textContent = `${regra.pontos} pts Seu palpite de campeão perdeu a ${nomeFase}`;
+        } else {
+            item.textContent = `${regra.pontos} pts Seu palpite de campeão foi eliminado ${preposicao} ${nomeFase}`;
+        }
+        listaBonus.appendChild(item);
+    }
 }
 
 async function salvarPalpites() {
