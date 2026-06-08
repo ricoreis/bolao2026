@@ -1,22 +1,17 @@
-function calcularPontos(palpA, palpB, realA, realB) {
+// regras.js - Lógica pura de cálculo via banco
+function calcularPontos(palpA, palpB, realA, realB, tabelaRegras) {
     const pA = parseInt(palpA), pB = parseInt(palpB), rA = parseInt(realA), rB = parseInt(realB);
-    
-    // 1. Definição das Regras conforme sua tabela (image_394215.png)
+    const get = (sigla) => tabelaRegras.find(r => r.nome_reduzido === sigla)?.pontos || 0;
+
     let pts = 0;
+    if (pA === rA && pB === rB) pts = get('EXATO');
+    else if (pA === pB && rA === rB) pts = get('EMPATE');
+    else if ((pA - pB) === (rA - rB)) pts = get('SALDO');
+    else if ((pA > pB && rA > rB) || (pA < pB && rA < rB)) pts = get('VENC');
+    else if ((pA === rB && pB === rA)) pts = get('-EXATO');
+    else if ((pB - pA) === (rA - rB)) pts = get('-SALDO');
+    else if ((pA > pB && rA < rB) || (pA < pB && rA > rB)) pts = get('-VENC');
 
-    // Cenários Positivos
-    if (pA === rA && pB === rB) pts = 7; // Placar Exato
-    else if (pA === pB && rA === rB) pts = 5; // Empate
-    else if ((pA - pB) === (rA - rB)) pts = 5; // Placar Saldo
-    else if ((pA > pB && rA > rB) || (pA < pB && rA < rB)) pts = 3; // Time Vencedor
-    
-    // Cenários Negativos (Contrários)
-    else if ((pA === rB && pB === rA)) pts = -7; // Exato Contrário
-    else if ((pB - pA) === (rA - rB)) pts = -5;  // Saldo Contrário
-    else if ((pA > pB && rA < rB) || (pA < pB && rA > rB)) pts = -3; // Vencedor Contrário
-
-    // 2. Bônus por Gol (Sempre positivo conforme sua tabela)
-    const bonus = Math.min(pA, rA) + Math.min(pB, rB);
-    
+    const bonus = (Math.min(pA, rA) + Math.min(pB, rB)) * get('GOLS');
     return pts + bonus;
 }
