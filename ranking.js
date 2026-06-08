@@ -1,3 +1,5 @@
+import { RegrasExtras } from './regras-extras.js';
+
 const SUPABASE_URL = "https://rximgiwpqmshqaducvla.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4aW1naXdwcW1zaHFhZHVjdmxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MjgwNDYsImV4cCI6MjA5NjEwNDA0Nn0.O3Uy5fYgc7CedVThLza_yCvuM4wHd4IpHrXoCYW2w-I";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -25,8 +27,7 @@ async function carregarRanking() {
 
 async function processarGrupos(usuarioId, regras, totalGrupos) {
     const { data: gabaritos } = await supabaseClient.from('grupos').select('*');
-    const { data: palpiteDB } = await supabaseClient.from('palpites')
-        .select('palpites_grupos').eq('usuario_id', usuarioId);
+    const { data: palpiteDB } = await supabaseClient.from('palpites').select('palpites_grupos').eq('usuario_id', usuarioId);
 
     if (!gabaritos || !palpiteDB || palpiteDB.length === 0) return { total: 0, contagem: {1:0, 2:0, 3:0, 4:0, ALL1: 0, ALL2: 0, ALL3: 0, ALL4: 0, ALLG: 0} };
 
@@ -72,6 +73,26 @@ async function processarGrupos(usuarioId, regras, totalGrupos) {
 
 async function processarRanking(apostas, jogos, headers) {
     const rankingMap = {};
+    // 1. Busca Resultados e Paises
+    const { data: gabaritoFinal } = await supabaseClient.from('resultados').select('*').single();
+    
+    // Busca na tabela 'paises' corretamente
+    let paises = [];
+    try {
+        const { data } = await supabaseClient.from('paises').select('*');
+        if (data) paises = data;
+    } catch (e) {
+        console.warn("Tabela 'paises' não encontrada.");
+    }
+
+    // Função para buscar nome do país pelo ID
+    const getNomePais = (id) => {
+        if (id == null) return "Sem palpite";
+        // Busca ignorando tipos (string/number)
+        const pais = paises?.find(p => parseInt(p.id) === parseInt(id));
+        return pais ? pais.nome : `ID: ${id}`;
+    };
+
     apostas.forEach(a => {
         if (!rankingMap[a.usuario_id]) {
             const usuarioObj = { usuario_id: a.usuario_id, nome: a.usuarios?.nome || 'Anon', pontos_totais: 0 };
@@ -90,7 +111,6 @@ async function processarRanking(apostas, jogos, headers) {
                 if (res.total > 0 || res.coluna) {
                     usr.pontos_totais += parseInt(res.total);
                     if (res.coluna) usr[res.coluna] = (usr[res.coluna] || 0) + 1;
-                    if (res.bonus > 0 && usr.hasOwnProperty('placar_gols')) usr.placar_gols = (usr.placar_gols || 0) + res.bonus;
                 }
             }
         });
@@ -100,21 +120,64 @@ async function processarRanking(apostas, jogos, headers) {
     await Promise.all(usuarios.map(async (usr) => {
         const resG = await processarGrupos(usr.usuario_id, headers, 12);
         usr.pontos_totais += resG.total;
-        
-        // Chaves que você definiu no banco (coluna_db)
         usr['grupo_primeiro'] = resG.contagem[1];
         usr['grupo_segundo'] = resG.contagem[2];
         usr['grupo_terceiro'] = resG.contagem[3];
         usr['grupo_quarto'] = resG.contagem[4];
-        
-        // Conversão para S/N
         usr['grupo_todos_primeiros'] = resG.contagem.ALL1 ? 'S' : 'N';
         usr['grupo_todos_segundos'] = resG.contagem.ALL2 ? 'S' : 'N';
         usr['grupo_todos_terceiros'] = resG.contagem.ALL3 ? 'S' : 'N';
         usr['grupo_todos_quartos'] = resG.contagem.ALL4 ? 'S' : 'N';
         usr['grupo_todos_exatos'] = resG.contagem.ALLG;
+
+        // --- Processamento de Finais (Mapeamento corrigido baseado no seu Log) ---
+        try {
+            const { data: palpitesList } = await supabaseClient
+                .from('palpites')
+                .select('*')
+                .eq('usuario_id', usr.usuario_id);
+            
+            const p = (palpitesList && palpitesList.length > 0) ? palpitesList[0] : null;
+
+            if (p && gabaritoFinal) {
+                // 'db' = onde salvar no usr (nome da coluna no pontuacao)
+                // 'pal' = nome da chave que existe no objeto P (vindo do banco)
+                // 'gab' = nome da chave que existe no objeto gabaritoFinal
+                const mapa = [
+                    { db: 'final_campeao', pal: 'campeao_id', gab: 'campeao_id', regra: 'CAMP' },
+                    { db: 'final_vice',    pal: 'vice_id',    gab: 'vice_id',    regra: 'VICE' },
+                    { db: 'final_terceiro', pal: 'terceiro_id', gab: 'terceiro_id', regra: 'TERC' },
+                    { db: 'final_quarto',   pal: 'quarto_id',   gab: 'quarto_id',   regra: 'QUAR' },
+                    { db: 'final_pior',     pal: 'pior_time_id', gab: 'pior_time_id', regra: 'PIOR' }
+                ];
+
+                mapa.forEach(m => {
+                    const palpiteID = p[m.pal];
+                    const gabaritoID = gabaritoFinal[m.gab];
+
+                    if (gabaritoID != null) {
+                        const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
+                        usr[m.db] = `${acertou ? 'S' : 'N'} (${getNomePais(palpiteID)})`;
+                        
+                        if (acertou) {
+                            // Define os valores fixos de bônus aqui, se o RegrasExtras falhar
+                            const pontosMapa = { 'CAMP': 40, 'VICE': 30, 'TERC': 20, 'QUAR': 15, 'PIOR': 50 };
+                            const pts = pontosMapa[m.regra] || 0;
+                            
+                            console.log(`PONTO ADICIONADO: ${m.regra} deu +${pts}.`);
+                            usr.pontos_totais += parseInt(pts);
+                        }
+                    } else {
+                        usr[m.db] = "-";
+                    }
+                });
+            }
+        } catch (e) { console.error("Erro Finais:", e); }
+        
     }));
 
+    // Forçar recalculação visual
+    usuarios.forEach(u => console.log("Final para " + u.nome + ": " + u.pontos_totais));
     return usuarios.sort((a, b) => b.pontos_totais - a.pontos_totais);
 }
 
@@ -132,15 +195,17 @@ function renderizarTabela(dados, headers) {
     });
 
     tbody.innerHTML = dados.map((usr, index) => {
-        const total = isNaN(usr.pontos_totais) ? 0 : usr.pontos_totais;
+        // AQUI ESTÁ O SEGREDO: Usamos usr.pontos_totais diretamente
+        const total = usr.pontos_totais || 0; 
+        
         const colunasDinamicas = headers.map(h => {
-            // Tenta buscar pelo coluna_db, se for nulo busca o próprio nome caso injetado manualmente
-            const valor = usr[h.coluna_db] ?? 0;
-            return `<td class="px-4 py-3 text-center">${valor}</td>`;
+            let valor = usr[h.coluna_db] ?? 0;
+            const colunasGrupos = ['grupo_primeiro', 'grupo_segundo', 'grupo_terceiro', 'grupo_quarto', 'grupo_todos_exatos'];
+            if (colunasGrupos.includes(h.coluna_db)) valor = `${valor}/12`;
+            return `<td class="px-2 py-3 text-center text-xs">${valor}</td>`;
         }).join('');
 
-        return `
-        <tr class="border-b border-gray-700 hover:bg-gray-700/20">
+        return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
             <td class="px-4 py-3 text-center sticky left-0 bg-gray-800">${index + 1}º</td>
             <td class="px-4 py-3 sticky left-16 bg-gray-800">${usr.nome}</td>
             <td class="px-4 py-3 font-bold text-amber-400 text-center sticky left-[244px] bg-gray-800">${total}</td>
