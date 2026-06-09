@@ -133,6 +133,8 @@ async function carregarPalpitesEComparar() {
         document.getElementById('sel-cr7-messi').value = p.duelo_gigantes || '';
 
         const totalGolsCalculado = await calcularTotalGolsReal(user.id);
+        const totalGolsOficial = await calcularTotalGolsOficial(); // <--- NOVA CHAMADA
+        
         // Se quiser exibir no input para o usuário ver (mas desabilitado):
         const inputGols = document.getElementById('inp-total-gols');
         inputGols.value = totalGolsCalculado;
@@ -140,13 +142,13 @@ async function carregarPalpitesEComparar() {
 
         if (gabaritoGlobal) {
             document.getElementById('box-bonus').classList.remove('hidden');
-            exibirPontos(p, gabaritoGlobal, totalGolsCalculado);
+            exibirPontos(p, gabaritoGlobal, totalGolsCalculado, totalGolsOficial);
             verificarPenalidadeCampeao(p.campeao_id);
         }
     }
 }
 
-function exibirPontos(palpite, gabarito, totalGolsCalculado) {
+function exibirPontos(palpite, gabarito, totalGolsCalculado, totalGolsOficial) {
     const extrair = (val) => (val && typeof val === 'object' && 'id' in val) ? parseInt(val.id) : parseInt(val);
     const map = [
         { id: 'pts-gol-brasil', p: palpite.primeiro_gol_brasil_id, g: gabarito.primeiro_gol_brasil_id, pts: 'BRGOL', tipo: 'simples' },
@@ -176,6 +178,28 @@ function exibirPontos(palpite, gabarito, totalGolsCalculado) {
             el.className = `block text-[10px] font-bold mt-1 ${pontos >= 0 ? 'text-emerald-400' : 'text-red-500'}`;
         }
     });
+
+    // Lógica para o total de gols (único span)
+    const elPts = document.getElementById('pts-total-gols');
+    
+    if (elPts) {
+        const p = parseInt(totalGolsCalculado);
+        const g = parseInt(totalGolsOficial);
+        const diff = p - g;
+        
+        // Calcula a pontuação
+        const pBase = RegrasExtras.obterPontos('ALLGOLS', configRegras);
+        const pontos = RegrasExtras.calcularTotalGols(p, g, pBase);
+        
+        // Monta a string final: "Pontos (Diferença | Total Copa: X)"
+        const textoPontos = `${pontos >= 0 ? '+' : ''}${pontos} pts`;
+        const textoInfo = `(Total de Gols na Copa: ${g})`;
+        
+        elPts.textContent = `${textoPontos} ${textoInfo}`;
+        
+        // Estilização condicional
+        elPts.className = `block text-[10px] font-bold mt-1 ${pontos >= 0 ? 'text-emerald-400' : 'text-red-500'}`;
+    }
 }
 
 // Função para somar os gols baseada nos palpites salvos na tabela 'apostas'
@@ -189,6 +213,17 @@ async function calcularTotalGolsReal(usuarioId) {
     
     // Soma todos os gols a favor e contra de todas as apostas do usuário
     return apostas.reduce((total, a) => total + (a.gols_a || 0) + (a.gols_b || 0), 0);
+}
+
+async function calcularTotalGolsOficial() {
+    // Busca todos os jogos que já foram realizados
+    const { data: jogos } = await supabaseClient
+        .from('jogos')
+        .select('gols_a, gols_b')
+        .not('gols_a', 'is', null); // Garante que pegamos apenas jogos com placar
+
+    if (!jogos) return 0;
+    return jogos.reduce((total, j) => total + (j.gols_a || 0) + (j.gols_b || 0), 0);
 }
 
 async function salvarPalpites() {
