@@ -75,7 +75,7 @@ async function processarRanking(apostas, jogos, headers) {
     const rankingMap = {};
     
     const [
-        { data: gabaritoFinal },
+        { data: gabaritoBruto },
         { data: paises },
         { data: jogadores },
         { data: fases }
@@ -85,6 +85,9 @@ async function processarRanking(apostas, jogos, headers) {
         supabaseClient.from('jogadores').select('*'),
         supabaseClient.from('fases').select('*')
     ]);
+
+    // AQUI ESTÁ A MÁGICA: Criamos a versão limpa para usar no resto da função
+    const gabaritoFinal = sanitizarResultadoFinal(gabaritoBruto, jogos);
 
     const formatarValor = (tabela, id, tipo) => {
         if (id == null) return "Sem palpite";
@@ -270,4 +273,23 @@ function determinarFase(timeId, jogos, fases) {
     if (jogosTime.length === 0) return "GR";
     const faseMax = Math.max(...jogosTime.map(j => j.fase_id));
     return fases.find(f => f.id === faseMax)?.nome || `Fase ${faseMax}`;
+}
+
+/**
+ * Garante que um ID não esteja em duas posições de pódio conflitantes.
+ */
+function sanitizarResultadoFinal(resultado, jogos) {
+    if (!resultado) return resultado;
+    const limpo = { ...resultado };
+    
+    // Identifica os IDs dos times na Final (fase 7) e no 3º Lugar (fase 6)
+    const vencedorFinal = jogos.find(j => parseInt(j.fase_id) === 7)?.vencedor_final_id;
+    
+    // Se o time é campeão, removemos ele de qualquer outra posição de pódio
+    if (vencedorFinal) {
+        if (parseInt(limpo.terceiro_id) === parseInt(vencedorFinal)) limpo.terceiro_id = null;
+        if (parseInt(limpo.quarto_id) === parseInt(vencedorFinal)) limpo.quarto_id = null;
+    }
+    
+    return limpo;
 }
