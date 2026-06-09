@@ -144,9 +144,40 @@ async function processarRanking(apostas, jogos, headers) {
                 usr['final_copa'] = `${acertouFinal ? 'S' : 'N'} (${formatarValor(paises, camp, 'pais')} x ${formatarValor(paises, vice, 'pais')})`;
                 if (acertouFinal) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === 'FINAL')?.pontos || 0);
 
-                // --- LÓGICA ATUALIZADA: ALLGOLS (Cravou ou Penalidade) ---
+                // --- NOVA LÓGICA: CAMPFORA ---
+                const timePalpite = parseInt(p.campeao_id);
+                const timeReal = parseInt(gabaritoFinal.campeao_id);
+
+                if (timeReal > 0) { // Se já temos um campeão definido
+                    if (timePalpite === timeReal) {
+                        usr['CAMPFORA'] = 'S';
+                    } else {
+                        const fase = determinarFase(timePalpite, jogos, fases);
+                        usr['CAMPFORA'] = `N (${fase})`;
+                    }
+                } else {
+                    usr['CAMPFORA'] = 'Pendente';
+                }
+
+                // --- LÓGICA ATUALIZADA: ALLGOLS (Só calcula quando houver resultado oficial) ---
                 const palpiteGols = parseInt(p['total_gols'] || 0);
                 const gabGols = parseInt(gabaritoFinal['total_gols'] || 0);
+
+                if (!isNaN(palpiteGols) && gabGols > 0) {
+                    const pontosBase = parseInt(headers.find(h => h.nome_reduzido === 'ALLGOLS')?.pontos || 30);
+                    const diferenca = Math.abs(palpiteGols - gabGols);
+                    
+                    if (diferenca === 0) {
+                        usr['extra_total_gols'] = `${palpiteGols} Cravou!`;
+                        usr.pontos_totais += pontosBase;
+                    } else {
+                        usr['extra_total_gols'] = `${palpiteGols} (-${diferenca})`;
+                        usr.pontos_totais -= diferenca;
+                    }
+                } else {
+                    // AQUI: Mostra apenas o palpite, sem penalizar agora
+                    usr['extra_total_gols'] = `${palpiteGols} (Pendente)`;
+                }
 
                 if (!isNaN(palpiteGols) && !isNaN(gabGols)) {
                     // Busca o valor de bônus configurado no banco (ex: 30)
@@ -225,4 +256,12 @@ function renderizarTabela(dados, headers) {
             ${colunasDinamicas}
         </tr>`;
     }).join('');
+}
+
+function determinarFase(timeId, jogos, fases) {
+    if (!timeId) return "Sem palpite";
+    const jogosTime = jogos.filter(j => (j.time_a_id === timeId || j.time_b_id === timeId) && j.fase_id !== null);
+    if (jogosTime.length === 0) return "GR";
+    const faseMax = Math.max(...jogosTime.map(j => j.fase_id));
+    return fases.find(f => f.id === faseMax)?.nome || `Fase ${faseMax}`;
 }
