@@ -72,14 +72,9 @@ async function processarGrupos(usuarioId, regras, totalGrupos) {
 }
 
 async function processarRanking(apostas, jogos, headers) {
-    console.log("DEBUG: Iniciando processarRanking..."); // <--- ADICIONE ISTO AQUI
-    const rankingMap = {};
-    
+    const rankingMap = {};   
     const [
-        { data: gabaritoBruto },
-        { data: paises },
-        { data: jogadores },
-        { data: fases }
+        { data: gabaritoBruto }, { data: paises }, { data: jogadores }, { data: fases }
     ] = await Promise.all([
         supabaseClient.from('resultados').select('*').single(),
         supabaseClient.from('paises').select('*'),
@@ -101,6 +96,7 @@ async function processarRanking(apostas, jogos, headers) {
         if (!rankingMap[a.usuario_id]) {
             const usuarioObj = { usuario_id: a.usuario_id, nome: a.usuarios?.nome || 'Anon', pontos_totais: 0 };
             headers.forEach(h => usuarioObj[h.coluna_db] = 0);
+            usuarioObj['placar_classificado_penaltis'] = 0; // Inicializado como número!
             rankingMap[a.usuario_id] = usuarioObj;
         }
     });
@@ -152,6 +148,30 @@ async function processarRanking(apostas, jogos, headers) {
                 const palpiteVice = parseInt(p.vice_id);
                 const gabCamp = parseInt(gabaritoFinal.campeao_id);
                 const gabVice = parseInt(gabaritoFinal.vice_id);
+
+                // --- LÓGICA DO PENAL (Simplificada e direto na fonte) ---
+                apostas.forEach(aposta => {
+                    const jogo = jogos.find(j => String(j.id) === String(aposta.jogo_id));
+                    const usr = rankingMap[aposta.usuario_id];
+                    
+                    // Inicializa o contador se ainda não existir
+                    if (usr['placar_classificado_penaltis'] === undefined) {
+                        usr['placar_classificado_penaltis'] = 0;
+                    }
+                    
+                    // Verifica se o jogo teve pênaltis e se o usuário palpitou
+                    if (jogo && jogo.penaltis_vencedor_id && aposta.penaltis_vencedor_id) {
+                        const acertou = (parseInt(aposta.penaltis_vencedor_id) === parseInt(jogo.penaltis_vencedor_id));
+                        
+                        if (acertou) {
+                            // Incrementa o contador de acertos
+                            usr['placar_classificado_penaltis'] += 1;
+                            
+                            const regraPenal = headers.find(h => h.nome_reduzido === 'PENAL');
+                            if (regraPenal) usr.pontos_totais += parseInt(regraPenal.pontos || 0);
+                        }
+                    }
+                });
 
                 const acertou = (palpiteCamp === gabCamp && palpiteVice === gabVice);
                 console.log(`Resultado da comparação: ${acertou ? 'ACERTOU!' : 'ERROU'}`);
@@ -298,6 +318,10 @@ function renderizarTabela(dados, headers) {
     const headersComFinal = [...headers];
     if (!headersComFinal.find(h => h.coluna_db === 'final_copa')) {
         headersComFinal.push({ coluna_db: 'final_copa', nome: 'Final' });
+    }
+    // ADICIONE ISTO:
+    if (!headersComFinal.find(h => h.coluna_db === 'placar_classificado_penaltis')) {
+        headersComFinal.push({ coluna_db: 'placar_classificado_penaltis', nome: 'Penal', nome_reduzido: 'PENAL' });
     }
 
     // Limpa o header e adiciona tudo (incluindo a Final)
