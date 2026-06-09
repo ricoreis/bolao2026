@@ -72,17 +72,20 @@
         </button>
     </nav>
 
-    <!-- CONTEÚDO CONTAINER -->
     <main class="max-w-3xl mx-auto px-4 py-8 space-y-6 pt-28">
+
         <h2 class="text-2xl uppercase font-semibold text-gray-300 pb-2 text-center">Fase Mata-Mata</h2>
 
-        <!-- Os Headers das Fases e os cards de jogos serão injetados aqui em ordem sequencial de ID -->
-        <div id="container-jogos" class="space-y-6">
-            <p class="text-gray-500 animate-pulse text-center py-8">Buscando chaveamento eliminatório...</p>
+        <div class="space-y-6">
+
+            <div id="container-jogos" class="space-y-6">
+                <p class="text-gray-500 animate-pulse text-center py-8">Buscando chaveamento eliminatório...</p>
+            </div>
+
         </div>
+
     </main>
 
-    <!-- TEMPLATE DO CARD DE JOGO (Modificado para Finais) -->
     <template id="template-jogo">
         <div class="card-jogo bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col gap-3">
             
@@ -135,11 +138,8 @@
         </div>
     </template>
 
-    <!-- Toast flutuante de alertas -->
     <div id="toast" class="fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"></div>
-
-<!-- Final do body de apostas-finais.html -->
     <script src="regras.js"></script>
-    <script src="apostas.js"></script> <!-- Mantém o seu motor atual -->
+    <script src="apostas.js"></script>
 </body>
 </html>

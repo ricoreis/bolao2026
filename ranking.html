@@ -82,10 +82,12 @@
     </nav>
 
     <main class="max-w-none px-4 py-8 space-y-6 pt-28">
+
         <h2 class="text-2xl uppercase font-semibold pb-2 text-gray-300 text-center">Ranking</h2>
 
-        <!-- Container com scroll horizontal -->
-        <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-x-auto shadow-2xl">
+        <div class="space-y-6">
+
+            <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-x-auto shadow-2xl">
             <table class="w-full text-left border-collapse min-w-[1000px]"> <!-- min-w garante espaço p/ as colunas -->
                 <thead class="text-xs text-emerald-400 uppercase bg-gray-800">
                     <tr class="border-b border-gray-700">
@@ -96,10 +98,11 @@
                         </tr>
                 </thead>
                 <tbody id="container-ranking" class="divide-y divide-gray-700/50 text-sm">
-                    <!-- Linhas populadas via JS -->
                 </tbody>
             </table>
+
         </div>
+
     </main>
 
     <!-- Script Isolado -->

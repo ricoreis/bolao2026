@@ -73,20 +73,29 @@
     </nav>
 
     <main class="max-w-3xl mx-auto px-4 py-8 space-y-6 pb-24 pt-28">
+
         <h2 class="text-2xl uppercase font-semibold text-gray-300 pb-2 text-center">Classificação dos Grupos</h2>
-        <div id="box-bonus" class="bg-gray-800 p-4 rounded-xl border border-emerald-500/30 mb-6 space-y-2">
-            <div id="lista-bonus" class="text-xs text-gray-300 space-y-1">
-                <p>Calculando bônus...</p>
+
+        <div class="space-y-6">
+
+            <div id="box-bonus" class="bg-gray-800 p-4 rounded-xl border border-emerald-500/30 mb-6 space-y-2">
+                <div id="lista-bonus" class="text-xs text-gray-300 space-y-1">
+                    <p>Calculando bônus...</p>
+                </div>
             </div>
-        </div>
-        <div id="container-grupos" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-        <div class="fixed bottom-0 left-0 w-full p-4 bg-gray-900 border-t border-gray-700 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-40">
-            <div class="max-w-3xl mx-auto">
-                <button id="btn-salvar-grupos" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-lg">
-                    Salvar Todos os Grupos
-                </button>
+
+            <div id="container-grupos" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+            <div class="fixed bottom-0 left-0 w-full px-8 py-4 bg-gray-900 border-t border-gray-700 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-50">
+                <div class="mx-auto text-right">
+                    <button id="btn-salvar-grupos" class="px-8 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-lg">
+                        Salvar
+                    </button>
+                </div>
             </div>
+
         </div>
+
     </main>
 
     <template id="template-grupo">

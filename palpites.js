@@ -77,9 +77,9 @@ function aplicarPenalidade(codigoRegra, nomeFase, faseId) {
     item.className = "text-red-400 font-bold text-sm mt-1";
     
     if (parseInt(faseId) === 7) {
-        item.textContent = `${regra.pontos} pts - Seu campeão perdeu a final`;
+        item.textContent = `${regra.pontos} pts Seu campeão perdeu a final`;
     } else {
-        item.textContent = `${regra.pontos} pts - Seu campeão foi eliminado na ${nomeFase}`;
+        item.textContent = `${regra.pontos} pts Seu campeão ficou na ${nomeFase}`;
     }
     listaBonus.appendChild(item);
 }
