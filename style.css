@@ -1,0 +1,27 @@
+th.sticky {
+    background-color: #1f2937;
+}
+
+tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+
+.has-tooltip:hover .tooltip {
+    display: block;
+}
+
+.tooltip {
+    display: none;
+    position: absolute;
+    z-index: 100;
+    padding: 0.5rem;
+    background: #111827;
+    border: 1px solid #059669;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    color: #fff;
+    white-space: nowrap;
+    top: 100%;
+    margin-top: 5px;
+}

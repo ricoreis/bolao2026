@@ -6,6 +6,7 @@
     <title>Bolão 2026 - Palpites</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
 
@@ -16,13 +17,56 @@
         </div>
 
         <div class="flex flex-wrap items-center justify-center gap-2 bg-gray-900/50 p-1 rounded-xl border border-gray-700">
-            <a href="ranking.html" class="text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition">Ranking</a>
-            <!-- <a href="dashboard.html" class="text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition">Início</a> -->
-            <a href="apostas-grupos.html" class="text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition">Grupos</a>
-            <a href="apostas-finais.html" class="text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition">Mata-Mata</a>
-            <a href="palpites.html" class="bg-emerald-600 text-white text-sm font-medium px-3 py-2 rounded-lg transition">Palpites</a>
-            <a href="grupos.html" class="text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition">Classificação</a>
+            <div class="group relative flex items-center justify-center">
+                <a href="dashboard.html" class="text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition size-12 flex items-center justify-center">
+                    <iconify-icon class="text-3xl" icon="material-symbols:dashboard-rounded"></iconify-icon>
+                </a>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Dashboard
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <a href="ranking.html" class="text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition size-12 flex items-center justify-center">
+                    <iconify-icon class="text-3xl" icon="material-symbols:trophy"></iconify-icon>
+                </a>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Ranking
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <a href="apostas-grupos.html" class="text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition size-12 flex items-center justify-center">
+                    <iconify-icon class="text-3xl" icon="proicons:soccer"></iconify-icon>
+                </a>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Jogos
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <a href="apostas-finais.html" class="text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition size-12 flex items-center justify-center">
+                    <iconify-icon class="text-3xl" icon="mdi:bracket"></iconify-icon>
+                </a>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Mata-Mata
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <a href="palpites.html" class="bg-emerald-600 text-white text-sm font-medium px-3 py-2 rounded-lg transition size-12 flex items-center justify-center">
+                    <iconify-icon class="text-3xl" icon="hugeicons:quiz-02"></iconify-icon>
+                </a>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Palpites
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <a href="grupos.html" class="text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-lg transition size-12 flex items-center justify-center">
+                    <iconify-icon class="text-3xl" icon="mynaui:list-number"></iconify-icon>
+                </a>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Classificação
+                </span>
+            </div>
         </div>
+
         <button id="btn-logout" class="bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg w-full sm:w-auto transition">
             Sair
         </button>
