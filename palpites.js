@@ -1,5 +1,5 @@
 /**
- * palpites.js - Motor Completo de Palpites (Estável e Consolidado)
+ * palpites.js - Motor Completo e Estável (Versão Final)
  */
 import { RegrasExtras } from './regras-extras.js';
 
@@ -22,7 +22,7 @@ function showToast(mensagem, isError = false) {
     setTimeout(() => { toast.className = "fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"; }, 3000);
 }
 
-// --- FUNÇÕES AUXILIARES DE MOTOR ---
+// --- LÓGICA DE MOTOR E PENALIDADES ---
 const faseEstaCompleta = (faseId) => {
     const jogos = todosJogos.filter(j => parseInt(j.fase_id) === parseInt(faseId));
     return jogos.length > 0 && jogos.every(j => j.time_a_id !== null && j.time_b_id !== null);
@@ -32,7 +32,6 @@ const timeNaFase = (faseId, idNum) => {
     return todosJogos.some(j => parseInt(j.fase_id) === parseInt(faseId) && (parseInt(j.time_a_id) === idNum || parseInt(j.time_b_id) === idNum));
 };
 
-// --- MOTOR DE VERIFICAÇÃO DE PENALIDADES ---
 async function verificarPenalidadeCampeao(idNum) {
     if (!idNum) return;
     const todasFases = [1, 2, 3, 4, 5, 6, 7];
@@ -47,34 +46,35 @@ async function verificarPenalidadeCampeao(idNum) {
         const jogoFinal = todosJogos.find(j => parseInt(j.fase_id) === 7);
         if (jogoFinal?.vencedor_final_id !== null && parseInt(jogoFinal.vencedor_final_id) !== idNum) {
             const faseObj = listaFases.find(f => parseInt(f.id) === 7);
-            aplicarPenalidade('CAMPVICE', faseObj?.nome || 'Final');
+            aplicarPenalidade('CAMPVICE', faseObj?.nome || 'Final', 7);
         }
     } else {
         const proximaFase = faseMaximaAtingida + 1;
         if (faseEstaCompleta(proximaFase) && !timeNaFase(proximaFase, idNum)) {
             const faseObj = listaFases.find(f => parseInt(f.id) === parseInt(faseMaximaAtingida));
             const codigoRegra = faseObj?.codigo_regra || 'CAMPGR';
-            aplicarPenalidade(codigoRegra, faseObj?.nome || `Fase ${faseMaximaAtingida}`);
+            aplicarPenalidade(codigoRegra, faseObj?.nome || `Fase ${faseMaximaAtingida}`, faseMaximaAtingida);
         }
     }
 }
 
-function aplicarPenalidade(codigoRegra, nomeFase) {
+function aplicarPenalidade(codigoRegra, nomeFase, faseId) {
     const regra = configRegras.find(r => r.nome_reduzido === codigoRegra);
     if (!regra || regra.pontos >= 0) return;
+
     const listaBonus = document.getElementById('lista-bonus');
     const item = document.createElement('div');
     item.className = "text-red-400 font-bold text-sm mt-1";
-    // Lógica para a mensagem personalizada
-    if (nomeFase === 'Final') {
+    
+    if (parseInt(faseId) === 7) {
         item.textContent = `${regra.pontos} pts - Seu campeão perdeu a final`;
     } else {
-        item.textContent = `${regra.pontos} pts - Seu campeão ficou na(s) ${nomeFase}`;
+        item.textContent = `${regra.pontos} pts - Seu campeão foi eliminado na ${nomeFase}`;
     }
     listaBonus.appendChild(item);
 }
 
-// --- DADOS E FLUXO ---
+// --- FLUXO PRINCIPAL ---
 async function carregarDadosIniciais() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) { window.location.href = "index.html"; return; }
@@ -171,18 +171,6 @@ function exibirPontos(palpite, gabarito) {
             el.className = `block text-[10px] font-bold mt-1 ${pontos >= 0 ? 'text-emerald-400' : 'text-red-500'}`;
         }
     });
-
-    obterPontosCampeao(palpite.campeao_id).then(pts => {
-        const el = document.getElementById('pts-campeao');
-        if (el) el.textContent = `+${pts} pts`;
-    });
-}
-
-async function obterPontosCampeao(palpiteId) {
-    if (!palpiteId) return 0;
-    const jogoFinal = todosJogos.find(j => parseInt(j.fase_id) === 7);
-    if (!jogoFinal || jogoFinal.vencedor_final_id === null) return 0;
-    return (parseInt(jogoFinal.vencedor_final_id) === parseInt(palpiteId)) ? RegrasExtras.obterPontos('CAMP', configRegras) : 0;
 }
 
 async function salvarPalpites() {

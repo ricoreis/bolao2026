@@ -137,67 +137,58 @@ async function processarRanking(apostas, jogos, headers) {
             const p = (pList && pList.length > 0) ? pList[0] : null;
 
             if (p && gabaritoFinal) {
-                // Final
-                const camp = p['campeao_id'], vice = p['vice_id'];
-                const gCamp = gabaritoFinal['campeao_id'], gVice = gabaritoFinal['vice_id'];
-                const acertouFinal = (String(camp) === String(gCamp) && String(vice) === String(gVice));
-                usr['final_copa'] = `${acertouFinal ? 'S' : 'N'} (${formatarValor(paises, camp, 'pais')} x ${formatarValor(paises, vice, 'pais')})`;
-                if (acertouFinal) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === 'FINAL')?.pontos || 0);
+                // --- LÓGICA DE PREENCHIMENTO BLINDADA ---
+                const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_semi", "campeao_perde_final"];
+                colunas.forEach(c => usr[c] = 'N'); 
 
-                // --- NOVA LÓGICA: CAMPFORA ---
-                const timePalpite = parseInt(p.campeao_id);
-                const timeReal = parseInt(gabaritoFinal.campeao_id);
+                const pCamp = parseInt(p.campeao_id);
+                if (pCamp > 0) {
+                    const fase = determinarFase(pCamp, jogos, fases);
+                    // DEBUG PARA SABERMOS O QUE ESTÁ A VIR DO BANCO
+                    console.log(`Debug -> Nome da fase para ${usr.nome}: "${fase}"`);
 
-                if (timeReal > 0) { // Se já temos um campeão definido
-                    if (timePalpite === timeReal) {
-                        usr['CAMPFORA'] = 'S';
-                    } else {
-                        const fase = determinarFase(timePalpite, jogos, fases);
-                        usr['CAMPFORA'] = `N (${fase})`;
-                    }
-                } else {
-                    usr['CAMPFORA'] = 'Pendente';
+                    // A lógica agora é estrita:
+                    if (fase === "Fase de Grupos") usr["campeao_perde_grupos"] = 'S';
+                    else if (fase === "Oitavas de Final") usr["campeao_perde_8"] = 'S';
+                    else if (fase === "Quartas de Final") usr["campeao_perde_4"] = 'S';
+                    else if (fase === "Semifinal") usr["campeao_perde_semi"] = 'S';
+                    else if (fase === "Final") usr["campeao_perde_final"] = 'S';
+                    else if (fase === "Décima-Sextas de Final") usr["campeao_perde_16"] = 'S';
                 }
 
-                // --- LÓGICA ATUALIZADA: ALLGOLS (Só calcula quando houver resultado oficial) ---
+                // Aplicação de pontos (independente do IF anterior)
+                const mapaRegras = [
+                    { c: "campeao_perde_grupos", r: "CAMPGR" },
+                    { c: "campeao_perde_16", r: "CAMP16" },
+                    { c: "campeao_perde_8", r: "CAMP8" },
+                    { c: "campeao_perde_4", r: "CAMP4" },
+                    { c: "campeao_perde_semi", r: "CAMPS" },
+                    { c: "campeao_perde_final", r: "CAMPVICE" }
+                ];
+
+                mapaRegras.forEach(m => {
+                    if (usr[m.c] === 'S') {
+                        const regraObj = headers.find(h => h.nome_reduzido === m.r);
+                        if (regraObj && regraObj.pontos) {
+                            usr.pontos_totais += parseInt(regraObj.pontos);
+                        }
+                    }
+                });
+                usr['final_campeao'] = (pCamp === parseInt(gabaritoFinal.campeao_id)) ? 'S' : 'N';
+                // --- FIM DA LÓGICA ---
+
                 const palpiteGols = parseInt(p['total_gols'] || 0);
                 const gabGols = parseInt(gabaritoFinal['total_gols'] || 0);
-
-                if (!isNaN(palpiteGols) && gabGols > 0) {
-                    const pontosBase = parseInt(headers.find(h => h.nome_reduzido === 'ALLGOLS')?.pontos || 30);
-                    const diferenca = Math.abs(palpiteGols - gabGols);
-                    
-                    if (diferenca === 0) {
-                        usr['extra_total_gols'] = `${palpiteGols} Cravou!`;
-                        usr.pontos_totais += pontosBase;
-                    } else {
-                        usr['extra_total_gols'] = `${palpiteGols} (-${diferenca})`;
-                        usr.pontos_totais -= diferenca;
-                    }
+                
+                if (gabGols > 0) {
+                    const dif = Math.abs(palpiteGols - gabGols);
+                    usr.pontos_totais += (dif === 0 ? parseInt(headers.find(h => h.nome_reduzido === 'ALLGOLS')?.pontos || 30) : -dif);
+                    usr['extra_total_gols'] = `${palpiteGols} (${dif === 0 ? 'Cravou' : -dif})`;
                 } else {
-                    // AQUI: Mostra apenas o palpite, sem penalizar agora
                     usr['extra_total_gols'] = `${palpiteGols} (Pendente)`;
                 }
 
-                if (!isNaN(palpiteGols) && !isNaN(gabGols)) {
-                    // Busca o valor de bônus configurado no banco (ex: 30)
-                    const pontosBase = parseInt(headers.find(h => h.nome_reduzido === 'ALLGOLS')?.pontos || 30);
-                    const diferenca = Math.abs(palpiteGols - gabGols);
-                    
-                    if (diferenca === 0) {
-                        // CRAVOU: Bônus de pontos
-                        usr['extra_total_gols'] = `${palpiteGols} Cravou!`;
-                        usr.pontos_totais += pontosBase;
-                    } else {
-                        // NÃO CRAVOU: Exibe aposta, diferença e penalidade negativa
-                        usr['extra_total_gols'] = `${palpiteGols} (-${diferenca})`;
-                        usr.pontos_totais -= diferenca;
-                    }
-                } else {
-                    usr['extra_total_gols'] = "-";
-                }
-
-                const mapa = [
+                const mapaExtra = [
                     { db: 'final_campeao', pal: 'campeao_id', gab: 'campeao_id', regra: 'CAMP', tipo: 'pais', tabela: paises },
                     { db: 'final_vice', pal: 'vice_id', gab: 'vice_id', regra: 'VICE', tipo: 'pais', tabela: paises },
                     { db: 'final_terceiro', pal: 'terceiro_id', gab: 'terceiro_id', regra: 'TERC', tipo: 'pais', tabela: paises },
@@ -211,7 +202,7 @@ async function processarRanking(apostas, jogos, headers) {
                     { db: 'extra_duelo', pal: 'duelo_gigantes', gab: 'duelo_gigantes', regra: 'CR7M10', tipo: 'bruto', tabela: null }
                 ];
 
-                mapa.forEach(m => {
+                mapaExtra.forEach(m => {
                     const palpiteID = p[m.pal];
                     const gabaritoID = gabaritoFinal[m.gab];
                     if (gabaritoID != null) {
@@ -243,10 +234,24 @@ function renderizarTabela(dados, headers) {
     tbody.innerHTML = dados.map((usr, index) => {
         const total = usr.pontos_totais || 0; 
         const colunasDinamicas = headers.map(h => {
-            let valor = usr[h.coluna_db] ?? 0;
+            let valor = usr[h.coluna_db];
+            
+            // Lista das colunas que você está a preencher com S/N
+            const colunasCamp = ['campeao_perde_grupos', 'campeao_perde_16', 'campeao_perde_8', 'campeao_perde_4', 'campeao_perde_semi', 'campeao_perde_final'];
+            
+            // Se for coluna de penalidade, usa 'N' como padrão
+            if (colunasCamp.includes(h.coluna_db)) {
+                return `<td class="px-2 py-3 text-center text-xs">${valor ?? 'N'}</td>`;
+            }
+
+            // Se for coluna de grupo, mantém o /12
             const colunasGrupos = ['grupo_primeiro', 'grupo_segundo', 'grupo_terceiro', 'grupo_quarto', 'grupo_todos_exatos'];
-            if (colunasGrupos.includes(h.coluna_db)) valor = `${valor}/12`;
-            return `<td class="px-2 py-3 text-center text-xs">${valor}</td>`;
+            if (colunasGrupos.includes(h.coluna_db)) {
+                return `<td class="px-2 py-3 text-center text-xs">${valor ?? 0}/12</td>`;
+            }
+
+            // Para o restante, mantém o original
+            return `<td class="px-2 py-3 text-center text-xs">${valor ?? 0}</td>`;
         }).join('');
 
         return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
