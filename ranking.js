@@ -103,41 +103,33 @@ async function processarRanking(apostas, jogos, headers) {
         }
     });
 
-    // 3. Processa Jogos (CORREÇÃO AQUI)
+    // 3. Processa Jogos
     jogos.forEach(jogo => {
         if (jogo.gols_a === null || jogo.gols_b === null) return;
         apostas.forEach(aposta => {
             if (String(aposta.jogo_id) === String(jogo.id)) {
                 const usr = rankingMap[aposta.usuario_id];
                 let mult = (parseInt(jogo.id) > 72) ? 2 : 1;
-                
                 const res = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, headers, mult);
                 
                 if (res.total > 0 || res.coluna) {
                     usr.pontos_totais += parseInt(res.total);
-                    
-                    // A coluna que o sistema usa para contar acertos (ex: placar_exato)
-                    if (res.coluna) usr[res.coluna] = (usr[res.coluna] || 0) + 1;
-                    
-                    // A COLUNA DE GOLS: Somamos o bônus de gols calculados pelo regras.js
-                    // Ajustamos para dividir pelo valor unitário da regra 'GOLS' para ter a contagem real
                     const valorRegraGols = parseInt(headers.find(h => h.nome_reduzido === 'GOLS')?.pontos || 1);
-                    const qtdGols = res.bonus / valorRegraGols;
+                    const qtdGols = (res.bonus || 0) / valorRegraGols;
+                    if (res.coluna) usr[res.coluna] = (usr[res.coluna] || 0) + 1;
                     usr['placar_gols'] = (usr['placar_gols'] || 0) + qtdGols;
                 }
             }
         });
     });
 
-    // 4. Grupos, Finais e Extras (Mantido)
+    // 4. Grupos, Finais e Extras
     const usuarios = Object.values(rankingMap);
     await Promise.all(usuarios.map(async (usr) => {
         const resG = await processarGrupos(usr.usuario_id, headers, 12);
         usr.pontos_totais += resG.total;
-        usr['grupo_primeiro'] = resG.contagem[1];
-        usr['grupo_segundo'] = resG.contagem[2];
-        usr['grupo_terceiro'] = resG.contagem[3];
-        usr['grupo_quarto'] = resG.contagem[4];
+        usr['grupo_primeiro'] = resG.contagem[1]; usr['grupo_segundo'] = resG.contagem[2];
+        usr['grupo_terceiro'] = resG.contagem[3]; usr['grupo_quarto'] = resG.contagem[4];
         usr['grupo_todos_primeiros'] = resG.contagem.ALL1 ? 'S' : 'N';
         usr['grupo_todos_segundos'] = resG.contagem.ALL2 ? 'S' : 'N';
         usr['grupo_todos_terceiros'] = resG.contagem.ALL3 ? 'S' : 'N';
@@ -149,6 +141,15 @@ async function processarRanking(apostas, jogos, headers) {
             const p = (pList && pList.length > 0) ? pList[0] : null;
 
             if (p && gabaritoFinal) {
+                // Lógica da FINAL (CAMPEÃO X VICE)
+                const camp = p['campeao_id'], vice = p['vice_id'];
+                const gCamp = gabaritoFinal['campeao_id'], gVice = gabaritoFinal['vice_id'];
+                
+                const acertouFinal = (String(camp) === String(gCamp) && String(vice) === String(gVice));
+                const nomeC = formatarValor(paises, camp, 'pais'), nomeV = formatarValor(paises, vice, 'pais');
+                usr['final_copa'] = `${acertouFinal ? 'S' : 'N'} (${nomeC} x ${nomeV})`;
+                if (acertouFinal) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === 'FINAL')?.pontos || 0);
+
                 const mapa = [
                     { db: 'final_campeao', pal: 'campeao_id', gab: 'campeao_id', regra: 'CAMP', tipo: 'pais', tabela: paises },
                     { db: 'final_vice', pal: 'vice_id', gab: 'vice_id', regra: 'VICE', tipo: 'pais', tabela: paises },
@@ -163,8 +164,6 @@ async function processarRanking(apostas, jogos, headers) {
                     { db: 'extra_duelo', pal: 'duelo_gigantes', gab: 'duelo_gigantes', regra: 'CR7M10', tipo: 'bruto', tabela: null }
                 ];
 
-                const pontosMapa = { 'CAMP': 40, 'VICE': 30, 'TERC': 20, 'QUAR': 15, 'PIOR': 50, 'BRGOL': 10, 'BRFASE': 10, 'BRG+': 10, 'BRG-': 10, 'ARTILH': 20, 'CR7M10': 10 };
-
                 mapa.forEach(m => {
                     const palpiteID = p[m.pal];
                     const gabaritoID = gabaritoFinal[m.gab];
@@ -173,16 +172,7 @@ async function processarRanking(apostas, jogos, headers) {
                     if (gabaritoID != null) {
                         const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
                         usr[m.db] = `${acertou ? 'S' : 'N'} (${nomeExibido})`;
-                        
-                        if (acertou) {
-                            // AQUI ESTÁ A CORREÇÃO:
-                            // Em vez de usar o pontosMapa fixo, buscamos o valor real na tabela 'headers'
-                            const regraDoBanco = headers.find(h => h.nome_reduzido === m.regra);
-                            const pts = regraDoBanco ? parseInt(regraDoBanco.pontos) : 0;
-                            
-                            usr.pontos_totais += pts;
-                            console.log(`Debug: Somando ${pts} de ${m.regra}.`);
-                        }
+                        if (acertou) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
                     } else {
                         usr[m.db] = "-";
                     }
