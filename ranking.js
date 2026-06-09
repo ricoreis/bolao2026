@@ -144,13 +144,27 @@ async function processarRanking(apostas, jogos, headers) {
                 usr['final_copa'] = `${acertouFinal ? 'S' : 'N'} (${formatarValor(paises, camp, 'pais')} x ${formatarValor(paises, vice, 'pais')})`;
                 if (acertouFinal) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === 'FINAL')?.pontos || 0);
 
-                // Total de Gols (ALLGOLS)
+                // --- LÓGICA ATUALIZADA: ALLGOLS (Cravou ou Penalidade) ---
                 const palpiteGols = parseInt(p['total_gols'] || 0);
                 const gabGols = parseInt(gabaritoFinal['total_gols'] || 0);
-                const pct = gabGols > 0 ? ((palpiteGols / gabGols) * 100).toFixed(0) : 0;
-                const acertouGols = (palpiteGols === gabGols);
-                usr['extra_total_gols'] = `${acertouGols ? 'S' : 'N'} (${palpiteGols} | ${pct}%)`;
-                if (acertouGols) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === 'ALLGOLS')?.pontos || 0);
+
+                if (!isNaN(palpiteGols) && !isNaN(gabGols)) {
+                    // Busca o valor de bônus configurado no banco (ex: 30)
+                    const pontosBase = parseInt(headers.find(h => h.nome_reduzido === 'ALLGOLS')?.pontos || 30);
+                    const diferenca = Math.abs(palpiteGols - gabGols);
+                    
+                    if (diferenca === 0) {
+                        // CRAVOU: Bônus de pontos
+                        usr['extra_total_gols'] = `${palpiteGols} Cravou!`;
+                        usr.pontos_totais += pontosBase;
+                    } else {
+                        // NÃO CRAVOU: Exibe aposta, diferença e penalidade negativa
+                        usr['extra_total_gols'] = `${palpiteGols} (-${diferenca})`;
+                        usr.pontos_totais -= diferenca;
+                    }
+                } else {
+                    usr['extra_total_gols'] = "-";
+                }
 
                 const mapa = [
                     { db: 'final_campeao', pal: 'campeao_id', gab: 'campeao_id', regra: 'CAMP', tipo: 'pais', tabela: paises },

@@ -10,17 +10,12 @@ export const RegrasExtras = {
         return (palpite === gabarito) ? pontosBase : 0;
     },
 
-    // Total de Gols (Regra de aproximação)
+    // Substitua a função calcularTotalGols em regras-extras.js
     calcularTotalGols: (palpite, gabarito, pontosBase) => {
-        const p = parseInt(palpite);
-        const g = parseInt(gabarito);
+        const p = parseInt(palpite), g = parseInt(gabarito);
         if (isNaN(p) || isNaN(g)) return 0;
         const diferenca = Math.abs(p - g);
-        if (diferenca === 0) return pontosBase;
-        if (diferenca <= 5) return Math.floor(pontosBase * 0.7);
-        if (diferenca <= 10) return Math.floor(pontosBase * 0.4);
-        if (diferenca <= 20) return Math.floor(pontosBase * 0.2);
-        return 0;
+        return (diferenca === 0) ? parseInt(pontosBase) : -diferenca;
     },
 
     // Busca o valor de pontos configurado no banco
