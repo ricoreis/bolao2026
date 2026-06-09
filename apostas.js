@@ -16,19 +16,28 @@ async function carregarRegras() {
     if (data) configRegras = data;
 }
 
-function showToast(mensagem, isError = false) {
-    toast.innerText = mensagem;
-    toast.className = `fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-0 opacity-100 transition-all duration-300 ${isError ? 'bg-red-600' : 'bg-emerald-600'}`;
-    setTimeout(() => { toast.className = "fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"; }, 3000);
+function showToast(mensagem) {
+    const toast = document.getElementById('toast');
+    if (toast) {
+        toast.textContent = mensagem;
+        
+        // POSICIONAMENTO: top-5, right-5
+        // ANIMAÇÃO: translate-y-[-20px] para surgir de cima (negativo)
+        toast.className = "fixed top-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 opacity-100 translate-y-0";
+        
+        setTimeout(() => {
+            // Ao esconder: volta para cima (translate-y-[-20px]) e opacidade 0
+            toast.className = "fixed top-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 translate-y-[-20px] opacity-0";
+        }, 3000);
+    }
 }
-
 async function verificarSessao() {
     await carregarRegras(); 
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) { window.location.href = "index.html"; return; }
     
     const { data: userData } = await supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single();
-    if (userData) saudacaoUser.innerText = `Boa sorte nas apostas, ${userData.nome}!`;
+    if (userData) saudacaoUser.innerText = `Olá, ${userData.nome}!`;
     carregarJogosEApostas();
 }
 

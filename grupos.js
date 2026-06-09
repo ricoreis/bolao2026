@@ -6,8 +6,15 @@ function showToast(mensagem) {
     const toast = document.getElementById('toast');
     if (toast) {
         toast.textContent = mensagem;
-        toast.className = "fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300";
-        setTimeout(() => toast.className = "fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300", 3000);
+        
+        // POSICIONAMENTO: top-5, right-5
+        // ANIMAÇÃO: translate-y-[-20px] para surgir de cima (negativo)
+        toast.className = "fixed top-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 opacity-100 translate-y-0";
+        
+        setTimeout(() => {
+            // Ao esconder: volta para cima (translate-y-[-20px]) e opacidade 0
+            toast.className = "fixed top-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 translate-y-[-20px] opacity-0";
+        }, 3000);
     }
 }
 
@@ -49,7 +56,7 @@ async function carregarDados() {
     const [p, g, r] = await Promise.all([
         supabaseClient.from('palpites').select('palpites_grupos').eq('usuario_id', user.id).single(),
         supabaseClient.from('grupos').select('*'),
-        supabaseClient.from('pontuacao').select('*')
+        supabaseClient.from('pontuacao').select('*'),
     ]);
 
     const TOTAL_GRUPOS = g.data ? g.data.length : 0;

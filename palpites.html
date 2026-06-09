@@ -15,17 +15,17 @@
             <p id="saudacao-user" class="text-xs text-gray-400 mt-1">Carregando perfil...</p>
         </div>
         <div class="flex items-center gap-2 bg-gray-900/50 p-1 rounded-xl border border-gray-700">
-            <a href="dashboard.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg">Início</a>
+            <!-- <a href="dashboard.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg">Início</a> -->
             <a href="apostas-grupos.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg">Jogos Grupos</a>
-            <a href="apostas-finais.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg">Jogos Mata-Mata</a>
+            <!-- <a href="apostas-finais.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg">Jogos Mata-Mata</a> -->
             <a href="palpites.html" class="bg-emerald-600 text-white text-sm font-medium px-4 py-2 rounded-lg">Palpites Extras</a>
             <a href="grupos.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg">Classificação nos Grupos</a>
-            <a href="ranking.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg">Ranking</a>
+            <!-- <a href="ranking.html" class="text-gray-400 hover:text-white text-sm font-medium px-4 py-2 rounded-lg">Ranking</a> -->
         </div>
         <button id="btn-logout" class="bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg w-full sm:w-auto">Sair</button>
     </nav>
 
-    <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+    <main class="max-w-3xl mx-auto px-4 py-8 space-y-6 pb-24">
         
         <!-- Box de Bônus de Pontuação -->
         <div id="box-bonus" class="bg-gray-800 p-4 rounded-xl border border-emerald-500/30 mb-6 space-y-2">
@@ -95,10 +95,12 @@
                         <span id="pts-artilheiro" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
                     </div>
                     <div>
-                        <label class="text-xs text-gray-400">Duelo de Gigantes (CR7 vs Messi)</label>
+                        <label class="text-xs text-gray-400">Quem participará mais com gols + assistências?</label>
                         <select id="sel-cr7-messi" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
+                            <option value="">Selecione...</option>
                             <option value="CR7">Cristiano Ronaldo</option>
                             <option value="MESSI">Lionel Messi</option>
+                            <option value="EMPATE">Empate</option>
                         </select>
                         <!-- O span precisa estar aqui! -->
                         <span id="pts-cr7-messi" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
@@ -130,9 +132,13 @@
                 </div>
             </div>
 
-            <button id="btn-salvar-palpites" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition">
-                Salvar Todos os Palpites
-            </button>
+            <div class="fixed bottom-0 left-0 w-full p-4 bg-gray-900 border-t border-gray-700 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-50">
+                <div class="max-w-3xl mx-auto">
+                    <button id="btn-salvar-palpites" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-lg">
+                        Salvar Todos os Palpites
+                    </button>
+                </div>
+            </div>
         </div>
     </main>
 

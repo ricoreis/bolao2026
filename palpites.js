@@ -16,10 +16,20 @@ let listaFases = [];
 let todosJogos = [];
 let gabaritoGlobal = null;
 
-function showToast(mensagem, isError = false) {
-    toast.innerText = mensagem;
-    toast.className = `fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-0 opacity-100 transition-all duration-300 ${isError ? 'bg-red-600' : 'bg-emerald-600'}`;
-    setTimeout(() => { toast.className = "fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"; }, 3000);
+function showToast(mensagem) {
+    const toast = document.getElementById('toast');
+    if (toast) {
+        toast.textContent = mensagem;
+        
+        // POSICIONAMENTO: top-5, right-5
+        // ANIMAÇÃO: translate-y-[-20px] para surgir de cima (negativo)
+        toast.className = "fixed top-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 opacity-100 translate-y-0";
+        
+        setTimeout(() => {
+            // Ao esconder: volta para cima (translate-y-[-20px]) e opacidade 0
+            toast.className = "fixed top-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 translate-y-[-20px] opacity-0";
+        }, 3000);
+    }
 }
 
 // --- LÓGICA DE MOTOR E PENALIDADES ---
@@ -82,8 +92,8 @@ async function carregarDadosIniciais() {
     const [regras, gab, jogadores, fases, paises, userData, jogos] = await Promise.all([
         supabaseClient.from('pontuacao').select('*'),
         supabaseClient.from('resultados').select('*').eq('id', 1).single(),
-        supabaseClient.from('jogadores').select('id, nome, clube').order('nome'),
-        supabaseClient.from('fases').select('id, nome, codigo_regra'),
+        supabaseClient.from('jogadores').select('id, nome, clube, posicao').order('nome'),
+        supabaseClient.from('fases').select('id, nome, codigo_regra').order('id'),
         supabaseClient.from('paises').select('id, nome').order('nome'),
         supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single(),
         supabaseClient.from('jogos').select('fase_id, time_a_id, time_b_id, vencedor_final_id')
@@ -94,24 +104,80 @@ async function carregarDadosIniciais() {
     listaFases = fases.data || [];
     todosJogos = jogos.data || [];
     
-    if (userData.data) saudacaoUser.innerText = `Olá, ${userData.data.nome}! Preencha seus palpites.`;
+    if (userData.data) saudacaoUser.innerText = `Olá, ${userData.data.nome}!`;
 
-    popularSelect('sel-gol', jogadores.data, (j) => `${j.nome} (${j.clube})`);
     popularSelect('sel-fase', fases.data, (f) => f.nome);
     ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => popularSelect(id, paises.data, (p) => p.nome));
-    
+    popularSelect('sel-fase', fases.data, (f) => f.nome, 5);
+
+    popularSelectAgrupado('sel-gol', jogadores.data);
+
     carregarPalpitesEComparar();
 }
 
-function popularSelect(id, dados, formatter) {
+function popularSelect(id, dados, formatter, idParaExcluir = null) {
     const select = document.getElementById(id);
     if (!select) return;
+    
     select.innerHTML = '<option value="">Selecione...</option>';
-    if (dados) dados.forEach(item => {
+    
+    if (dados) {
+        dados.forEach(item => {
+            // Se o ID for o que queremos excluir, simplesmente pulamos este loop
+            if (idParaExcluir && parseInt(item.id) === parseInt(idParaExcluir)) return;
+            
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = formatter(item);
+            select.appendChild(option);
+        });
+    }
+}
+
+function popularSelectAgrupado(id, dados) {
+    const select = document.getElementById(id);
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Selecione...</option>';
+    
+    // 1. Extrair o jogador especial (ID 27) e os demais
+    const jogadorEspecial = dados.find(j => j.id === 27);
+    const demaisJogadores = dados.filter(j => j.id !== 27);
+
+    // 2. Adicionar o especial no topo como uma opção comum (fora de grupo)
+    if (jogadorEspecial) {
         const option = document.createElement('option');
-        option.value = item.id;
-        option.textContent = formatter(item);
+        option.value = jogadorEspecial.id;
+        option.textContent = jogadorEspecial.nome;
         select.appendChild(option);
+    }
+
+    // 3. Agrupar apenas os demais por posição
+    const grupos = demaisJogadores.reduce((acc, item) => {
+        const pos = item.posicao || 'Outros';
+        if (!acc[pos]) acc[pos] = [];
+        acc[pos].push(item);
+        return acc;
+    }, {});
+
+    // 4. Definir a ordem desejada para os grupos
+    const ordemPreferencial = ['Goleiro', 'Defensor', 'Meia', 'Atacante'];
+    const chavesOrdenadas = [...ordemPreferencial, ...Object.keys(grupos).filter(k => !ordemPreferencial.includes(k))];
+
+    // 5. Adicionar os grupos com os jogadores
+    chavesOrdenadas.forEach(posicao => {
+        if (!grupos[posicao]) return; 
+
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = posicao;
+        
+        grupos[posicao].sort((a, b) => a.id - b.id).forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = `${item.nome} (${item.clube})`;
+            optgroup.appendChild(option);
+        });
+        select.appendChild(optgroup);
     });
 }
 

@@ -40,7 +40,7 @@ async function carregarDadosDashboard(uid) {
         }
 
         // Injeta nome e a pontuação baseada na coluna oficial
-        document.getElementById('saudacao-user').innerText = `Logado como: ${usuario.nome}`;
+        document.getElementById('saudacao-user').innerText = `Olá, ${usuario.nome}!`;
         document.getElementById('player-points').innerHTML = `${usuario.pontos_totais} <span class="text-xs font-normal text-gray-400">pts</span>`;
         
         // 2. Busca classificação geral usando 'pontos_totais' para o Top 5
