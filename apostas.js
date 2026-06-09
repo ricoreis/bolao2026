@@ -31,6 +31,7 @@ function showToast(mensagem) {
         }, 3000);
     }
 }
+
 async function verificarSessao() {
     await carregarRegras(); 
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -119,8 +120,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             // Se fase_id > 1 (Mata-mata), multiplicador é 2, senão é 1
             const multiplicador = (jogo.fase_id > 1) ? 2 : 1;
             
-            // Chama a função global calcularPontos (definida em regras.js)
-            const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, multiplicador);
+            const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, multiplicador);
             
             const divInfo = document.createElement('div');
             divInfo.className = "mt-3 p-2 bg-gray-950/50 rounded text-center text-xs";
