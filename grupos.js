@@ -30,7 +30,7 @@ async function carregarEstrutura() {
 
     Object.entries(grupos).forEach(([letra, lista]) => {
         const clone = document.importNode(document.getElementById('template-grupo').content, true);
-        clone.querySelector('.grupo-titulo').textContent = `Grupo ${letra}`;
+        clone.querySelector('.grupo-titulo').textContent = `${letra}`;
         const divPrincipal = clone.querySelector('div');
         divPrincipal.id = `card-grupo-${letra}`;
         
