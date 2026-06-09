@@ -173,7 +173,16 @@ async function processarRanking(apostas, jogos, headers) {
                     if (gabaritoID != null) {
                         const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
                         usr[m.db] = `${acertou ? 'S' : 'N'} (${nomeExibido})`;
-                        if (acertou) usr.pontos_totais += parseInt(pontosMapa[m.regra] || 0);
+                        
+                        if (acertou) {
+                            // AQUI ESTÁ A CORREÇÃO:
+                            // Em vez de usar o pontosMapa fixo, buscamos o valor real na tabela 'headers'
+                            const regraDoBanco = headers.find(h => h.nome_reduzido === m.regra);
+                            const pts = regraDoBanco ? parseInt(regraDoBanco.pontos) : 0;
+                            
+                            usr.pontos_totais += pts;
+                            console.log(`Debug: Somando ${pts} de ${m.regra}.`);
+                        }
                     } else {
                         usr[m.db] = "-";
                     }
