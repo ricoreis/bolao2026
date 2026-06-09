@@ -372,9 +372,11 @@ function renderizarTabela(dados, headers) {
         }).join('');
 
         return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
-            <td class="px-4 py-3 text-center sticky left-0 bg-gray-800">${index + 1}º</td>
-            <td class="px-4 py-3 sticky left-16 bg-gray-800">${usr.nome}</td>
-            <td class="px-4 py-3 font-bold text-amber-400 text-center sticky left-[244px] bg-gray-800">${total}</td>
+            <td class="sticky px-4 py-3 min-w-[75px] left-0 text-center bg-gray-800">${index + 1}º</td>
+            <td class="sticky px-4 py-3 min-w-[200px] left-[75px] bg-gray-800">${usr.nome}</td>
+            <td class="sticky px-4 py-3 min-w-[75px] left-[275px] font-bold text-amber-400 text-center bg-gray-800">
+                ${total ?? 0}
+            </td>
             ${colunasDinamicas}
         </tr>`;
     }).join('');

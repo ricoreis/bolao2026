@@ -20,7 +20,7 @@
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
 
-    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
         <div class="w-full sm:w-auto text-center sm:text-left">
             <div class="w-full sm:w-auto text-center sm:text-left">
                 <h1 class="text-xl font-bold tracking-wide text-emerald-400">BOLÃO 2026</h1>
@@ -86,21 +86,18 @@
         </div>
     </nav>
 
-    <main class="max-w-none px-4 py-8 space-y-6 pt-28">
+    <main class="max-w-none pt-24">
 
-        <h2 class="text-2xl uppercase font-semibold pb-2 text-gray-300 text-center">Ranking</h2>
+        <div>
 
-        <div class="space-y-6">
-
-            <div class="bg-gray-800 border border-gray-700 rounded-xl overflow-x-auto shadow-2xl">
+            <div class="bg-gray-800 border border-gray-700 overflow-x-auto shadow-2xl">
             <table class="w-full text-left border-collapse min-w-[1000px]"> <!-- min-w garante espaço p/ as colunas -->
                 <thead class="text-xs text-emerald-400 uppercase bg-gray-800">
                     <tr class="border-b border-gray-700">
-                        <th class="sticky left-0 bg-gray-800 z-20 px-4 py-4 w-16 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Pos</th>
-                        <th class="sticky left-16 bg-gray-800 z-20 px-4 py-4 min-w-[180px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Participante</th>
-                        <th class="sticky left-[244px] bg-gray-800 z-20 px-4 py-4 text-right shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Pts</th>
-                        
-                        </tr>
+                        <th class="sticky min-w-[75px] left-0 bg-yellow-800 z-20 px-4 py-4 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Pos</th>
+                        <th class="sticky min-w-[200px] left-[75px] bg-pink-800 z-20 px-4 py-4 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Participante</th>
+                        <th class="sticky min-w-[75px] left-[275px] bg-gray-800 z-20 px-4 py-4 text-right shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Pts</th>
+                    </tr>
                 </thead>
                 <tbody id="container-ranking" class="divide-y divide-gray-700/50 text-sm">
                 </tbody>
