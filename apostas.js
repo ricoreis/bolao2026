@@ -228,4 +228,9 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
 }
 
 btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
-document.addEventListener('DOMContentLoaded', verificarSessao);
+
+// document.addEventListener('DOMContentLoaded', verificarSessao);
+document.addEventListener('DOMContentLoaded', () => {
+    carregarSaudacao();
+    verificarSessao();
+});

@@ -407,3 +407,7 @@ function sanitizarResultadoFinal(resultado, jogos) {
     
     return limpo;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    carregarSaudacao();
+});

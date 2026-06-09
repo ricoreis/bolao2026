@@ -189,4 +189,8 @@ async function iniciarPagina() {
     await verificarPrazo();
 }
 
-document.addEventListener('DOMContentLoaded', iniciarPagina);
+// document.addEventListener('DOMContentLoaded', iniciarPagina);
+document.addEventListener('DOMContentLoaded', () => {
+    carregarSaudacao();
+    iniciarPagina();
+});
