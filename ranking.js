@@ -74,7 +74,6 @@ async function processarGrupos(usuarioId, regras, totalGrupos) {
 async function processarRanking(apostas, jogos, headers) {
     const rankingMap = {};
     
-    // 1. Busca Dados e Tabelas
     const [
         { data: gabaritoFinal },
         { data: paises },
@@ -94,7 +93,6 @@ async function processarRanking(apostas, jogos, headers) {
         return item ? item.nome : `ID: ${id}`;
     };
 
-    // 2. Inicializa o Mapa
     apostas.forEach(a => {
         if (!rankingMap[a.usuario_id]) {
             const usuarioObj = { usuario_id: a.usuario_id, nome: a.usuarios?.nome || 'Anon', pontos_totais: 0 };
@@ -103,7 +101,6 @@ async function processarRanking(apostas, jogos, headers) {
         }
     });
 
-    // 3. Processa Jogos
     jogos.forEach(jogo => {
         if (jogo.gols_a === null || jogo.gols_b === null) return;
         apostas.forEach(aposta => {
@@ -123,7 +120,6 @@ async function processarRanking(apostas, jogos, headers) {
         });
     });
 
-    // 4. Grupos, Finais e Extras
     const usuarios = Object.values(rankingMap);
     await Promise.all(usuarios.map(async (usr) => {
         const resG = await processarGrupos(usr.usuario_id, headers, 12);
@@ -141,14 +137,20 @@ async function processarRanking(apostas, jogos, headers) {
             const p = (pList && pList.length > 0) ? pList[0] : null;
 
             if (p && gabaritoFinal) {
-                // Lógica da FINAL (CAMPEÃO X VICE)
+                // Final
                 const camp = p['campeao_id'], vice = p['vice_id'];
                 const gCamp = gabaritoFinal['campeao_id'], gVice = gabaritoFinal['vice_id'];
-                
                 const acertouFinal = (String(camp) === String(gCamp) && String(vice) === String(gVice));
-                const nomeC = formatarValor(paises, camp, 'pais'), nomeV = formatarValor(paises, vice, 'pais');
-                usr['final_copa'] = `${acertouFinal ? 'S' : 'N'} (${nomeC} x ${nomeV})`;
+                usr['final_copa'] = `${acertouFinal ? 'S' : 'N'} (${formatarValor(paises, camp, 'pais')} x ${formatarValor(paises, vice, 'pais')})`;
                 if (acertouFinal) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === 'FINAL')?.pontos || 0);
+
+                // Total de Gols (ALLGOLS)
+                const palpiteGols = parseInt(p['total_gols'] || 0);
+                const gabGols = parseInt(gabaritoFinal['total_gols'] || 0);
+                const pct = gabGols > 0 ? ((palpiteGols / gabGols) * 100).toFixed(0) : 0;
+                const acertouGols = (palpiteGols === gabGols);
+                usr['extra_total_gols'] = `${acertouGols ? 'S' : 'N'} (${palpiteGols} | ${pct}%)`;
+                if (acertouGols) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === 'ALLGOLS')?.pontos || 0);
 
                 const mapa = [
                     { db: 'final_campeao', pal: 'campeao_id', gab: 'campeao_id', regra: 'CAMP', tipo: 'pais', tabela: paises },
@@ -167,15 +169,11 @@ async function processarRanking(apostas, jogos, headers) {
                 mapa.forEach(m => {
                     const palpiteID = p[m.pal];
                     const gabaritoID = gabaritoFinal[m.gab];
-                    const nomeExibido = formatarValor(m.tabela, palpiteID, m.tipo);
-
                     if (gabaritoID != null) {
                         const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
-                        usr[m.db] = `${acertou ? 'S' : 'N'} (${nomeExibido})`;
+                        usr[m.db] = `${acertou ? 'S' : 'N'} (${formatarValor(m.tabela, palpiteID, m.tipo)})`;
                         if (acertou) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
-                    } else {
-                        usr[m.db] = "-";
-                    }
+                    } else usr[m.db] = "-";
                 });
             }
         } catch (e) { console.error("Erro no processamento:", e); }
@@ -199,17 +197,8 @@ function renderizarTabela(dados, headers) {
 
     tbody.innerHTML = dados.map((usr, index) => {
         const total = usr.pontos_totais || 0; 
-        
         const colunasDinamicas = headers.map(h => {
-            // O valor é buscado dinamicamente pela chave 'coluna_db'
             let valor = usr[h.coluna_db] ?? 0;
-            
-            // Debug: se o valor for 0 mas você sabe que deveria ter pontos, 
-            // este log vai mostrar se a chave está a ser encontrada no objeto usr
-            if (h.coluna_db === 'gols' && valor === 0) {
-                console.log(`Debug GOLS: Usuário ${usr.nome} tem valor 0 na chave 'gols'`);
-            }
-
             const colunasGrupos = ['grupo_primeiro', 'grupo_segundo', 'grupo_terceiro', 'grupo_quarto', 'grupo_todos_exatos'];
             if (colunasGrupos.includes(h.coluna_db)) valor = `${valor}/12`;
             return `<td class="px-2 py-3 text-center text-xs">${valor}</td>`;
