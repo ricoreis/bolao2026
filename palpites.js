@@ -292,6 +292,46 @@ async function calcularTotalGolsOficial() {
     return jogos.reduce((total, j) => total + (j.gols_a || 0) + (j.gols_b || 0), 0);
 }
 
+async function verificarPrazo() {
+    const { data: jogo } = await supabaseClient
+        .from('jogos')
+        .select('data_jogo')
+        .eq('id', 1)
+        .single();
+
+    // 1. O Supabase sempre retorna data em ISO string (formato UTC)
+    // Ao usar new Date(jogo.data_jogo), o JS cria o objeto de data corretamente
+    const dataJogo = new Date(jogo.data_jogo); 
+    const agora = new Date();
+
+    // 2. getTime() retorna o número de milissegundos desde 1970 em UTC.
+    // Isso é universal, não importa onde o usuário esteja!
+    const tempoJogo = dataJogo.getTime();
+    const tempoAgora = agora.getTime();
+    
+    // Duas horas em milissegundos
+    const duasHorasEmMs = 2 * 60 * 60 * 1000;
+
+    // 3. A comparação agora é matemática pura, sem fuso horário envolvido
+    if ((tempoJogo - tempoAgora) < duasHorasEmMs) {
+        travarInputs();
+        showToast("Apostas encerradas!");
+    }
+}
+
+function travarInputs() {
+    const inputs = document.querySelectorAll('.grp-input');
+    const btnSalvar = document.getElementById('btn-salvar-palpites');
+    
+    inputs.forEach(i => i.disabled = true);
+    if (btnSalvar) {
+        btnSalvar.disabled = true;
+        btnSalvar.classList.add('bg-transparent', 'cursor-not-allowed');
+        btnSalvar.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'font-bold' );
+        btnSalvar.textContent = "Apostas de Palpites Encerradas";
+    }
+}
+
 async function salvarPalpites() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     const dados = {
@@ -316,4 +356,10 @@ async function salvarPalpites() {
 
 btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
 document.getElementById('btn-salvar-palpites').addEventListener('click', salvarPalpites);
-document.addEventListener('DOMContentLoaded', carregarDadosIniciais);
+
+async function iniciarPagina() {
+    await carregarDadosIniciais();
+    await verificarPrazo();
+}
+
+document.addEventListener('DOMContentLoaded', iniciarPagina);

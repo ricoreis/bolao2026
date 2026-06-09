@@ -131,6 +131,46 @@ function atualizarBoxBonus(contagem, gruposPerfeitos, regras, totalGrupos) {
     }
 }
 
+async function verificarPrazo() {
+    const { data: jogo } = await supabaseClient
+        .from('jogos')
+        .select('data_jogo')
+        .eq('id', 1)
+        .single();
+
+    // 1. O Supabase sempre retorna data em ISO string (formato UTC)
+    // Ao usar new Date(jogo.data_jogo), o JS cria o objeto de data corretamente
+    const dataJogo = new Date(jogo.data_jogo); 
+    const agora = new Date();
+
+    // 2. getTime() retorna o número de milissegundos desde 1970 em UTC.
+    // Isso é universal, não importa onde o usuário esteja!
+    const tempoJogo = dataJogo.getTime();
+    const tempoAgora = agora.getTime();
+    
+    // Duas horas em milissegundos
+    const duasHorasEmMs = 2 * 60 * 60 * 1000;
+
+    // 3. A comparação agora é matemática pura, sem fuso horário envolvido
+    if ((tempoJogo - tempoAgora) < duasHorasEmMs) {
+        travarInputs();
+        showToast("Apostas encerradas!");
+    }
+}
+
+function travarInputs() {
+    const inputs = document.querySelectorAll('.grp-input');
+    const btnSalvar = document.getElementById('btn-salvar-grupos');
+    
+    inputs.forEach(i => i.disabled = true);
+    if (btnSalvar) {
+        btnSalvar.disabled = true;
+        btnSalvar.classList.add('bg-transparent', 'cursor-not-allowed');
+        btnSalvar.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'font-bold' );
+        btnSalvar.textContent = "Apostas de Classificação Encerradas";
+    }
+}
+
 async function salvar() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     const dados = {};
@@ -143,4 +183,10 @@ async function salvar() {
 }
 
 document.getElementById('btn-salvar-grupos').addEventListener('click', salvar);
-document.addEventListener('DOMContentLoaded', carregarEstrutura);
+
+async function iniciarPagina() {
+    await carregarEstrutura();
+    await verificarPrazo();
+}
+
+document.addEventListener('DOMContentLoaded', iniciarPagina);
