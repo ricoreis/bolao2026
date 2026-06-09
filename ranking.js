@@ -138,7 +138,7 @@ async function processarRanking(apostas, jogos, headers) {
 
             if (p && gabaritoFinal) {
                 // --- LÓGICA DE PREENCHIMENTO BLINDADA ---
-                const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_semi", "campeao_perde_final"];
+                const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
                 colunas.forEach(c => usr[c] = 'N'); 
 
                 const pCamp = parseInt(p.campeao_id);
@@ -151,7 +151,8 @@ async function processarRanking(apostas, jogos, headers) {
                     if (fase === "Fase de Grupos") usr["campeao_perde_grupos"] = 'S';
                     else if (fase === "Oitavas de Final") usr["campeao_perde_8"] = 'S';
                     else if (fase === "Quartas de Final") usr["campeao_perde_4"] = 'S';
-                    else if (fase === "Semifinal") usr["campeao_perde_semi"] = 'S';
+                    else if (fase === "Semifinal") usr["campeao_perde_3"] = 'S';
+                    else if (fase === "Disputa de 3º Lugar") usr["campeao_perde_3"] = 'S';
                     else if (fase === "Final") usr["campeao_perde_final"] = 'S';
                     else if (fase === "Décima-Sextas de Final") usr["campeao_perde_16"] = 'S';
                 }
@@ -162,7 +163,7 @@ async function processarRanking(apostas, jogos, headers) {
                     { c: "campeao_perde_16", r: "CAMP16" },
                     { c: "campeao_perde_8", r: "CAMP8" },
                     { c: "campeao_perde_4", r: "CAMP4" },
-                    { c: "campeao_perde_semi", r: "CAMPS" },
+                    { c: "campeao_perde_3", r: "CAMP3" },
                     { c: "campeao_perde_final", r: "CAMPVICE" }
                 ];
 
@@ -237,7 +238,7 @@ function renderizarTabela(dados, headers) {
             let valor = usr[h.coluna_db];
             
             // Lista das colunas que você está a preencher com S/N
-            const colunasCamp = ['campeao_perde_grupos', 'campeao_perde_16', 'campeao_perde_8', 'campeao_perde_4', 'campeao_perde_semi', 'campeao_perde_final'];
+            const colunasCamp = ['campeao_perde_grupos', 'campeao_perde_16', 'campeao_perde_8', 'campeao_perde_4', 'campeao_perde_3', 'campeao_perde_final'];
             
             // Se for coluna de penalidade, usa 'N' como padrão
             if (colunasCamp.includes(h.coluna_db)) {
