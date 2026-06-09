@@ -6,7 +6,6 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Variável global para armazenar as regras do banco
 let configRegras = [];
 
-const saudacaoUser = document.getElementById('saudacao-user');
 const btnLogout = document.getElementById('btn-logout');
 const toast = document.getElementById('toast');
 
@@ -38,7 +37,6 @@ async function verificarSessao() {
     if (!session) { window.location.href = "index.html"; return; }
     
     const { data: userData } = await supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single();
-    if (userData) saudacaoUser.innerText = `Olá, ${userData.nome}!`;
     carregarJogosEApostas();
 }
 

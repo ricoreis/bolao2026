@@ -7,7 +7,6 @@ const SUPABASE_URL = "https://rximgiwpqmshqaducvla.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4aW1naXdwcW1zaHFhZHVjdmxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MjgwNDYsImV4cCI6MjA5NjEwNDA0Nn0.O3Uy5fYgc7CedVThLza_yCvuM4wHd4IpHrXoCYW2w-I";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const saudacaoUser = document.getElementById('saudacao-user');
 const btnLogout = document.getElementById('btn-logout');
 const toast = document.getElementById('toast');
 
@@ -104,8 +103,6 @@ async function carregarDadosIniciais() {
     listaFases = fases.data || [];
     todosJogos = jogos.data || [];
     
-    if (userData.data) saudacaoUser.innerText = `Olá, ${userData.data.nome}!`;
-
     popularSelect('sel-fase', fases.data, (f) => f.nome);
     ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => popularSelect(id, paises.data, (p) => p.nome));
     popularSelect('sel-fase', fases.data, (f) => f.nome, 5);
