@@ -184,6 +184,9 @@ async function processarRanking(apostas, jogos, headers) {
                     const faseID = determinarFase(pCamp, jogos, fases);
                     console.log(`DEBUG PUNIÇÃO: Usuário ${usr.nome} | Fase ID: ${faseID}`);
 
+                    const jogoFinal = jogos.find(j => parseInt(j.fase_id) === 7);
+                    const vencedorOficial = jogoFinal ? parseInt(jogoFinal.vencedor_final_id) : null;
+
                     // Limpa estados anteriores
                     const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
                     colunas.forEach(c => usr[c] = 'N');
@@ -195,7 +198,16 @@ async function processarRanking(apostas, jogos, headers) {
                     else if (faseID === 4) usr["campeao_perde_4"] = 'S';
                     else if (faseID === 5) usr["campeao_perde_3"] = 'S'; // Jogo de 3º lugar
                     else if (faseID === 6) usr["campeao_perde_3"] = 'S'; // Jogo de 3º lugar
-                    else if (faseID === 7) usr["campeao_perde_final"] = 'S'; // Final
+                    else if (faseID === 7) {
+                        // Só aplica a punição se:
+                        // - O vencedor oficial já estiver definido (não for null)
+                        // - E o palpite do usuário (pCamp) for diferente desse vencedor
+                        if (vencedorOficial !== null && pCamp !== vencedorOficial) {
+                            usr["campeao_perde_final"] = 'S';
+                        } else {
+                            usr["campeao_perde_final"] = 'N';
+                        }
+                    }
 
                     const mapaRegras = [
                         { c: "campeao_perde_grupos", r: "CAMPGR" },
