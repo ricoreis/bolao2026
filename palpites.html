@@ -92,10 +92,10 @@
         
         <h2 class="text-2xl uppercase font-semibold text-gray-300 pb-2 text-center">Palpites Extras</h2>
         
-        <div class="space-y-6">
+        <div class="space-y-12">
 
             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                <h3 class="text-emerald-400 font-bold mb-4">Seleção Brasileira</h3>
+                <h3 class="text-emerald-400 font-bold mb-8 text-xl">Brasil-il-il</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">Primeiro Gol do Brasil</label>
@@ -108,55 +108,55 @@
                         <label class="text-xs text-gray-400">Brasil chega até...</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-fase" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
-                            <span id="pts-fase-brasil" class="block text-[10px] font-bold text-emerald-400 mt-1"></span>
+                            <span id="pts-fase-brasil"></span>
                         </div>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">Gols do Brasil</label>
                         <div class="flex gap-4 items-center">
                             <input type="number" id="inp-gols-pro" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
-                            <span id="pts-gols-pro" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
+                            <span id="pts-gols-pro"></span>
                         </div>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">Gols sofridos pelo Brasil</label>
                         <div class="flex gap-4 items-center">
                             <input type="number" id="inp-gols-contra" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
-                            <span id="pts-gols-contra" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
+                            <span id="pts-gols-contra"></span>
                         </div>
                     </div>
                 </div>
             </div>
             
             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                <h3 class="text-emerald-400 font-bold mb-4">Podium</h3>
+                <h3 class="text-emerald-400 font-bold mb-8 text-xl">Podium</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">Campeão</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-campeao" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
-                            <span id="pts-campeao" class="block text-[10px] font-bold text-amber-400 mt-1"></span>
+                            <span id="pts-campeao"></span>
                         </div>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">Vice-Campeão</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-vice" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
-                            <span id="pts-vice" class="block text-[10px] font-bold text-amber-400 mt-1"></span>
+                            <span id="pts-vice"></span>
                         </div>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">3º Lugar</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-terceiro" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
-                            <span id="pts-terceiro" class="block text-[10px] font-bold text-amber-400 mt-1"></span>
+                            <span id="pts-terceiro"></span>
                         </div>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">4º Lugar</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-quarto" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
-                            <span id="pts-quarto" class="block text-[10px] font-bold text-amber-400 mt-1"></span>
+                            <span id="pts-quarto"></span>
                         </div>
                     </div>
                 </div>
@@ -167,20 +167,20 @@
             </div>
 
             <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
-                <h3 class="text-emerald-400 font-bold mb-4">Outros Palpites</h3>
+                <h3 class="text-emerald-400 font-bold mb-8 text-xl">Outros Palpites</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">Pior time da Copa</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-pior" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
-                            <span id="pts-pior" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
+                            <span id="pts-pior"></span>
                         </div>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">País do Artilheiro</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-artilheiro-pais" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
-                            <span id="pts-artilheiro" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
+                            <span id="pts-artilheiro"></span>
                         </div>
                     </div>
                     <div class="flex flex-col">
@@ -192,7 +192,7 @@
                                 <option value="MESSI">Lionel Messi</option>
                                 <option value="EMPATE">Empate</option>
                             </select>
-                            <span id="pts-cr7-messi" class="block text-[10px] font-bold text-blue-400 mt-1"></span>
+                            <span id="pts-cr7-messi"></span>
                         </div>
                     </div>
                     <div class="flex flex-col">
@@ -200,10 +200,10 @@
                         <div class="flex gap-4 items-center">
                             <input type="number" id="inp-total-gols" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
                             <!-- <span id="pts-total-gols" class="block text-[10px] font-bold text-blue-400 mt-1"></span> -->
-                             <div class="flex gap-2 items-center">
+                            <div class="flex items-center hidden">
                                 <span id="pts-total-gols"></span>
                                 <span id="pts-total-gols_copa" class="text-[10px] text-gray-200 mt-1 rounded-full px-2 py-1 text-nowrap"></span>
-                             </div>
+                            </div>
                         </div>
                     </div>
                 </div>

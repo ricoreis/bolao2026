@@ -239,7 +239,11 @@ function exibirPontos(palpite, gabarito, totalGolsCalculado, totalGolsOficial) {
         const el = document.getElementById(item.id);
         if (el) {
             el.textContent = `${pontos > 0 ? '+' : ''}${pontos}`;
-            el.className = `text-sm text-gray-800 mt-1 rounded-full px-2 py-1 w-fit h-fit ${pontos > 0 ? 'bg-amber-400' : pontos == 0 ? 'bg-gray-700' : 'bg-red-400'}`;
+            el.className = `hidden text-sm text-gray-800 mt-1 rounded-full px-2 py-1 w-fit h-fit ${pontos > 0 ? 'bg-amber-400' : 'bg-red-400'}`;
+            if (pontos != 0) {
+                el.classList.remove("hidden")
+                console.log(pontos + "");
+            }
         }
     });
 
