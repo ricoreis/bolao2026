@@ -59,6 +59,8 @@ async function carregarEstrutura() {
             input.dataset.grupo = letra;
             input.dataset.pais = pais.nome;
             grid.appendChild(iClone);
+
+            input.addEventListener('input', () => validarGrupo(letra));
         });
         container.appendChild(clone);
     });
@@ -224,6 +226,44 @@ async function iniciarPagina() {
     await carregarEstrutura();
     await verificarPrazo();
 }
+
+const validarGrupo = (grupoLetra) => {
+    const card = document.getElementById(`card-grupo-${grupoLetra}`);
+    const inputs = card.querySelectorAll('.grp-input');
+    const btnSalvar = document.getElementById('btn-salvar-grupos');
+    
+    // Objeto para rastrear quais números (1-4) já foram usados
+    const usados = {};
+    let temErro = false;
+
+    // Limpa estados anteriores
+    inputs.forEach(i => i.classList.remove('border-red-500', 'bg-red-900/20'));
+
+    // Analisa os inputs
+    inputs.forEach(i => {
+        const val = i.value;
+        if (val) {
+            if (usados[val]) {
+                // Se o valor já foi registrado, marca erro nos dois (no atual e no anterior)
+                i.classList.add('border-red-500', 'bg-red-900/20');
+                usados[val].classList.add('border-red-500', 'bg-red-900/20');
+                temErro = true;
+            } else {
+                usados[val] = i;
+            }
+        }
+    });
+
+    // Se houver erro, desabilita o botão, senão habilita
+    btnSalvar.disabled = temErro;
+    if (temErro) {
+        btnSalvar.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        btnSalvar.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    
+    return temErro;
+};
 
 btnsLogout.forEach(botao => {
     botao.addEventListener('click', async () => { 
