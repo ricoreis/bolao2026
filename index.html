@@ -288,9 +288,9 @@
         document.getElementById('signup-form').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            // BLOQUEIO TOTAL E IMEDIATO
             const btnRegistrar = document.getElementById('btn-registrar');
-            if (btnRegistrar.disabled) return; // Se já foi clicado, ignora novos cliques
+            // Bloqueio de cliques múltiplos
+            if (btnRegistrar.disabled) return; 
 
             btnRegistrar.disabled = true;
             btnRegistrar.innerText = "Processando...";
@@ -303,50 +303,49 @@
 
             if (!name) {
                 showMsg("Por favor, informe o seu Nome ou Apelido.", true);
+                btnRegistrar.disabled = false;
+                btnRegistrar.innerText = "Criar Minha Conta";
                 return;
             }
 
             if (password.length < 6) {
                 showMsg("A senha escolhida precisa ter pelo menos 6 caracteres.", true);
+                btnRegistrar.disabled = false;
+                btnRegistrar.innerText = "Criar Minha Conta";
                 return;
             }
 
-            console.log("Iniciando fluxo linear de cadastro...");
-            const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+            // Fluxo simplificado: 
+            // O banco de dados (via Trigger) criará o registro na tabela 'usuarios' automaticamente.
+            const { data, error } = await supabaseClient.auth.signUp({
                 email: email,
-                password: password
+                password: password,
+                options: {
+                    data: { 
+                        nome: name // Isso é capturado pelo SQL Trigger
+                    }
+                }
             });
 
-            if (authError) {
+            if (error) {
                 btnRegistrar.disabled = false;
                 btnRegistrar.innerText = "Tentar Criar Novamente";
-                showMsg(`Erro no cadastro: ${authError.message}`, true);
+                showMsg(`Erro no cadastro: ${error.message}`, true);
                 return;
             }
 
-            if (authData && authData.user) {
-                const newUserId = authData.user.id;
-                console.log("Credencial criada. Gravando nome na tabela pública...");
-
-                const { error: dbError } = await supabaseClient
-                    .from('usuarios')
-                    .insert([{ id: newUserId, nome: name, pontos_totais: 0 }]);
-
-                if (dbError) {
-                    btnRegistrar.disabled = false;
-                    btnRegistrar.innerText = "Tentar Criar Novamente";
-                    console.error("Erro:", dbError.message);
-                    showMsg("Conta criada, mas houve uma falha ao registrar o seu nome.", true);
-                } else {
-                    showMsg("Sua conta foi criada! Agora só fazer seu login. Boa sorte!", false, true);
-                    
-                    document.getElementById('signup-name').value = "";
-                    document.getElementById('signup-email').value = "";
-                    document.getElementById('signup-password').value = "";
-                    
-                    buscarNomeDoPerfil(newUserId);
-                }
-            }
+            // Se chegou aqui, o usuário foi criado no Auth e o Trigger vai criar o registro na tabela pública.
+            showMsg("Sua conta foi criada com sucesso! Redirecionando...", false, true);
+            
+            // Limpa os campos
+            document.getElementById('signup-name').value = "";
+            document.getElementById('signup-email').value = "";
+            document.getElementById('signup-password').value = "";
+            
+            // Redireciona após 2 segundos
+            setTimeout(() => {
+                window.location.href = "apostas-grupos.html";
+            }, 2000);
         });
 
         // 4. SOLICITAR LINK DE RECUPERAÇÃO DE SENHA
