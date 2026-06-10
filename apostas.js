@@ -101,7 +101,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         if(jogo.jogo_fifa) {
             jogoPrefixo = "JOGO " + jogo.jogo_fifa + " - "
         } else {
-            jogoPrefixo = "GRUPO " + jogo.grupo + " - ";
+            // jogoPrefixo = "GRUPO " + jogo.grupo + " - ";
         }
 
         const dataLocal = new Date(jogo.data_jogo);
