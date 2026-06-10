@@ -20,11 +20,17 @@ function showToast(mensagem) {
 
 async function carregarEstrutura() {
     const container = document.getElementById('container-grupos');
-    const { data: paises } = await supabaseClient.from('paises').select('nome, grupo').order('grupo').order('posicao');
-    
+    const { data: paises } = await supabaseClient
+        .from('paises')
+        .select('id, nome, grupo, sigla')
+        .order('grupo')
+        .order('posicao');
+
+    if (!paises) return;
+
     const grupos = paises.reduce((acc, p) => {
         if (!acc[p.grupo]) acc[p.grupo] = [];
-        acc[p.grupo].push(p.nome);
+        acc[p.grupo].push({ id: p.id, nome: p.nome, sigla: p.sigla }); 
         return acc;
     }, {});
 
@@ -35,12 +41,22 @@ async function carregarEstrutura() {
         divPrincipal.id = `card-grupo-${letra}`;
         
         const grid = clone.querySelector('.grid-inputs');
-        lista.forEach(nome => {
+        lista.forEach(pais => {
             const iClone = document.importNode(document.getElementById('template-input-pais').content, true);
-            iClone.querySelector('.nome-pais').textContent = nome;
+            const img = iClone.querySelector('img');
+            if (img) {
+                img.src = `/assets/images/paises/${pais.id}.svg`; 
+                img.setAttribute("title", pais.nome);
+            }
+
+            const spanNome = iClone.querySelector('.nome-pais');
+            if (spanNome) {
+                spanNome.appendChild(document.createTextNode(pais.sigla));
+            }
+
             const input = iClone.querySelector('.grp-input');
             input.dataset.grupo = letra;
-            input.dataset.pais = nome;
+            input.dataset.pais = pais.nome;
             grid.appendChild(iClone);
         });
         container.appendChild(clone);
@@ -86,12 +102,14 @@ async function carregarDados() {
 
             let acertosNoGrupo = 0;
             Object.entries(palpite).forEach(([pais, pos]) => {
+                const inputEl = card.querySelector(`.grp-input[data-pais="${pais}"]`);
                 if (gabarito[pais] && pos === gabarito[pais]) {
                     acertosNoGrupo++;
                     contagemAcertos[pos]++;
                     const regra = r.data.find(reg => reg.nome_reduzido === `${pos}ºGRP`);
-                    const inputEl = card.querySelector(`.grp-input[data-pais="${pais}"]`);
                     if (inputEl) inputEl.nextElementSibling.textContent = `+${regra ? regra.pontos : 0}`;
+                } else {
+                    inputEl.nextElementSibling.classList.add("hidden");
                 }
             });
             if (acertosNoGrupo === 4) gruposPerfeitos.push(grupoDB.grupo);
@@ -106,27 +124,36 @@ function atualizarBoxBonus(contagem, gruposPerfeitos, regras, totalGrupos) {
     if (!listaBonus) return;
     listaBonus.innerHTML = '';
 
+    // Função auxiliar para criar a estrutura padrão de bônus
+    const criarLinhaBonus = (pontos, texto) => {
+        const div = document.createElement('div');
+        div.className = "bonus-linha flex items-center gap-2";
+        div.innerHTML = `
+            <span class="bonus-pontos text-sm text-amber-400 mt-1 bg-gray-800 rounded-full px-2 py-1 w-12 text-center">+${pontos}</span>
+            <p class="bonus-tipo">${texto}</p>
+        `;
+        return div;
+    };
+
+    // 1. Processar acertos de posições (1º, 2º, 3º, 4º)
     [1, 2, 3, 4].forEach(pos => {
         const codigo = `ALL${pos}º`; 
         const regra = regras.find(r => r.nome_reduzido === codigo);
         
         if (regra && contagem[pos] === totalGrupos) {
-            const p = document.createElement('p');
-            p.className = "text-yellow-400 font-bold";
-            p.textContent = `+${regra.pontos} | ${regra.nome}`;
-            listaBonus.appendChild(p);
+            const linha = criarLinhaBonus(regra.pontos, `Acertou ${regra.nome} dos Grupos`);
+            listaBonus.appendChild(linha);
         }
     });
 
+    // 2. Processar grupos perfeitos (4 acertos no grupo)
     if (gruposPerfeitos.length > 0) {
         const regraGrupo = regras.find(r => r.nome_reduzido === 'ALLGRP');
         if (regraGrupo) {
             const totalBonus = gruposPerfeitos.length * regraGrupo.pontos;
-            const p = document.createElement('p');
-            p.className = "text-emerald-400 font-bold mt-2";
             const gruposOrdenados = gruposPerfeitos.sort().join(', ');
-            p.textContent = `+${totalBonus} | ${regraGrupo.nome}: ${gruposOrdenados}`;
-            listaBonus.appendChild(p);
+            const linha = criarLinhaBonus(totalBonus, `Acertou Grupo(s) Inteiro(s) : ${gruposOrdenados}`);
+            listaBonus.appendChild(linha);
         }
     }
 }
@@ -161,6 +188,7 @@ async function verificarPrazo() {
 function travarInputs() {
     const inputs = document.querySelectorAll('.grp-input');
     const btnSalvar = document.getElementById('btn-salvar-grupos');
+    const instrucoes = document.getElementById('instrucoes');
     
     inputs.forEach(i => i.disabled = true);
     if (btnSalvar) {
@@ -168,6 +196,7 @@ function travarInputs() {
         btnSalvar.classList.add('bg-transparent', 'cursor-not-allowed');
         btnSalvar.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'font-bold' );
         btnSalvar.textContent = "Apostas de Classificação Encerradas";
+        instrucoes.classList.add('hidden');
     }
 }
 

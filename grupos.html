@@ -90,8 +90,12 @@
 
         <div class="space-y-6">
 
-            <div id="box-bonus" class="bg-gray-800 p-4 rounded-xl border border-emerald-500/30 mb-6 space-y-2">
-                <div id="lista-bonus" class="text-xs text-gray-300 space-y-1">
+            <div class="text-sm font-light" id="instrucoes">
+                Preencha com números de 1 a 4 abaixo de cada país a posição que acha que ele terminará no grupo. Estas apostas darão muitos pontos, uma vez que além de acertar as posições, você ganha bônus se acertar grupos inteiros, todos primeiros, etc.
+            </div>
+
+            <div id="box-bonus" class="bg-amber-400 p-4 rounded-xl border border-amber-200 mb-6 space-y-2">
+                <div id="lista-bonus" class="text-xs text-gray-800 space-y-1">
                     <p>Calculando bônus...</p>
                 </div>
             </div>
@@ -111,17 +115,18 @@
     </main>
 
     <template id="template-grupo">
-        <div class="bg-gray-800 p-4 rounded-xl border border-gray-700">       
-            <h4 class="grupo-titulo text-white font-bold mb-3 border-b border-gray-700 pb-2 text-3xl"></h4>
+        <div class="bg-gray-800 p-8 rounded-xl border border-gray-700">       
+            <h4 class="grupo-titulo text-white font-bold mb-6 text-5xl"></h4>
             <div class="grid-inputs grid grid-cols-4 gap-2"></div>
         </div>
     </template>
 
     <template id="template-input-pais">
-        <div class="flex flex-col items-center gap-1">
-            <span class="nome-pais text-[9px] text-gray-400 uppercase truncate w-full text-center"></span>
-            <input type="number" min="1" max="4" class="grp-input w-full bg-gray-900 border border-gray-700 rounded p-2 text-center text-sm font-bold text-emerald-400">
-            <span class="pontos-individuais text-[10px] font-bold text-amber-400 mt-1"></span>
+        <div class="flex flex-col items-center gap-1 p-1">
+            <span class="bandeira-pais w-full text-center rounded-md overflow-hidden"><img src="" /></span>
+            <span class="nome-pais text-sm text-gray-400 uppercase w-full text-center mb-2"></span>
+            <input type="number" inputmode="numeric" min="1" max="4" maxlength="1" class="grp-input w-full bg-gray-900 border border-gray-700 p-2 text-center text-sm font-bold text-emerald-400 rounded-lg">
+            <span class="pontos-individuais text-sm text-gray-800 mt-1 bg-amber-400 rounded-full px-2 py-1"></span>
         </div>
     </template>
 
