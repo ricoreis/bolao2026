@@ -46,7 +46,7 @@ async function carregarEstrutura() {
             const iClone = document.importNode(document.getElementById('template-input-pais').content, true);
             const img = iClone.querySelector('img');
             if (img) {
-                img.src = `assets/images/paises/${pais.id}.svg`; 
+                img.src = `./assets/images/paises/${pais.id}.svg`; 
                 img.setAttribute("title", pais.nome);
             }
 
