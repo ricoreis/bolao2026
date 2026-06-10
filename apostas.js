@@ -51,8 +51,8 @@ async function carregarJogosEApostas() {
         .select(`
             *,
             fase:fases(nome),
-            time_a:paises!jogos_time_a_id_fkey(nome, sigla),
-            time_b:paises!jogos_time_b_id_fkey(nome, sigla)
+            time_a:paises!jogos_time_a_id_fkey(nome, sigla, id),
+            time_b:paises!jogos_time_b_id_fkey(nome, sigla, id)
         `);
 
     if (ehPaginaFinais) {
@@ -96,17 +96,29 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         const card = template.content.cloneNode(true);
         const cardElement = card.querySelector('.card-jogo');
 
+        const jogoFifa = jogo.jogo_fifa ? "JOGO " + jogo.jogo_fifa + " - " : "";
+
         const dataLocal = new Date(jogo.data_jogo);
-        card.querySelector('.data-jogo').innerText = dataLocal.toLocaleString('pt-BR', {
-            weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
-        }).replace(':', 'h').replace(' ', ' – ').toUpperCase();
+        card.querySelector('.data-jogo').innerText = jogoFifa + dataLocal.toLocaleString('pt-BR', {
+            weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+        }).replace(' ', '').replace(',', ' ').replace(', ', ' ').toUpperCase();
 
         card.querySelector('.time-a').innerText = jogo.time_a?.nome || jogo.time_a_placeholder || 'A definir';
         card.querySelector('.time-b').innerText = jogo.time_b?.nome || jogo.time_b_placeholder || 'A definir';
 
+        if (jogo.time_a?.id) {
+            card.querySelector('.band-a').src = `/assets/images/paises/${jogo.time_a?.id}.svg`;
+            card.querySelector('.band-a').setAttribute("title", jogo.time_a?.nome);
+        }
+        if (jogo.time_b?.id) {
+            card.querySelector('.band-b').src = `/assets/images/paises/${jogo.time_b?.id}.svg`;
+            card.querySelector('.band-b').setAttribute("title", jogo.time_b?.nome);
+        }
+
         const inputA = card.querySelector('.input-a');
         const inputB = card.querySelector('.input-b');
         const btnSalvar = card.querySelector('.btn-salvar');
+        const statusBadge = card.querySelector('.status-badge');
 
         inputA.id = `golsA_${jogo.id}`;
         inputB.id = `golsB_${jogo.id}`;
@@ -135,7 +147,13 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             inputA.classList.add("opacity-50", "cursor-not-allowed");
             inputB.classList.add("opacity-50", "cursor-not-allowed");
             btnSalvar.className = "btn-salvar ml-2 bg-gray-700 text-gray-500 font-bold px-4 py-2 rounded-lg cursor-not-allowed text-sm";
+        } else if ( !jogo.time_a || !jogo.time_b ) {
+            inputA.disabled = true; inputB.disabled = true; btnSalvar.disabled = true;
+            inputA.classList.add("opacity-0", "cursor-auto");
+            inputB.classList.add("opacity-0", "cursor-auto");
+            btnSalvar.classList.add("hidden");
         } else {
+            statusBadge.classList.add("hidden");
             btnSalvar.onclick = (e) => salvarAposta(jogo.id, cardElement, ehPaginaFinais);
         }
 

@@ -18,7 +18,7 @@
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
 
-    <nav class="bg-gray-800 border-b border-gray-700 px-6 h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-6 md:h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
         <div class="w-full sm:w-auto text-center sm:text-left">
             <div class="w-full sm:w-auto text-center sm:text-left">
                 <h1 class="text-xl font-bold tracking-wide text-emerald-400">BOLÃO 2026</h1>
@@ -84,7 +84,7 @@
         </div>
     </nav>
 
-    <main class="max-w-3xl mx-auto px-4 py-8 space-y-6 pt-28">
+    <main class="max-w-3xl mx-auto px-4 py-8 space-y-6 pt-56 md:pt-36">
 
         <h2 class="text-2xl uppercase font-semibold text-gray-300 pb-2 text-center">Fase de Grupos</h2>
 
@@ -99,25 +99,32 @@
     </main>
 
     <template id="template-jogo">
-        <div class="card-jogo bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col gap-2">
-            <span class="data-jogo text-xs font-mono text-gray-500"></span>
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <span class="time-a font-bold text-white"></span>
-                    <span class="sigla-a text-xs text-gray-500 font-bold"></span>
-                    <span class="text-gray-600 font-bold px-2">VS</span>
-                    <span class="time-b font-bold text-white"></span>
-                    <span class="sigla-b text-xs text-gray-500 font-bold"></span>
+        <div class="card-jogo bg-gray-800 border border-gray-700 rounded-xl p-4 flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div class="flex items-center justify-center w-full flex-col gap-4">
+
+                    <div class="flex items-center justify-center w-full">
+                        <span class="data-jogo text-xs font-mono text-gray-500"></span>
+                    </div>
+                    <div class="flex items-center justify-center gap-3 grid grid-cols-12 w-full">
+                        <span class="time-a text-white col-span-3 text-right hidden md:block"></span>
+                        <div class="flex gap-4 col-span-12 md:col-span-6 items-center justify-center">
+                            <img class="band-a w-12" src="" />
+                            <input type="number" min="0" class="input-a w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
+                            <span class="w-4 text-center">x</span>
+                            <input type="number" min="0" class="input-b w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
+                            <img class="band-b w-12" src="" />
+                        </div>
+                        <span class="time-b text-white col-span-3 hidden md:block"></span>
+                    </div>
+                    <div class="flex justify-center items-center gap-4">
+                        <button class="btn-salvar ml-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg transition text-sm">Salvar</button>
+                        <div class="status-badge bg-gray-900 text-gray-500 text-sm px-6 py-1 rounded-full">
+                            Aguardando partida
+                        </div>
+                    </div>
+
                 </div>
-                <div class="flex items-center gap-2">
-                    <input type="number" class="input-a w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
-                    <span class="text-gray-600 font-bold">x</span>
-                    <input type="number" class="input-b w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
-                    <button class="btn-salvar ml-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg transition">Salvar</button>
-                </div>
-            </div>
-            <div class="status-badge bg-gray-900 text-gray-500 text-[10px] px-2 py-1 rounded w-fit">
-                Aguardando partida
             </div>
         </div>
     </template>

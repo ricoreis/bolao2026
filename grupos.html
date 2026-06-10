@@ -18,7 +18,7 @@
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
 
-    <nav class="bg-gray-800 border-b border-gray-700 px-6 h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-6 md:h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
         <div class="w-full sm:w-auto text-center sm:text-left">
             <div class="w-full sm:w-auto text-center sm:text-left">
                 <h1 class="text-xl font-bold tracking-wide text-emerald-400">BOLÃO 2026</h1>
@@ -84,7 +84,7 @@
         </div>
     </nav>
 
-    <main class="max-w-3xl mx-auto px-4 py-8 space-y-6 pb-24 pt-28">
+    <main class="max-w-3xl mx-auto px-4 py-8 space-y-6 pt-56 md:pt-36">
 
         <h2 class="text-2xl uppercase font-semibold text-gray-300 pb-2 text-center">Classificação dos Grupos</h2>
 
@@ -123,7 +123,7 @@
 
     <template id="template-input-pais">
         <div class="flex flex-col items-center gap-1 p-1">
-            <span class="bandeira-pais w-full text-center rounded-md overflow-hidden"><img src="" /></span>
+            <span class="bandeira-pais w-full text-center"><img src="" /></span>
             <span class="nome-pais text-sm text-gray-400 uppercase w-full text-center mb-2"></span>
             <input type="number" inputmode="numeric" min="1" max="4" maxlength="1" class="grp-input w-full bg-gray-900 border border-gray-700 p-2 text-center text-sm font-bold text-emerald-400 rounded-lg">
             <span class="pontos-individuais text-sm text-gray-800 mt-1 bg-amber-400 rounded-full px-2 py-1"></span>
