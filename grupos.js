@@ -130,7 +130,7 @@ function atualizarBoxBonus(contagem, gruposPerfeitos, regras, totalGrupos) {
         div.className = "bonus-linha flex items-center gap-2";
         div.innerHTML = `
             <span class="bonus-pontos text-sm text-amber-400 mt-1 bg-gray-800 rounded-full px-2 py-1 w-12 text-center">+${pontos}</span>
-            <p class="bonus-tipo">${texto}</p>
+            <p class="bonus-tipo text-sm">${texto}</p>
         `;
         return div;
     };
