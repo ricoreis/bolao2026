@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
     <style>
         .password-container { position: relative; }
         .toggle-password {
@@ -22,6 +25,8 @@
             justify-content: center;
         }
         .toggle-password:hover { color: #111827; }
+        body { font-family: 'Quicksand', sans-serif; font-weight: 500; }
+        h1,h2,h3 { font-family: 'Quicksand', sans-serif; font-weight: 300; }
     </style>
 </head>
 <body class="bg-gray-50 flex items-center justify-center min-h-screen text-gray-800 antialiased font-sans">
@@ -30,7 +35,8 @@
         
         <!-- CABEÇALHO -->
         <div class="mb-8 text-center">
-            <h1 class="text-2xl font-bold tracking-tight text-gray-900">Bolão do Cuca 2026</h1>
+            <h1 class="text-2xl font-bold tracking-tight text-gray-900 mb-4">Bolão da Copa 2026</h1>
+            <img class="rounded-lg" src="assets/images/logo-copa.webp" />
         </div>
 
         <!-- NOTIFICAÇÕES GERAIS (Sucesso/Erro) -->
@@ -54,7 +60,7 @@
                         </button>
                     </div>
                 </div>
-                <button type="submit" class="w-full py-3 px-4 bg-gray-900 hover:bg-gray-800 text-white font-medium rounded-lg text-sm transition-colors duration-150">
+                <button type="submit" class="w-full py-3 px-4 bg-emerald-700 hover:bg-gray-800 text-white font-medium rounded-lg text-sm transition-colors duration-150">
                     Entrar
                 </button>
                 <div class="text-center pb-8">
