@@ -238,13 +238,14 @@ function exibirPontos(palpite, gabarito, totalGolsCalculado, totalGolsOficial) {
         
         const el = document.getElementById(item.id);
         if (el) {
-            el.textContent = `${pontos >= 0 ? '+' : ''}${pontos} pts`;
-            el.className = `block text-[10px] font-bold mt-1 ${pontos >= 0 ? 'text-emerald-400' : 'text-red-500'}`;
+            el.textContent = `${pontos > 0 ? '+' : ''}${pontos}`;
+            el.className = `text-sm text-gray-800 mt-1 rounded-full px-2 py-1 w-fit h-fit ${pontos > 0 ? 'bg-amber-400' : pontos == 0 ? 'bg-gray-700' : 'bg-red-400'}`;
         }
     });
 
     // Lógica para o total de gols (único span)
     const elPts = document.getElementById('pts-total-gols');
+    const elPtsCopa = document.getElementById('pts-total-gols_copa');
     
     if (elPts) {
         const p = parseInt(totalGolsCalculado);
@@ -256,13 +257,14 @@ function exibirPontos(palpite, gabarito, totalGolsCalculado, totalGolsOficial) {
         const pontos = RegrasExtras.calcularTotalGols(p, g, pBase);
         
         // Monta a string final: "Pontos (Diferença | Total Copa: X)"
-        const textoPontos = `${pontos >= 0 ? '+' : ''}${pontos} pts`;
-        const textoInfo = `(Total de Gols na Copa: ${g})`;
+        const textoPontos = `${pontos >= 0 ? '+' : ''}${pontos}`;
+        const textoInfo = `Gols na Copa: ${g}`;
         
-        elPts.textContent = `${textoPontos} ${textoInfo}`;
+        elPts.textContent = `${textoPontos}`;
+        elPtsCopa.textContent = `${textoInfo}`;
         
         // Estilização condicional
-        elPts.className = `block text-[10px] font-bold mt-1 ${pontos >= 0 ? 'text-emerald-400' : 'text-red-500'}`;
+        elPts.className = `text-sm text-gray-800 mt-1 rounded-full px-2 py-1 w-fit h-fit ${pontos > 0 ? 'bg-amber-400' : pontos == 0 ? 'bg-gray-700' : 'bg-red-400'}`;
     }
 }
 

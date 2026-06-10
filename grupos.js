@@ -106,11 +106,10 @@ async function carregarDados() {
                 const inputEl = card.querySelector(`.grp-input[data-pais="${pais}"]`);
                 if (gabarito[pais] && pos === gabarito[pais]) {
                     acertosNoGrupo++;
+                    inputEl.nextElementSibling.classList.remove("hidden");
                     contagemAcertos[pos]++;
                     const regra = r.data.find(reg => reg.nome_reduzido === `${pos}ºGRP`);
                     if (inputEl) inputEl.nextElementSibling.textContent = `+${regra ? regra.pontos : 0}`;
-                } else {
-                    inputEl.nextElementSibling.classList.add("hidden");
                 }
             });
             if (acertosNoGrupo === 4) gruposPerfeitos.push(grupoDB.grupo);
