@@ -3,6 +3,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const toast = document.getElementById('toast');
+const btnsLogout = document.querySelectorAll('.btn-logout');
 
 function showToast(message, isError = false) {
     toast.innerText = message;
@@ -103,9 +104,15 @@ async function carregarDadosDashboard(uid) {
 }
 
 // Lógica de logout
-document.getElementById('btn-logout').addEventListener('click', async () => {
-    const { error } = await supabaseClient.auth.signOut();
-    if (error) showToast("Erro ao efetuar logout.", true);
+// document.getElementById('btn-logout').addEventListener('click', async () => {
+//     const { error } = await supabaseClient.auth.signOut();
+//     if (error) showToast("Erro ao efetuar logout.", true);
+// });
+btnsLogout.forEach(botao => {
+    botao.addEventListener('click', async () => { 
+        await supabaseClient.auth.signOut(); 
+        window.location.href = "index.html"; 
+    });
 });
 
 document.addEventListener('DOMContentLoaded', () => {

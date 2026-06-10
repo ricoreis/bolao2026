@@ -7,7 +7,8 @@ const SUPABASE_URL = "https://rximgiwpqmshqaducvla.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4aW1naXdwcW1zaHFhZHVjdmxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MjgwNDYsImV4cCI6MjA5NjEwNDA0Nn0.O3Uy5fYgc7CedVThLza_yCvuM4wHd4IpHrXoCYW2w-I";
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const btnLogout = document.getElementById('btn-logout');
+// const btnLogout = document.getElementById('btn-logout');
+const btnsLogout = document.querySelectorAll('.btn-logout');
 const toast = document.getElementById('toast');
 
 let configRegras = [];
@@ -351,8 +352,15 @@ async function salvarPalpites() {
     else showToast("Palpites salvos com sucesso!");
 }
 
-btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
+// btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
 document.getElementById('btn-salvar-palpites').addEventListener('click', salvarPalpites);
+
+btnsLogout.forEach(botao => {
+    botao.addEventListener('click', async () => { 
+        await supabaseClient.auth.signOut(); 
+        window.location.href = "index.html"; 
+    });
+});
 
 async function iniciarPagina() {
     await carregarDadosIniciais();

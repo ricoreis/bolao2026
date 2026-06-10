@@ -6,7 +6,8 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Variável global para armazenar as regras do banco
 let configRegras = [];
 
-const btnLogout = document.getElementById('btn-logout');
+// const btnLogout = document.getElementById('btn-logout');
+const btnsLogout = document.querySelectorAll('.btn-logout');
 const toast = document.getElementById('toast');
 
 // Carrega as regras do banco ao iniciar o bolão
@@ -248,7 +249,14 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
     }
 }
 
-btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
+// btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
+
+btnsLogout.forEach(botao => {
+    botao.addEventListener('click', async () => { 
+        await supabaseClient.auth.signOut(); 
+        window.location.href = "index.html"; 
+    });
+});
 
 // document.addEventListener('DOMContentLoaded', verificarSessao);
 document.addEventListener('DOMContentLoaded', () => {

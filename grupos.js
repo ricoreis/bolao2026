@@ -17,6 +17,7 @@ function showToast(mensagem) {
         }, 3000);
     }
 }
+const btnsLogout = document.querySelectorAll('.btn-logout');
 
 async function carregarEstrutura() {
     const container = document.getElementById('container-grupos');
@@ -217,6 +218,13 @@ async function iniciarPagina() {
     await carregarEstrutura();
     await verificarPrazo();
 }
+
+btnsLogout.forEach(botao => {
+    botao.addEventListener('click', async () => { 
+        await supabaseClient.auth.signOut(); 
+        window.location.href = "index.html"; 
+    });
+});
 
 // document.addEventListener('DOMContentLoaded', iniciarPagina);
 document.addEventListener('DOMContentLoaded', () => {

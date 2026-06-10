@@ -5,6 +5,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', carregarRanking);
+const btnsLogout = document.querySelectorAll('.btn-logout');
 
 async function carregarRanking() {
     try {
@@ -412,4 +413,11 @@ function sanitizarResultadoFinal(resultado, jogos) {
 
 document.addEventListener('DOMContentLoaded', () => {
     carregarSaudacao();
+});
+
+btnsLogout.forEach(botao => {
+    botao.addEventListener('click', async () => { 
+        await supabaseClient.auth.signOut(); 
+        window.location.href = "index.html"; 
+    });
 });
