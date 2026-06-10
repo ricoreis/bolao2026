@@ -92,8 +92,19 @@
 
         <h2 class="text-2xl uppercase font-semibold text-gray-300 pb-2 text-center">Fase de Grupos</h2>
 
-        <div class="text-sm font-light text-center" id="instrucoes">
-            A aposta de cada jogo encerra faltando 1 hora para a partida.
+        <div class="text-sm font-light rounded-xl p-8 flex flex-row gap-4 border border-gray-200/15 items-center" id="instrucoes">
+            <iconify-icon class="text-5xl" icon="cuida:alert-outline"></iconify-icon>
+            <div class="flex flex-col gap-4">
+                <p>
+                    A aposta de cada jogo encerra faltando 1 hora para a partida.
+                </p>
+                <p>
+                    <span class="">IMPORTANTE:</span> não se esqueça de salvar cada jogo. Após salvar, você continua podendo editar. Basta trocar os números.
+                </p>
+            </div>
+        </div>
+
+        <div>
         </div>
 
         <div class="space-y-6">
@@ -126,7 +137,7 @@
                         <span class="time-b text-white col-span-3 hidden md:block"></span>
                     </div>
                     <div class="flex justify-center items-center gap-4">
-                        <button class="btn-salvar ml-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg transition text-sm">
+                        <button class="btn-salvar hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg transition text-sm">
                             Salvar
                         </button>
                         <div class="status-badge bg-gray-900 text-gray-500 text-sm px-6 py-1 rounded-full">

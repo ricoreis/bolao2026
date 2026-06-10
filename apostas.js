@@ -131,6 +131,19 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         inputA.value = aposta?.gols_a ?? '';
         inputB.value = aposta?.gols_b ?? '';
 
+        const toggleSalvar = () => {
+            const preenchidoA = inputA.value !== '';
+            const preenchidoB = inputB.value !== '';
+            
+            if (preenchidoA && preenchidoB) {
+                btnSalvar.classList.remove("hidden");
+            } else {
+                btnSalvar.classList.add("hidden");
+            }
+        };
+        inputA.addEventListener('input', toggleSalvar);
+        inputB.addEventListener('input', toggleSalvar);
+
         // Cálculo dinâmico com Multiplicador
         if (jogo.gols_a !== null && jogo.gols_b !== null && aposta) {
             // Se fase_id > 1 (Mata-mata), multiplicador é 2, senão é 1
@@ -207,12 +220,37 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 }
 
 async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
+    const inputA = cardElement.querySelector('.input-a');
+    const inputB = cardElement.querySelector('.input-b');
+    const btnSalvar = cardElement.querySelector('.btn-salvar');
+
+    const atualizarVisibilidadeBotao = () => {
+        const preenchidoA = inputA.value !== '';
+        const preenchidoB = inputB.value !== '';
+
+        if (preenchidoA && preenchidoB) {
+            btnSalvar.disabled = false;
+            btnSalvar.classList.remove('hidden');
+        } else {
+            btnSalvar.classList.add('hidden');
+        }
+    };
+
+    inputA.addEventListener('input', atualizarVisibilidadeBotao);
+    inputB.addEventListener('input', atualizarVisibilidadeBotao);
+
+    // 2. Estado de Carregamento
+    const textoOriginal = btnSalvar.innerHTML;
+    btnSalvar.disabled = true;
+    btnSalvar.innerHTML = `<span class="opacity-70">Salvando...</span>`;
+
+    inputA.disabled = true;
+    inputB.disabled = true;
+
     try {
         const { data: { user } } = await supabaseClient.auth.getUser();
-        const inputA = cardElement.querySelector('.input-a');
-        const inputB = cardElement.querySelector('.input-b');
-        const golsA = parseInt(inputA.value || 0);
-        const golsB = parseInt(inputB.value || 0);
+        const golsA = parseInt(inputA.value);
+        const golsB = parseInt(inputB.value);
 
         const dadosAposta = { 
             usuario_id: user.id, 
@@ -222,25 +260,22 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
         };
 
         if (ehPaginaFinais) {
-            // Verifica se o jogo é um empate
-            const ehEmpate = (inputA.value !== '' && inputB.value !== '' && golsA === golsB);
-            
+            const ehEmpate = (golsA === golsB);
             if (ehEmpate) {
-                // Se é empate, tenta pegar a escolha do radio
                 const radio = cardElement.querySelector(`input[name="penaltis_${jogoId}"]:checked`);
                 dadosAposta.penaltis_vencedor_id = radio ? parseInt(radio.value) : null;
             } else {
-                // SE NÃO É EMPATE, FORÇA O NULL
                 dadosAposta.penaltis_vencedor_id = null;
             }
         }
-
-        const { error } = await supabaseClient.from('apostas').upsert(dadosAposta, { onConflict: 'usuario_id, jogo_id' });
         
-        if (inputA.value === '' || inputB.value === '') {
-            showToast("Preencha ambos os placares!");
-            return;
-        }
+        btnSalvar.innerHTML = `<span class="text-emerald-400 font-bold">Aposta salva!</span>`;
+        btnSalvar.classList.add('bg-emerald-900/20', 'border-emerald-700');
+        btnSalvar.classList.remove('hover:bg-emerald-700');
+
+        const { error } = await supabaseClient
+            .from('apostas')
+            .upsert(dadosAposta, { onConflict: 'usuario_id, jogo_id' });
         
         if (error) {
             console.error("Erro Supabase:", error);
@@ -248,9 +283,28 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
         } else {
             showToast("Aposta salva!");
         }
+
+        setTimeout(() => {
+            btnSalvar.classList.add('hidden'); 
+            btnSalvar.innerHTML = textoOriginal;
+            btnSalvar.classList.remove('bg-emerald-900/20', 'border-emerald-700');
+            btnSalvar.classList.add('hover:bg-emerald-700');
+            inputA.disabled = false;
+            inputB.disabled = false;
+            // Opcional: btnSalvar.disabled = false; // Não precisa, o hidden já bloqueia
+        }, 3000);
     } catch (e) { 
         console.error(e);
+        btnSalvar.disabled = false;
+        btnSalvar.innerHTML = textoOriginal; 
+        btnSalvar.classList.remove('bg-emerald-900/20', 'border-emerald-700');
+        btnSalvar.classList.add('hover:bg-emerald-700');
+        inputA.disabled = false;
+        inputB.disabled = false;
         showToast("Erro ao processar.", true); 
+    } finally {
+        // btnSalvar.disabled = false;
+        // btnSalvar.innerHTML = textoOriginal;
     }
 }
 
