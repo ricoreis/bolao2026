@@ -230,39 +230,59 @@ async function iniciarPagina() {
 const validarGrupo = (grupoLetra) => {
     const card = document.getElementById(`card-grupo-${grupoLetra}`);
     const inputs = card.querySelectorAll('.grp-input');
+    const spanErro = card.querySelector('.erro-grupo');
     const btnSalvar = document.getElementById('btn-salvar-grupos');
     
-    // Objeto para rastrear quais números (1-4) já foram usados
-    const usados = {};
-    let temErro = false;
-
-    // Limpa estados anteriores
+    // 1. Limpa todos os estados de erro primeiro
     inputs.forEach(i => i.classList.remove('border-red-500', 'bg-red-900/20'));
+    if (spanErro) spanErro.textContent = "";
 
-    // Analisa os inputs
+    let temErro = false;
+    let mensagemErro = "";
+
+    // 2. Primeiro verifica erros de intervalo (0, 5, 6...)
     inputs.forEach(i => {
-        const val = i.value;
-        if (val) {
-            if (usados[val]) {
-                // Se o valor já foi registrado, marca erro nos dois (no atual e no anterior)
-                i.classList.add('border-red-500', 'bg-red-900/20');
-                usados[val].classList.add('border-red-500', 'bg-red-900/20');
-                temErro = true;
-            } else {
-                usados[val] = i;
-            }
+        const val = parseInt(i.value);
+        if (i.value !== '' && (val < 1 || val > 4)) {
+            i.classList.add('border-red-500', 'bg-red-900/20');
+            temErro = true;
+            mensagemErro = "Os números devem ser de 1 a 4";
         }
     });
 
-    // Se houver erro, desabilita o botão, senão habilita
-    btnSalvar.disabled = temErro;
-    if (temErro) {
-        btnSalvar.classList.add('opacity-50', 'cursor-not-allowed');
-    } else {
-        btnSalvar.classList.remove('opacity-50', 'cursor-not-allowed');
+    // 3. Se não houver erro de intervalo, verifica duplicidade em TODOS
+    if (!temErro) {
+        // Cria um mapa de valores encontrados
+        const contagem = {};
+        inputs.forEach(i => {
+            const val = i.value;
+            if (val !== '') {
+                if (!contagem[val]) contagem[val] = [];
+                contagem[val].push(i);
+            }
+        });
+
+        // Marca todos os inputs que possuem valores repetidos
+        Object.keys(contagem).forEach(val => {
+            if (contagem[val].length > 1) {
+                contagem[val].forEach(inputEl => {
+                    inputEl.classList.add('border-red-500', 'bg-red-900/20');
+                });
+                temErro = true;
+                mensagemErro = "Não pode repetir números";
+            }
+        });
     }
-    
-    return temErro;
+
+    // 4. Exibe mensagem e trava botão
+    if (spanErro) {
+        spanErro.textContent = temErro ? mensagemErro : "";
+        spanErro.classList.toggle('text-red-500', temErro);
+    }
+
+    btnSalvar.disabled = temErro;
+    btnSalvar.classList.toggle('opacity-50', temErro);
+    btnSalvar.classList.toggle('cursor-not-allowed', temErro);
 };
 
 btnsLogout.forEach(botao => {
