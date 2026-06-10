@@ -12,13 +12,16 @@ async function carregarRanking() {
         const [
             { data: headers },
             { data: apostas },
-            { data: jogos }
+            { data: jogos },
+            { data: usuarios }
         ] = await Promise.all([
             supabaseClient.from('pontuacao').select('*').order('id'),
             supabaseClient.from('apostas').select('*, usuarios(nome)'),
-            supabaseClient.from('jogos').select('*')
+            supabaseClient.from('jogos').select('*'),
+            supabaseClient.from('usuarios').select('*')
         ]);
 
+        const participantesFinal = await processarParticipantes(usuarios);
         const rankingFinal = await processarRanking(apostas, jogos, headers);
         renderizarTabela(rankingFinal, headers);
     } catch (error) {
@@ -72,6 +75,27 @@ async function processarGrupos(usuarioId, regras, totalGrupos) {
     return { total: pontosGrupo, contagem: contagem };
 }
 
+async function processarParticipantes(usuarios) {
+
+    const container = document.getElementById('container-participantes');
+    const template = document.getElementById('template-participante');
+    if (!container || !template) return;
+    container.innerHTML = ''; 
+    console.log(usuarios);
+
+    usuarios.forEach(usuario => {
+
+        console.log("Participante: " + usuario.nome);
+        const card = template.content.cloneNode(true);
+        const cardElement = card.querySelector('.participante');
+        card.querySelector('.participante-nome').innerText = usuario.nome;
+
+        container.appendChild(card);
+
+    });
+
+}
+
 async function processarRanking(apostas, jogos, headers) {
     const rankingMap = {};   
     const [
@@ -83,7 +107,6 @@ async function processarRanking(apostas, jogos, headers) {
         supabaseClient.from('fases').select('*')
     ]);
 
-    // AQUI ESTÁ A MÁGICA: Criamos a versão limpa para usar no resto da função
     const gabaritoFinal = sanitizarResultadoFinal(gabaritoBruto, jogos);
 
     const formatarValor = (tabela, id, tipo) => {
@@ -122,7 +145,6 @@ async function processarRanking(apostas, jogos, headers) {
     });
 
     const usuarios = Object.values(rankingMap);
-    console.log("DEBUG: Total de usuários a processar:", usuarios.length); // <--- ADICIONE ISTO
     await Promise.all(usuarios.map(async (usr) => {
         const resG = await processarGrupos(usr.usuario_id, headers, 12);
         usr.pontos_totais += resG.total;
@@ -392,17 +414,12 @@ function determinarFase(timeId, jogos, fases) {
     return faseMax;
 }
 
-/**
- * Garante que um ID não esteja em duas posições de pódio conflitantes.
- */
 function sanitizarResultadoFinal(resultado, jogos) {
     if (!resultado) return resultado;
     const limpo = { ...resultado };
     
-    // Identifica os IDs dos times na Final (fase 7) e no 3º Lugar (fase 6)
     const vencedorFinal = jogos.find(j => parseInt(j.fase_id) === 7)?.vencedor_final_id;
     
-    // Se o time é campeão, removemos ele de qualquer outra posição de pódio
     if (vencedorFinal) {
         if (parseInt(limpo.terceiro_id) === parseInt(vencedorFinal)) limpo.terceiro_id = null;
         if (parseInt(limpo.quarto_id) === parseInt(vencedorFinal)) limpo.quarto_id = null;
