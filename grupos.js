@@ -122,6 +122,8 @@ async function carregarDados() {
 
 function atualizarBoxBonus(contagem, gruposPerfeitos, regras, totalGrupos) {
     const listaBonus = document.getElementById('lista-bonus');
+    const divBox = document.getElementById('box-bonus');
+    let bonusConfere = 0;
     if (!listaBonus) return;
     listaBonus.innerHTML = '';
 
@@ -143,6 +145,7 @@ function atualizarBoxBonus(contagem, gruposPerfeitos, regras, totalGrupos) {
         
         if (regra && contagem[pos] === totalGrupos) {
             const linha = criarLinhaBonus(regra.pontos, `Acertou ${regra.nome} dos Grupos`);
+            bonusConfere += regra.pontos;
             listaBonus.appendChild(linha);
         }
     });
@@ -154,8 +157,12 @@ function atualizarBoxBonus(contagem, gruposPerfeitos, regras, totalGrupos) {
             const totalBonus = gruposPerfeitos.length * regraGrupo.pontos;
             const gruposOrdenados = gruposPerfeitos.sort().join(', ');
             const linha = criarLinhaBonus(totalBonus, `Acertou Grupo(s) Inteiro(s) : ${gruposOrdenados}`);
+            bonusConfere += totalBonus;
             listaBonus.appendChild(linha);
         }
+    }
+    if (bonusConfere > 0) {
+        divBox.classList.remove("hidden");
     }
 }
 
