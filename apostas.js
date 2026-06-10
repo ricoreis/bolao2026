@@ -113,11 +113,11 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         card.querySelector('.time-b').innerText = jogo.time_b?.nome || jogo.time_b_placeholder || 'A definir';
 
         if (jogo.time_a?.id) {
-            card.querySelector('.band-a').src = `/assets/images/paises/${jogo.time_a?.id}.svg`;
+            card.querySelector('.band-a').src = `assets/images/paises/${jogo.time_a?.id}.svg`;
             card.querySelector('.band-a').setAttribute("title", jogo.time_a?.nome);
         }
         if (jogo.time_b?.id) {
-            card.querySelector('.band-b').src = `/assets/images/paises/${jogo.time_b?.id}.svg`;
+            card.querySelector('.band-b').src = `assets/images/paises/${jogo.time_b?.id}.svg`;
             card.querySelector('.band-b').setAttribute("title", jogo.time_b?.nome);
         }
 
