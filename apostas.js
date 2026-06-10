@@ -237,6 +237,11 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
 
         const { error } = await supabaseClient.from('apostas').upsert(dadosAposta, { onConflict: 'usuario_id, jogo_id' });
         
+        if (inputA.value === '' || inputB.value === '') {
+            showToast("Preencha ambos os placares!");
+            return;
+        }
+        
         if (error) {
             console.error("Erro Supabase:", error);
             showToast("Erro ao salvar.", true);
