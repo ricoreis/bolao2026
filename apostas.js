@@ -96,10 +96,15 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         const card = template.content.cloneNode(true);
         const cardElement = card.querySelector('.card-jogo');
 
-        const jogoFifa = jogo.jogo_fifa ? "JOGO " + jogo.jogo_fifa + " - " : "";
+        let jogoPrefixo = "";
+        if(jogo.jogo_fifa) {
+            jogoPrefixo = "JOGO " + jogo.jogo_fifa + " - "
+        } else {
+            jogoPrefixo = "GRUPO " + jogo.grupo + " - ";
+        }
 
         const dataLocal = new Date(jogo.data_jogo);
-        card.querySelector('.data-jogo').innerText = jogoFifa + dataLocal.toLocaleString('pt-BR', {
+        card.querySelector('.data-jogo').innerText = jogoPrefixo + dataLocal.toLocaleString('pt-BR', {
             weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
         }).replace(' ', '').replace(',', ' ').replace(', ', ' ').toUpperCase();
 
