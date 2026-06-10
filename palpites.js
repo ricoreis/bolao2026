@@ -333,6 +333,7 @@ function travarInputs() {
         btnSalvar.classList.add('bg-transparent', 'cursor-not-allowed');
         btnSalvar.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'font-bold' );
         btnSalvar.textContent = "Apostas de Palpites Encerradas";
+        instrucoes.classList.add('hidden');
     }
 }
 
