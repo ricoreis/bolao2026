@@ -186,24 +186,24 @@ async function processarRanking(apostas, jogos, headers) {
 
                 // TEMPORARIAMENTE FORA
                 // --- LÓGICA DO PENAL (Simplificada e direto na fonte) ---
-                apostas.forEach(aposta => {
-                    const jogo = jogos.find(j => String(j.id) === String(aposta.jogo_id));
-                    const usr = rankingMap[aposta.usuario_id];
+                // apostas.forEach(aposta => {
+                //     const jogo = jogos.find(j => String(j.id) === String(aposta.jogo_id));
+                //     const usr = rankingMap[aposta.usuario_id];
                     
-                    if (usr['placar_classificado_penaltis'] === undefined) {
-                        usr['placar_classificado_penaltis'] = 0;
-                    }
+                //     if (usr['placar_classificado_penaltis'] === undefined) {
+                //         usr['placar_classificado_penaltis'] = 0;
+                //     }
                     
-                    if (jogo && jogo.penaltis_vencedor_id && aposta.penaltis_vencedor_id) {
-                        const acertou = (parseInt(aposta.penaltis_vencedor_id) === parseInt(jogo.penaltis_vencedor_id));
+                //     if (jogo && jogo.penaltis_vencedor_id && aposta.penaltis_vencedor_id) {
+                //         const acertou = (parseInt(aposta.penaltis_vencedor_id) === parseInt(jogo.penaltis_vencedor_id));
                         
-                        if (acertou) {
-                            usr['placar_classificado_penaltis'] += 1;
-                            const regraPenal = headers.find(h => h.nome_reduzido === 'PENAL');
-                            if (regraPenal) usr.pontos_totais += parseInt(regraPenal.pontos || 0);
-                        }
-                    }
-                });
+                //         if (acertou) {
+                //             usr['placar_classificado_penaltis'] += 1;
+                //             const regraPenal = headers.find(h => h.nome_reduzido === 'PENAL');
+                //             if (regraPenal) usr.pontos_totais += parseInt(regraPenal.pontos || 0);
+                //         }
+                //     }
+                // });
 
                 // ---------------------------------------------------------------------------
 
@@ -226,76 +226,74 @@ async function processarRanking(apostas, jogos, headers) {
                 
                 // --- CAMPEAO CAINDO
                 // --- TEMPORARIAMENTE FORA
-                const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
-                colunas.forEach(c => usr[c] = '-'); 
+                // const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
+                // colunas.forEach(c => usr[c] = '-'); 
 
-                const pCamp = parseInt(p.campeao_id);
-                const jogoFinal = jogos.find(j => parseInt(j.fase_id) === 7);
-                const vencedorOficial = jogoFinal ? parseInt(jogoFinal.vencedor_final_id) : null;
+                // const pCamp = parseInt(p.campeao_id);
+                // const jogoFinal = jogos.find(j => parseInt(j.fase_id) === 7);
+                // const vencedorOficial = jogoFinal ? parseInt(jogoFinal.vencedor_final_id) : null;
 
-                if (pCamp > 0 && vencedorOficial > 0 && vencedorOficial !== null) {
+                // if (pCamp > 0 && vencedorOficial > 0 && vencedorOficial !== null) {
 
-                    const faseID = determinarFase(pCamp, jogos, fases);
-                    // console.log(`DEBUG PUNIÇÃO: Usuário ${usr.nome} | Fase ID: ${faseID}`);
+                //     const faseID = determinarFase(pCamp, jogos, fases);
+                //     const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
+                //     colunas.forEach(c => usr[c] = 'N1');
 
-                    const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
-                    colunas.forEach(c => usr[c] = 'N1');
+                //     if (faseID === 1) usr["campeao_perde_grupos"] = 'S';
+                //     else if (faseID === 2) usr["campeao_perde_16"] = 'S';
+                //     else if (faseID === 3) usr["campeao_perde_8"] = 'S';
+                //     else if (faseID === 4) usr["campeao_perde_4"] = 'S';
+                //     else if (faseID === 5) usr["campeao_perde_3"] = 'S';
+                //     else if (faseID === 6) usr["campeao_perde_3"] = 'S';
+                //     else if (faseID === 7) {
+                //         if (vencedorOficial !== null && pCamp !== vencedorOficial) {
+                //             usr["campeao_perde_final"] = 'S';
+                //         } else {
+                //             usr["campeao_perde_final"] = 'N';
+                //         }
+                //     }
 
-                    if (faseID === 1) usr["campeao_perde_grupos"] = 'S';
-                    else if (faseID === 2) usr["campeao_perde_16"] = 'S';
-                    else if (faseID === 3) usr["campeao_perde_8"] = 'S';
-                    else if (faseID === 4) usr["campeao_perde_4"] = 'S';
-                    else if (faseID === 5) usr["campeao_perde_3"] = 'S';
-                    else if (faseID === 6) usr["campeao_perde_3"] = 'S';
-                    else if (faseID === 7) {
-                        if (vencedorOficial !== null && pCamp !== vencedorOficial) {
-                            usr["campeao_perde_final"] = 'S';
-                        } else {
-                            usr["campeao_perde_final"] = 'N';
-                        }
-                    }
+                //     const mapaRegras = [
+                //         { c: "campeao_perde_grupos", r: "CAMPGR" },
+                //         { c: "campeao_perde_16", r: "CAMP16" },
+                //         { c: "campeao_perde_8", r: "CAMP8" },
+                //         { c: "campeao_perde_4", r: "CAMP4" },
+                //         { c: "campeao_perde_3", r: "CAMP3" },
+                //         { c: "campeao_perde_final", r: "CAMPVICE" }
+                //     ];
 
-                    const mapaRegras = [
-                        { c: "campeao_perde_grupos", r: "CAMPGR" },
-                        { c: "campeao_perde_16", r: "CAMP16" },
-                        { c: "campeao_perde_8", r: "CAMP8" },
-                        { c: "campeao_perde_4", r: "CAMP4" },
-                        { c: "campeao_perde_3", r: "CAMP3" },
-                        { c: "campeao_perde_final", r: "CAMPVICE" }
-                    ];
-
-                    mapaRegras.forEach(m => {
-                        if (usr[m.c] === 'S') {
-                            const regraObj = headers.find(h => h.nome_reduzido === m.r);
-                            if (regraObj && regraObj.pontos) {
-                                usr.pontos_totais += parseInt(regraObj.pontos);
-                            }
-                        }
-                    });
-                }
+                //     mapaRegras.forEach(m => {
+                //         if (usr[m.c] === 'S') {
+                //             const regraObj = headers.find(h => h.nome_reduzido === m.r);
+                //             if (regraObj && regraObj.pontos) {
+                //                 usr.pontos_totais += parseInt(regraObj.pontos);
+                //             }
+                //         }
+                //     });
+                // }
 
                 // ----------------------------------------------------------------------
 
                 // --- GOLS
                 // --- TEMPORARIAMENTE FORA
-                const apostasDoUsuario = apostas.filter(a => String(a.usuario_id) === String(usr.usuario_id));
-                const palpiteGols = apostasDoUsuario.reduce((soma, a) => soma + (a.gols_a || 0) + (a.gols_b || 0), 0);
+                // const apostasDoUsuario = apostas.filter(a => String(a.usuario_id) === String(usr.usuario_id));
+                // const palpiteGols = apostasDoUsuario.reduce((soma, a) => soma + (a.gols_a || 0) + (a.gols_b || 0), 0);
 
-                const gabGols = jogos
-                    .filter(j => j.gols_a !== null && j.gols_b !== null)
-                    .reduce((soma, j) => soma + j.gols_a + j.gols_b, 0);
+                // const gabGols = jogos
+                //     .filter(j => j.gols_a !== null && j.gols_b !== null)
+                //     .reduce((soma, j) => soma + j.gols_a + j.gols_b, 0);
 
-                if (gabGols > 0) {
-                    const dif = Math.abs(palpiteGols - gabGols);
-                    const regraAllGols = headers.find(h => h.nome_reduzido === 'ALLGOLS');
+                // if (gabGols > 0) {
+                //     const dif = Math.abs(palpiteGols - gabGols);
+                //     const regraAllGols = headers.find(h => h.nome_reduzido === 'ALLGOLS');
                     
-                    const pontosBonus = regraAllGols ? parseInt(regraAllGols.pontos || 30) : 30;
+                //     const pontosBonus = regraAllGols ? parseInt(regraAllGols.pontos || 30) : 30;
                     
-                    usr.pontos_totais += (dif === 0 ? pontosBonus : -dif);
-                    usr['extra_total_gols'] = `${palpiteGols} (${dif === 0 ? 'Cravou' : -dif})`;
-                } else {
-                    usr['extra_total_gols'] = `${palpiteGols} (Pendente)`;
-                }
+                //     usr.pontos_totais += (dif === 0 ? pontosBonus : -dif);
+                //     usr['extra_total_gols'] = `${palpiteGols} (${dif === 0 ? 'Cravou' : -dif})`;
+                // } else {
+                //     usr['extra_total_gols'] = `${palpiteGols} (Pendente)`;
+                // }
 
                 // ----------------------------------------------------------------------
 
@@ -359,7 +357,15 @@ async function processarRanking(apostas, jogos, headers) {
         } catch (e) { console.error("Erro no processamento:", e); }
     }));
 
-    return usuarios.sort((a, b) => b.pontos_totais - a.pontos_totais);
+    // return usuarios.sort((a, b) => b.pontos_totais - a.pontos_totais);
+
+    // ORDENACAO - CRITÉRIOS
+    return usuarios.sort((a, b) => {
+        if (b.pontos_totais !== a.pontos_totais) {
+            return b.pontos_totais - a.pontos_totais;
+        }
+        return a.nome.localeCompare(b.nome);
+    });
 }
 
 function renderizarTabela(dados, headers) {
