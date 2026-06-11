@@ -174,42 +174,34 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         }
 
         if (jogoOcorrido) {
-            inputA.disabled = true;
-            inputB.disabled = true;
-            btnSalvar.disabled = true;
-            inputA.classList.add("hidden");
-            inputB.classList.add("hidden");
-            definitivoA.classList.remove("hidden");
-            definitivoB.classList.remove("hidden");
+            inputA.disabled = true; inputB.disabled = true; btnSalvar.disabled = true;
+            inputA.classList.add("hidden"); inputB.classList.add("hidden");
+            definitivoA.classList.remove("hidden"); definitivoB.classList.remove("hidden");
             statusBadge.classList.add("hidden"); 
-        } else if ((dataLocal - agora) / (1000 * 60) < 60) {
-            inputA.disabled = true;
-            inputB.disabled = true;
-            btnSalvar.disabled = true;
-            inputA.classList.add("opacity-50", "cursor-not-allowed");
-            inputB.classList.add("opacity-50", "cursor-not-allowed");
-            btnSalvar.className = "btn-salvar ml-2 bg-gray-700 text-gray-500 font-bold px-4 py-2 rounded-lg cursor-not-allowed text-sm";
+        } 
+        else if ((dataLocal - agora) / (1000 * 60) < 60) {
+            inputA.disabled = true; inputB.disabled = true; btnSalvar.disabled = true;
+            inputA.classList.add("opacity-50", "cursor-not-allowed", "hidden");
+            inputB.classList.add("opacity-50", "cursor-not-allowed", "hidden");
+            definitivoA.classList.remove("hidden"); definitivoB.classList.remove("hidden");
             
-            // STATUS: JOGO ENCERRADO PARA APOSTAS
             btnSalvar.classList.add("hidden");
-            inputA.classList.add("hidden");
-            inputB.classList.add("hidden");
-            definitivoA.classList.remove("hidden");
-            definitivoB.classList.remove("hidden");
             statusBadge.classList.remove("hidden");
             statusBadge.innerText = "Apostas Encerradas! Aguardando resultado";
-            
-        } else if ( !jogo.time_a || !jogo.time_b ) {
-            inputA.disabled = true;
-            inputB.disabled = true;
-            btnSalvar.disabled = true;
+        } 
+        else if (!jogo.time_a || !jogo.time_b) {
+            if (jogo.fase_id > 1) {
+                statusBadge.classList.remove("hidden");
+            } else {
+                statusBadge.classList.add("hidden");
+            }
+            inputA.disabled = true; inputB.disabled = true; btnSalvar.disabled = true;
             inputA.classList.add("opacity-0", "cursor-auto");
             inputB.classList.add("opacity-0", "cursor-auto");
             btnSalvar.classList.add("hidden");
+        } 
+        else {
             statusBadge.classList.add("hidden");
-        } else {
-            // STATUS: JOGO ABERTO
-            statusBadge.classList.add("hidden"); // Esconde qualquer status
             btnSalvar.onclick = (e) => salvarAposta(jogo.id, cardElement, ehPaginaFinais);
         }
 
