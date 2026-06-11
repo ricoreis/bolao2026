@@ -115,6 +115,8 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
         card.querySelector('.time-a').innerText = jogo.time_a?.nome || jogo.time_a_placeholder || 'A definir';
         card.querySelector('.time-b').innerText = jogo.time_b?.nome || jogo.time_b_placeholder || 'A definir';
+        card.querySelector('.sigla-a').innerText = jogo.time_a?.sigla || jogo.time_a_placeholder || 'A definir';
+        card.querySelector('.sigla-b').innerText = jogo.time_b?.sigla || jogo.time_b_placeholder || 'A definir';
 
         if (jogo.time_a?.id) {
             card.querySelector('.band-a').src = `./assets/images/paises/${jogo.time_a?.id}.svg`;
@@ -192,6 +194,8 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         else if (!jogo.time_a || !jogo.time_b) {
             if (jogo.fase_id > 1) {
                 statusBadge.classList.remove("hidden");
+                inputA.classList.add("hidden");
+                inputB.classList.add("hidden");
             } else {
                 statusBadge.classList.add("hidden");
             }

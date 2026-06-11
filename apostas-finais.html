@@ -133,13 +133,21 @@
                     <div class="flex items-center justify-center gap-3 grid grid-cols-12 w-full">
                         <span class="time-a text-white col-span-3 text-right hidden md:block"></span>
                         <div class="flex gap-4 col-span-12 md:col-span-6 items-center justify-center">
-                            <img class="band-a w-12" src="" />
-                            <input type="number" min="0" class="input-a w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
-                            <span class="definitivo-a w-12 h-10 text-center text-2xl flex items-center justify-center hidden"></span>
-                            <span class="w-4 text-center">x</span>
-                            <span class="definitivo-b w-12 h-10 text-center text-2xl flex items-center justify-center hidden"></span>
-                            <input type="number" min="0" class="input-b w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
-                            <img class="band-b w-12" src="" />
+                            <div class="w-12 flex flex-col">
+                                <img class="band-a w-12" src="" />
+                                <span class="sigla-a text-white text-center text-xs font-light flex md:hidden h-7 items-center justify-center"></span>
+                            </div>
+                            <div class="w-28 flex justify-center gap-1.5 items-center pb-7 md:pb-0">
+                                <input type="number" min="0" class="input-a w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
+                                <span class="definitivo-a w-12 h-10 text-center text-2xl flex items-center justify-center hidden"></span>
+                                <span class="w-4 text-center">x</span>
+                                <span class="definitivo-b w-12 h-10 text-center text-2xl flex items-center justify-center hidden"></span>
+                                <input type="number" min="0" class="input-b w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div class="w-12 flex flex-col">
+                                <img class="band-b w-12" src="" />
+                                <span class="sigla-b text-white text-center text-xs font-light flex md:hidden h-7 items-center justify-center"></span>
+                            </div>
                         </div>
                         <span class="time-b text-white col-span-3 hidden md:block"></span>
                     </div>
