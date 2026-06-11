@@ -140,22 +140,22 @@ async function processarRanking(apostas, jogos, headers) {
     });
 
     // 2. Agora processa as apostas apenas para somar pontos aos que já existem
-    jogos.forEach(jogo => {
-        if (jogo.gols_a === null || jogo.gols_b === null) return;
-        apostas.forEach(aposta => {
-            if (String(aposta.jogo_id) === String(jogo.id)) {
-                const usr = rankingMap[aposta.usuario_id];
-                if (!usr) return;
+    // jogos.forEach(jogo => {
+    //     if (jogo.gols_a === null || jogo.gols_b === null) return;
+    //     apostas.forEach(aposta => {
+    //         if (String(aposta.jogo_id) === String(jogo.id)) {
+    //             const usr = rankingMap[aposta.usuario_id];
+    //             if (!usr) return;
                 
-                let mult = (parseInt(jogo.id) > 72) ? 2 : 1;
-                const res = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, headers, mult);
+    //             let mult = (parseInt(jogo.id) > 72) ? 2 : 1;
+    //             const res = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, headers, mult);
                 
-                if (res.total > 0 || res.coluna) {
-                    usr.pontos_totais += parseInt(res.total);
-                }
-            }
-        });
-    });
+    //             if (res.total > 0 || res.coluna) {
+    //                 usr.pontos_totais += parseInt(res.total);
+    //             }
+    //         }
+    //     });
+    // });
 
     const [
         { data: gabaritoBruto }, { data: paises }, { data: jogadores }, { data: fases }
