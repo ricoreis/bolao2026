@@ -17,7 +17,7 @@ async function carregarRanking() {
         ] = await Promise.all([
             supabaseClient.from('pontuacao').select('*').order('id'),
             supabaseClient.from('apostas').select('*, usuarios(nome)'),
-            supabaseClient.from('jogos').select('*'),
+            supabaseClient.from('jogos').select('*, vencedor_final_id'),
             supabaseClient.from('usuarios').select('*')
         ]);
 
@@ -30,6 +30,7 @@ async function carregarRanking() {
 }
 
 async function processarGrupos(usuarioId, regras, totalGrupos) {
+
     const { data: gabaritos } = await supabaseClient.from('grupos').select('*');
     const { data: palpiteDB } = await supabaseClient.from('palpites').select('palpites_grupos').eq('usuario_id', usuarioId);
 
@@ -81,11 +82,11 @@ async function processarParticipantes(usuarios) {
     const template = document.getElementById('template-participante');
     if (!container || !template) return;
     container.innerHTML = ''; 
-    console.log(usuarios);
+    // console.log(usuarios);
 
     usuarios.forEach(usuario => {
 
-        console.log("Participante: " + usuario.nome);
+        // console.log("Participante: " + usuario.nome);
         const card = template.content.cloneNode(true);
         const cardElement = card.querySelector('.participante');
         card.querySelector('.participante-nome').innerText = usuario.nome;
@@ -97,7 +98,9 @@ async function processarParticipantes(usuarios) {
 }
 
 async function processarRanking(apostas, jogos, headers) {
-    const rankingMap = {};   
+
+    const rankingMap = {};
+
     const [
         { data: gabaritoBruto }, { data: paises }, { data: jogadores }, { data: fases }
     ] = await Promise.all([
@@ -120,7 +123,7 @@ async function processarRanking(apostas, jogos, headers) {
         if (!rankingMap[a.usuario_id]) {
             const usuarioObj = { usuario_id: a.usuario_id, nome: a.usuarios?.nome || 'Anon', pontos_totais: 0 };
             headers.forEach(h => usuarioObj[h.coluna_db] = 0);
-            usuarioObj['placar_classificado_penaltis'] = 0; // Inicializado como número!
+            usuarioObj['placar_classificado_penaltis'] = 0;
             rankingMap[a.usuario_id] = usuarioObj;
         }
     });
@@ -145,8 +148,11 @@ async function processarRanking(apostas, jogos, headers) {
     });
 
     const usuarios = Object.values(rankingMap);
+
     await Promise.all(usuarios.map(async (usr) => {
+
         const resG = await processarGrupos(usr.usuario_id, headers, 12);
+
         usr.pontos_totais += resG.total;
         usr['grupo_primeiro'] = resG.contagem[1]; usr['grupo_segundo'] = resG.contagem[2];
         usr['grupo_terceiro'] = resG.contagem[3]; usr['grupo_quarto'] = resG.contagem[4];
@@ -158,13 +164,17 @@ async function processarRanking(apostas, jogos, headers) {
 
         try {
             const { data: pList } = await supabaseClient.from('palpites').select('*').eq('usuario_id', usr.usuario_id);
-            const p = (pList && pList.length > 0) ? pList[0] : null;
-            console.log(`DEBUG: Processando usuário ${usr.nome}, Palpite encontrado:`, !!p);
-            if (p && gabaritoFinal) {
 
-                console.log(`--- DEBUG: Usuário ${usr.nome} ---`);
-                console.log(`Palpite: CampID=${p.campeao_id}, ViceID=${p.vice_id}`);
-                console.log(`Gabarito: CampID=${gabaritoFinal.campeao_id}, ViceID=${gabaritoFinal.vice_id}`);
+            // if (!pList || pList.length === 0) {
+            //     console.log(`Usuário ${usr.nome} não tem palpites. Pulando lógica extra.`);
+            //     return;
+            // }
+        
+            const p = pList[0];
+            // const p = (pList && pList.length > 0) ? pList[0] : null;
+
+            // console.log(`DEBUG: Processando usuário ${usr.nome}, Palpite encontrado:`, !!p);
+            if (p && gabaritoFinal) {
 
                 // Lógica de Comparação
                 const palpiteCamp = parseInt(p.campeao_id);
@@ -172,79 +182,72 @@ async function processarRanking(apostas, jogos, headers) {
                 const gabCamp = parseInt(gabaritoFinal.campeao_id);
                 const gabVice = parseInt(gabaritoFinal.vice_id);
 
+                // ---------------------------------------------------------------------------
+
+                // TEMPORARIAMENTE FORA
                 // --- LÓGICA DO PENAL (Simplificada e direto na fonte) ---
                 apostas.forEach(aposta => {
                     const jogo = jogos.find(j => String(j.id) === String(aposta.jogo_id));
                     const usr = rankingMap[aposta.usuario_id];
                     
-                    // Inicializa o contador se ainda não existir
                     if (usr['placar_classificado_penaltis'] === undefined) {
                         usr['placar_classificado_penaltis'] = 0;
                     }
                     
-                    // Verifica se o jogo teve pênaltis e se o usuário palpitou
                     if (jogo && jogo.penaltis_vencedor_id && aposta.penaltis_vencedor_id) {
                         const acertou = (parseInt(aposta.penaltis_vencedor_id) === parseInt(jogo.penaltis_vencedor_id));
                         
                         if (acertou) {
-                            // Incrementa o contador de acertos
                             usr['placar_classificado_penaltis'] += 1;
-                            
                             const regraPenal = headers.find(h => h.nome_reduzido === 'PENAL');
                             if (regraPenal) usr.pontos_totais += parseInt(regraPenal.pontos || 0);
                         }
                     }
                 });
 
-                const acertou = (palpiteCamp === gabCamp && palpiteVice === gabVice);
-                console.log(`Resultado da comparação: ${acertou ? 'ACERTOU!' : 'ERROU'}`);
+                // ---------------------------------------------------------------------------
 
+                const acertou = (palpiteCamp === gabCamp && palpiteVice === gabVice);
                 const nomeCamp = paises.find(pais => pais.id === palpiteCamp)?.nome || "??";
                 const nomeVice = paises.find(pais => pais.id === palpiteVice)?.nome || "??";
 
-                // Adiciona a string no objeto usr
                 usr['final_copa'] = `${acertou ? 'S' : 'N'} (${nomeCamp} x ${nomeVice})`;
-                console.log(`Texto gerado: ${usr['final_copa']}`);
 
                 if (acertou) {
                     const regra = headers.find(h => h.nome_reduzido === 'FINAL');
                     if (regra) {
-                        console.log(`Somando ${regra.pontos} pontos ao total ${usr.pontos_totais}`);
                         usr.pontos_totais += parseInt(regra.pontos || 0);
                     } else {
                         console.warn("Regra 'FINAL_COMPLETA' não encontrada nos headers!");
                     }
                 }
 
-                // --- LÓGICA DE PREENCHIMENTO BLINDADA ---
+                // ----------------------------------------------------------------------
+                
+                // --- CAMPEAO CAINDO
+                // --- TEMPORARIAMENTE FORA
                 const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
-                colunas.forEach(c => usr[c] = 'N'); 
+                colunas.forEach(c => usr[c] = '-'); 
 
-                // --- PUNIÇÕES (Lógica Direta com IDs) ---
                 const pCamp = parseInt(p.campeao_id);
+                const jogoFinal = jogos.find(j => parseInt(j.fase_id) === 7);
+                const vencedorOficial = jogoFinal ? parseInt(jogoFinal.vencedor_final_id) : null;
 
-                if (pCamp > 0) {
+                if (pCamp > 0 && vencedorOficial > 0 && vencedorOficial !== null) {
+
                     const faseID = determinarFase(pCamp, jogos, fases);
-                    console.log(`DEBUG PUNIÇÃO: Usuário ${usr.nome} | Fase ID: ${faseID}`);
+                    // console.log(`DEBUG PUNIÇÃO: Usuário ${usr.nome} | Fase ID: ${faseID}`);
 
-                    const jogoFinal = jogos.find(j => parseInt(j.fase_id) === 7);
-                    const vencedorOficial = jogoFinal ? parseInt(jogoFinal.vencedor_final_id) : null;
-
-                    // Limpa estados anteriores
                     const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
-                    colunas.forEach(c => usr[c] = 'N');
+                    colunas.forEach(c => usr[c] = 'N1');
 
-                    // Mapeamento direto pelos IDs que o determinarFase retorna
                     if (faseID === 1) usr["campeao_perde_grupos"] = 'S';
                     else if (faseID === 2) usr["campeao_perde_16"] = 'S';
                     else if (faseID === 3) usr["campeao_perde_8"] = 'S';
                     else if (faseID === 4) usr["campeao_perde_4"] = 'S';
-                    else if (faseID === 5) usr["campeao_perde_3"] = 'S'; // Jogo de 3º lugar
-                    else if (faseID === 6) usr["campeao_perde_3"] = 'S'; // Jogo de 3º lugar
+                    else if (faseID === 5) usr["campeao_perde_3"] = 'S';
+                    else if (faseID === 6) usr["campeao_perde_3"] = 'S';
                     else if (faseID === 7) {
-                        // Só aplica a punição se:
-                        // - O vencedor oficial já estiver definido (não for null)
-                        // - E o palpite do usuário (pCamp) for diferente desse vencedor
                         if (vencedorOficial !== null && pCamp !== vencedorOficial) {
                             usr["campeao_perde_final"] = 'S';
                         } else {
@@ -271,7 +274,10 @@ async function processarRanking(apostas, jogos, headers) {
                     });
                 }
 
-                // --- GOLS (BLINDADA) --- TEMPORARIO
+                // ----------------------------------------------------------------------
+
+                // --- GOLS
+                // --- TEMPORARIAMENTE FORA
                 // const apostasDoUsuario = apostas.filter(a => String(a.usuario_id) === String(usr.usuario_id));
                 // const palpiteGols = apostasDoUsuario.reduce((soma, a) => soma + (a.gols_a || 0) + (a.gols_b || 0), 0);
 
@@ -291,6 +297,8 @@ async function processarRanking(apostas, jogos, headers) {
                 //     usr['extra_total_gols'] = `${palpiteGols} (Pendente)`;
                 // }
 
+                // ----------------------------------------------------------------------
+
                 const mapaExtra = [
                     { db: 'final_campeao', pal: 'campeao_id', gab: 'campeao_id', regra: 'CAMP', tipo: 'pais', tabela: paises },
                     { db: 'final_vice', pal: 'vice_id', gab: 'vice_id', regra: 'VICE', tipo: 'pais', tabela: paises },
@@ -307,8 +315,10 @@ async function processarRanking(apostas, jogos, headers) {
                 ];
 
                 mapaExtra.forEach(m => {
-                    // Caso especial para a Final (Comparando dois IDs)
                     if (m.tipo === 'final') {
+
+                        // --- FINAL DA COPA
+                        // --- TEMPORARIAMENTE FORA
                         const palpiteCamp = p.campeao_id;
                         const palpiteVice = p.vice_id;
                         const gabCamp = gabaritoFinal.campeao_id;
@@ -323,15 +333,26 @@ async function processarRanking(apostas, jogos, headers) {
                         if (acertou) {
                             usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
                         }
+
                     } else {
                         // Lógica original para os outros campos...
                         const palpiteID = p[m.pal];
                         const gabaritoID = gabaritoFinal[m.gab];
+
+                        if (m.db === 'extra_duelo') {
+                            const valoresValidos = ['CR7', 'MESSI', 'EMPATE'];
+                            if (!valoresValidos.includes(palpiteID)) {
+                                usr[m.db] = "-";
+                                return;
+                            }
+                        }
                         if (gabaritoID != null) {
                             const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
                             usr[m.db] = `${acertou ? 'S' : 'N'} (${formatarValor(m.tabela, palpiteID, m.tipo)})`;
                             if (acertou) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
                         } else usr[m.db] = "-";
+
+
                     }
                 });
             }
@@ -360,7 +381,7 @@ function renderizarTabela(dados, headers) {
     while (thead.children.length > 3) thead.removeChild(thead.lastChild);
     headersComFinal.forEach(h => {
         const th = document.createElement('th');
-        th.className = "px-4 py-4 text-center text-xs text-emerald-400 uppercase";
+        th.className = `px-4 py-4 text-center text-xs text-emerald-400 uppercase col-${h.coluna_db}`;
         th.innerText = h.nome_reduzido;
         thead.appendChild(th);
     });
@@ -371,32 +392,33 @@ function renderizarTabela(dados, headers) {
         // AGORA USAMOS headersComFinal AQUI!
         const colunasDinamicas = headersComFinal.map(h => {
             let valor = usr[h.coluna_db];
+            const classeColuna = `col-${h.coluna_db}`;
 
             // 1. Lógica específica para a FINAL
             if (h.coluna_db === 'final_copa') {
-                return `<td class="px-2 py-3 text-center text-xs whitespace-nowrap font-medium text-white">${valor || 'N (? x ?)'}</td>`;
+                return `<td class="${classeColuna} px-2 py-3 text-center text-xs whitespace-nowrap font-medium text-white">${valor}</td>`;
             }
             
             // 2. Colunas de penalidade
             const colunasCamp = ['campeao_perde_grupos', 'campeao_perde_16', 'campeao_perde_8', 'campeao_perde_4', 'campeao_perde_3', 'campeao_perde_final'];
             if (colunasCamp.includes(h.coluna_db)) {
-                return `<td class="px-2 py-3 text-center text-xs">${valor ?? 'N'}</td>`;
+                return `<td class="${classeColuna} px-2 py-3 text-center text-xs">${valor ?? 'N'}</td>`;
             }
 
             // 3. Colunas de grupo
             const colunasGrupos = ['grupo_primeiro', 'grupo_segundo', 'grupo_terceiro', 'grupo_quarto', 'grupo_todos_exatos'];
             if (colunasGrupos.includes(h.coluna_db)) {
-                return `<td class="px-2 py-3 text-center text-xs">${valor ?? 0}/12</td>`;
+                return `<td class="${classeColuna} px-2 py-3 text-center text-xs">${valor ?? 0}/12</td>`;
             }
 
             // 4. Restante
-            return `<td class="px-2 py-3 text-center text-xs">${valor ?? 0}</td>`;
+            return `<td class="${classeColuna} px-2 py-3 text-center text-xs">${valor ?? 0}</td>`;
         }).join('');
 
         return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
-            <td class="sticky px-4 py-3 min-w-[75px] left-0 text-center bg-gray-800">${index + 1}º</td>
-            <td class="sticky px-4 py-3 min-w-[200px] left-[75px] bg-gray-800">${usr.nome}</td>
-            <td class="sticky px-4 py-3 min-w-[75px] left-[275px] font-bold text-amber-400 text-center bg-gray-800">
+            <td class="sticky px-2 py-3 min-w-[50px] max-w-[50px] w-[50px] left-0 text-center bg-gray-700 text-xs text-center">${index + 1}º</td>
+            <td class="sticky px-2 py-3 min-w-[150px] max-w-[150px] w-[150px] left-[50px] bg-gray-700">${usr.nome}</td>
+            <td class="sticky px-2 py-3 min-w-[100px] max-w-[100px] w-[100px] left-[200px] text-center bg-gray-700">
                 ${total ?? 0}
             </td>
             ${colunasDinamicas}
@@ -409,7 +431,7 @@ function determinarFase(timeId, jogos, fases) {
     const jogosTime = jogos.filter(j => (j.time_a_id == timeId || j.time_b_id == timeId));
     if (jogosTime.length === 0) return 0;
     const faseMax = Math.max(...jogosTime.map(j => parseInt(j.fase_id || 0)));
-    console.log(`DEBUG FASE: Time ${timeId} | Fase Máxima encontrada: ${faseMax}`); // Log crítico
+    // console.log(`DEBUG FASE: Time ${timeId} | Fase Máxima encontrada: ${faseMax}`); // Log crítico
     return faseMax;
 }
 
