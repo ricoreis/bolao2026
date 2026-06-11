@@ -152,10 +152,11 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, multiplicador);
             
             const divInfo = document.createElement('div');
-            divInfo.className = "mt-3 p-2 bg-gray-950/50 rounded text-center text-xs";
+            divInfo.className = "mt-3 p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-4 items-center justify-center";
             divInfo.innerHTML = `
                 <div class="text-gray-400">Placar Oficial: ${jogo.gols_a} x ${jogo.gols_b}</div>
-                <div class="font-bold text-emerald-400 mt-1">Pontos: ${pontos} ${multiplicador > 1 ? '(Dobrado!)' : ''}</div>
+                <div class="text-sm text-gray-800 bg-amber-400 rounded-full px-2 py-1 w-fit">${pontos}</div>
+                ${multiplicador > 1 ? '<span class="text-xs font-bold text-amber-500 uppercase bg-amber-500/10 px-4 py-2 rounded-full">Dobrado</span>' : ''}
             `;
             cardElement.appendChild(divInfo);
         }
