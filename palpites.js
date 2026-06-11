@@ -370,15 +370,24 @@ async function verificarPrazo() {
 }
 
 function travarInputs() {
-    const inputs = document.querySelectorAll('.grp-input');
+    // Busca todos os selects, inputs e textareas do formulário
+    const inputs = document.querySelectorAll('select, input, textarea');
     const btnSalvar = document.getElementById('btn-salvar-palpites');
+    const instrucoes = document.getElementById('instrucoes'); // Ajustado para o ID correto que você usa no HTML
     
+    // Desabilita todos os campos
     inputs.forEach(i => i.disabled = true);
+    
+    // Ajusta o botão
     if (btnSalvar) {
         btnSalvar.disabled = true;
-        btnSalvar.classList.add('bg-transparent', 'cursor-not-allowed');
-        btnSalvar.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'font-bold' );
-        btnSalvar.textContent = "Apostas de Palpites Encerradas";
+        btnSalvar.classList.add('bg-transparent', 'cursor-not-allowed', 'opacity-50');
+        btnSalvar.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'font-bold');
+        btnSalvar.textContent = "Apostas Encerradas";
+    }
+
+    // Esconde instruções se existir
+    if (instrucoes) {
         instrucoes.classList.add('hidden');
     }
 }
