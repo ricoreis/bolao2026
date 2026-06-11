@@ -124,6 +124,34 @@ async function processarRanking(apostas, jogos, headers) {
 
     const rankingMap = {};
 
+    const { data: todosUsuarios } = await supabaseClient.from('usuarios').select('*');
+    // 1. Inicializa o map com TODOS os usuários (os 33)
+    todosUsuarios.forEach(u => {
+        const usuarioObj = { usuario_id: u.id, nome: u.nome, pontos_totais: 0 };
+        headers.forEach(h => usuarioObj[h.coluna_db] = 0); // ou h.tipos dependendo do seu header
+        usuarioObj['placar_classificado_penaltis'] = 0;
+        rankingMap[u.id] = usuarioObj;
+    });
+
+    // 2. Agora processa as apostas apenas para somar pontos aos que já existem
+    jogos.forEach(jogo => {
+        if (jogo.gols_a === null || jogo.gols_b === null) return;
+        apostas.forEach(aposta => {
+            if (String(aposta.jogo_id) === String(jogo.id)) {
+                const usr = rankingMap[aposta.usuario_id];
+                if (!usr) return; // Segurança
+                
+                let mult = (parseInt(jogo.id) > 72) ? 2 : 1;
+                const res = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, headers, mult);
+                
+                if (res.total > 0 || res.coluna) {
+                    usr.pontos_totais += parseInt(res.total);
+                    // ... (resto da sua lógica de soma de pontos)
+                }
+            }
+        });
+    });
+
     const [
         { data: gabaritoBruto }, { data: paises }, { data: jogadores }, { data: fases }
     ] = await Promise.all([
