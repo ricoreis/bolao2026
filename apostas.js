@@ -152,12 +152,12 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, multiplicador);
             
             const divInfo = document.createElement('div');
-            divInfo.className = "mt-3 p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-4 items-center justify-center";
+            divInfo.className = "p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-2 items-center justify-center";
             divInfo.innerHTML = `
                 <div class="text-gray-400">Placar Oficial: ${jogo.gols_a} x ${jogo.gols_b}</div>
-                <div class="text-sm text-gray-800 bg-amber-400 rounded-full px-2 py-1 w-fit">${pontos}</div>
-                ${multiplicador > 1 ? '<span class="text-xs font-bold text-amber-500 uppercase bg-amber-500/10 px-4 py-2 rounded-full">Dobrado</span>' : ''}
+                <div class="text-sm text-gray-800 ${pontos > 0 ? "bg-amber-400" : "bg-red-400"} rounded-full px-2 py-1 w-fit">${pontos > 0 ? "+" : ""}${pontos}</div>
             `;
+            // ${multiplicador > 1 ? '<span class="text-xs font-bold text-amber-500 uppercase bg-amber-500/10 px-4 py-2 rounded-full">Dobrado</span>' : ''}
             cardElement.appendChild(divInfo);
         }
 
@@ -191,19 +191,28 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                 const divResultado = document.createElement('div');
                 divResultado.className = "mt-2 p-2 bg-gray-800 rounded text-center text-xs";
 
-                if (jogo.penaltis_vencedor_id) {
-                    const timeVencedor = (jogo.penaltis_vencedor_id === jogo.time_a_id) ? jogo.time_a.nome : jogo.time_b.nome;
-                    const acertou = aposta?.penaltis_vencedor_id === jogo.penaltis_vencedor_id;
-                    
-                    divResultado.innerHTML = acertou 
-                        ? `<span class="text-gray-400 font-bold">✓ Você acertou: ${timeVencedor} venceu nos pênaltis!</span>`
-                        : `<span class="text-gray-400">Você apostou em pênaltis, mas não acertou o vencedor.</span>`;
-                } else {
-                    divResultado.innerHTML = aposta?.penaltis_vencedor_id 
-                        ? `<span class="text-gray-400 italic">Você apostou em pênaltis, mas o jogo foi decidido no tempo normal.</span>`
-                        : "";
-                }
+            let mensagemHTML = "";
+
+            if (jogo.penaltis_vencedor_id) {
+                const timeVencedor = (jogo.penaltis_vencedor_id === jogo.time_a_id) ? jogo.time_a.nome : jogo.time_b.nome;
+                const acertou = aposta?.penaltis_vencedor_id === jogo.penaltis_vencedor_id;
+                
+                mensagemHTML = acertou 
+                    ? `<span class="text-gray-400">Você acertou: ${timeVencedor} venceu nos pênaltis!</span>`
+                    : `<span class="text-red-400">Você apostou em pênaltis, mas não acertou o vencedor.</span>`;
+            } else if (aposta?.penaltis_vencedor_id) {
+                // mensagemHTML = `<span class="text-gray-400 italic">Você apostou em pênaltis, mas o jogo foi decidido no tempo normal.</span>`;
+            }
+
+            // 2. Só cria e adiciona a div SE houver mensagem
+            if (mensagemHTML !== "") {
+                const divResultado = document.createElement('div');
+                divResultado.className = "mt-2 p-2 rounded text-center text-xs";
+                divResultado.innerHTML = mensagemHTML;
                 cardElement.appendChild(divResultado);
+            }
+
+            // cardElement.appendChild(divResultado);
 
             } else {
                 // Jogo ainda não ocorreu: mostra os rádios para apostar
