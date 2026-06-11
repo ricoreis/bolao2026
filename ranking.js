@@ -416,9 +416,9 @@ function renderizarTabela(dados, headers) {
         }).join('');
 
         return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
-            <td class="sticky px-2 py-3 min-w-[50px] max-w-[50px] w-[50px] left-0 text-center bg-gray-700 text-xs text-center">${index + 1}º</td>
-            <td class="sticky px-2 py-3 min-w-[150px] max-w-[150px] w-[150px] left-[50px] bg-gray-700">${usr.nome}</td>
-            <td class="sticky px-2 py-3 min-w-[100px] max-w-[100px] w-[100px] left-[200px] text-center bg-gray-700">
+            <td class="md:sticky px-2 py-3 min-w-[50px] max-w-[50px] w-[50px] left-0 text-center bg-gray-700 text-xs text-center col-posicao">${index + 1}º</td>
+            <td class="md:sticky px-2 py-3 min-w-[150px] max-w-[150px] w-[150px] left-[50px] bg-gray-700">${usr.nome}</td>
+            <td class="md:sticky px-2 py-3 min-w-[100px] max-w-[100px] w-[100px] left-[200px] text-center bg-gray-700 col-pontuacao">
                 ${total ?? 0}
             </td>
             ${colunasDinamicas}

@@ -16,6 +16,16 @@
         body { font-family: 'Quicksand', sans-serif; font-weight: 500; }
         h1,h2,h3 { font-family: 'Quicksand', sans-serif; font-weight: 300; }
         tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
+        .col-pontuacao, 
+        .col-posicao, 
+        .col-placar_exato, 
+        .col-placar_saldo, 
+        .col-placar_vencedor, 
+        .col-placar_empate, 
+        .col-placar_exato_contrario, 
+        .col-placar_saldo_contrario, 
+        .col-placar_vencedor_contrario, 
+        .col-placar_gols, 
         .col-brasil_primeiro_gol, 
         .col-brasil_fase_chega, 
         .col-brasil_gols_pro,
@@ -52,7 +62,7 @@
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans h-full">
 
-    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-6 md:h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-6 h-36 md:h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
         <div class="w-full sm:w-auto text-center sm:text-left">
             <div class="w-full sm:w-auto text-center sm:text-left flex justify-between">
                 <h1 class="text-xl font-bold tracking-wide text-emerald-400">BOLÃO 2026</h1>
@@ -64,7 +74,7 @@
 
         <div class="flex flex-wrap items-center justify-center gap-2 p-1">
             <div class="hidden group relative flex items-center justify-center">
-                <button onclick="window.location.href='dashboard.html'" class="cursor-pointer hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-12 flex items-center justify-center">
+                <button onclick="window.location.href='dashboard.html'" class="cursor-pointer hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
                     <iconify-icon class="text-3xl" icon="material-symbols:dashboard-rounded"></iconify-icon>
                 </button>
                 <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
@@ -72,7 +82,7 @@
                 </span>
             </div>
             <div class="group relative flex items-center justify-center">
-                <button class="bg-emerald-600 text-white text-sm font-medium px-3 py-2 rounded-full transition size-12 flex items-center justify-center">
+                <button class="bg-emerald-600 text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
                     <iconify-icon class="text-3xl" icon="material-symbols:trophy"></iconify-icon>
                 </button>
                 <!-- <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
@@ -80,7 +90,7 @@
                 </span> -->
             </div>
             <div class="group relative flex items-center justify-center">
-                <button onclick="window.location.href='pontuacao.html'"  class="cursor-pointer text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-12 flex items-center justify-center">
+                <button onclick="window.location.href='pontuacao.html'"  class="cursor-pointer text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
                     <iconify-icon class="text-3xl" icon="icon-park-solid:checklist"></iconify-icon>
                 </button>
                 <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
@@ -88,7 +98,7 @@
                 </span>
             </div>
             <div class="group relative flex items-center justify-center">
-                <button onclick="window.location.href='palpites.html'" class="cursor-pointer text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-12 flex items-center justify-center">
+                <button onclick="window.location.href='palpites.html'" class="cursor-pointer text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
                     <iconify-icon class="text-3xl" icon="hugeicons:quiz-02"></iconify-icon>
                 </button>
                 <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
@@ -96,7 +106,7 @@
                 </span>
             </div>
             <div class="group relative flex items-center justify-center">
-                <button onclick="window.location.href='grupos.html'" class="cursor-pointer hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-12 flex items-center justify-center">
+                <button onclick="window.location.href='grupos.html'" class="cursor-pointer hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
                     <iconify-icon class="text-3xl" icon="mynaui:list-number"></iconify-icon>
                 </button>
                 <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
@@ -104,21 +114,21 @@
                 </span>
             </div>
             <div class="group relative flex items-center justify-center">
-                <button onclick="window.location.href='apostas-grupos.html'" class="cursor-pointer text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-12 flex items-center justify-center">
+                <button onclick="window.location.href='apostas-grupos.html'" class="cursor-pointer text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
                     <iconify-icon class="text-3xl" icon="lucide-lab:soccer-pitch"></iconify-icon>
                 </button>
                 <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
                     Jogos
                 </span>
             </div>
-            <!-- <div class="group relative flex items-center justify-center">
-                <button onclick="window.location.href='apostas-finais.html'" class="cursor-pointer hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-12 flex items-center justify-center">
+            <div class="group relative flex items-center justify-center">
+                <button onclick="window.location.href='apostas-finais.html'" class="cursor-pointer hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
                     <iconify-icon class="text-3xl" icon="mdi:bracket"></iconify-icon>
                 </button>
                 <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
                     Mata-Mata
                 </span>
-            </div> -->
+            </div>
         </div>
 
         <div class="gap-3 items-center hidden md:flex">
@@ -129,20 +139,20 @@
         </div>
     </nav>
 
-    <main class="max-w-none pt-56 md:pt-36 px-12 pb-12 h-full">
+    <main class="max-w-none pt-36 md:pt-36 md:px-12 md:pb-12 h-full">
 
         <div id="participantes" class="flex p-12 hidden">
             <div id="container-participantes" class="grid grid-cols-3 w-full gap-6"></div>
         </div>
         <div class="flex h-full">
 
-            <div class="bg-gray-800 border border-gray-700 overflow-x-auto shadow-2xl w-full rounded-xl">
+            <div class="bg-gray-800 border border-gray-700 overflow-x-auto shadow-2xl w-full md:rounded-xl">
                 <table class="w-full text-left border-collapse min-w-[1000px]">
                     <thead class="text-xs text-emerald-800 uppercase bg-emerald-700">
                         <tr class="border-b border-gray-700">
-                            <th class="sticky min-w-[50px] max-w-[50px] w-[50px] left-0 z-20 bg-emerald-700 text-emerald-400 px-2 text-center py-4 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]"></th>
-                            <th class="sticky min-w-[150px] max-w-[150px] w-[150px] left-[50px] z-20 bg-emerald-700 text-emerald-400 px-2 py-4 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Participante</th>
-                            <th class="sticky min-w-[100px] max-w-[100px] w-[100px] left-[200px] z-20 bg-emerald-700 text-emerald-400 px-2 py-4 text-center shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Pts</th>
+                            <th class="md:sticky min-w-[50px] max-w-[50px] w-[50px] left-0 z-20 bg-emerald-700 text-emerald-400 px-2 text-center py-4 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)] col-posicao"></th>
+                            <th class="md:sticky min-w-[150px] max-w-[150px] w-[150px] left-[50px] z-20 bg-emerald-700 text-emerald-400 px-2 py-4 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)]">Participantes</th>
+                            <th class="md:sticky min-w-[100px] max-w-[100px] w-[100px] left-[200px] z-20 bg-emerald-700 text-emerald-400 px-2 py-4 text-center shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)] col-pontuacao">Pts</th>
                         </tr>
                     </thead>
                     <tbody id="container-ranking" class="divide-y divide-gray-700/50 text-sm">
