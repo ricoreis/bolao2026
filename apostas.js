@@ -97,6 +97,11 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         const card = template.content.cloneNode(true);
         const cardElement = card.querySelector('.card-jogo');
 
+        const dataLocal = new Date(jogo.data_jogo);
+        const agora = new Date();
+        const faltamMenosDeUmaHora = (dataLocal - agora) / (1000 * 60) < 60;
+        const jogoOcorrido = (jogo.gols_a !== null && jogo.gols_b !== null);
+
         let jogoPrefixo = "";
         if(jogo.jogo_fifa) {
             jogoPrefixo = "JOGO " + jogo.jogo_fifa + " - "
@@ -104,7 +109,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             jogoPrefixo = "GRUPO " + jogo.grupo + " - ";
         }
 
-        const dataLocal = new Date(jogo.data_jogo);
         card.querySelector('.data-jogo').innerText = jogoPrefixo + dataLocal.toLocaleString('pt-BR', {
             weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
         }).replace(' ', '').replace(',', ' ').replace(', ', ' ').toUpperCase();
@@ -123,6 +127,8 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
         const inputA = card.querySelector('.input-a');
         const inputB = card.querySelector('.input-b');
+        const definitivoA = card.querySelector('.definitivo-a');
+        const definitivoB = card.querySelector('.definitivo-b');
         const btnSalvar = card.querySelector('.btn-salvar');
         const statusBadge = card.querySelector('.status-badge');
 
@@ -131,10 +137,16 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         inputA.value = aposta?.gols_a ?? '';
         inputB.value = aposta?.gols_b ?? '';
 
+        definitivoA.textContent = inputA.value;
+        definitivoB.textContent = inputB.value;
+
         const toggleSalvar = () => {
             const preenchidoA = inputA.value !== '';
             const preenchidoB = inputB.value !== '';
             
+            definitivoA.textContent = inputA.value;
+            definitivoB.textContent = inputB.value;
+
             if (preenchidoA && preenchidoB) {
                 btnSalvar.classList.remove("hidden");
             } else {
@@ -161,19 +173,43 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             cardElement.appendChild(divInfo);
         }
 
-        const agora = new Date();
-        if ((dataLocal - agora) / (1000 * 60) < 60) {
-            inputA.disabled = true; inputB.disabled = true; btnSalvar.disabled = true;
+        if (jogoOcorrido) {
+            inputA.disabled = true;
+            inputB.disabled = true;
+            btnSalvar.disabled = true;
+            inputA.classList.add("hidden");
+            inputB.classList.add("hidden");
+            definitivoA.classList.remove("hidden");
+            definitivoB.classList.remove("hidden");
+            statusBadge.classList.add("hidden"); 
+        } else if ((dataLocal - agora) / (1000 * 60) < 60) {
+            inputA.disabled = true;
+            inputB.disabled = true;
+            btnSalvar.disabled = true;
             inputA.classList.add("opacity-50", "cursor-not-allowed");
             inputB.classList.add("opacity-50", "cursor-not-allowed");
             btnSalvar.className = "btn-salvar ml-2 bg-gray-700 text-gray-500 font-bold px-4 py-2 rounded-lg cursor-not-allowed text-sm";
+            
+            // STATUS: JOGO ENCERRADO PARA APOSTAS
+            btnSalvar.classList.add("hidden");
+            inputA.classList.add("hidden");
+            inputB.classList.add("hidden");
+            definitivoA.classList.remove("hidden");
+            definitivoB.classList.remove("hidden");
+            statusBadge.classList.remove("hidden");
+            statusBadge.innerText = "Apostas Encerradas! Aguardando resultado";
+            
         } else if ( !jogo.time_a || !jogo.time_b ) {
-            inputA.disabled = true; inputB.disabled = true; btnSalvar.disabled = true;
+            inputA.disabled = true;
+            inputB.disabled = true;
+            btnSalvar.disabled = true;
             inputA.classList.add("opacity-0", "cursor-auto");
             inputB.classList.add("opacity-0", "cursor-auto");
             btnSalvar.classList.add("hidden");
-        } else {
             statusBadge.classList.add("hidden");
+        } else {
+            // STATUS: JOGO ABERTO
+            statusBadge.classList.add("hidden"); // Esconde qualquer status
             btnSalvar.onclick = (e) => salvarAposta(jogo.id, cardElement, ehPaginaFinais);
         }
 
