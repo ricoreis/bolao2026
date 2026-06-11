@@ -101,7 +101,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         if(jogo.jogo_fifa) {
             jogoPrefixo = "JOGO " + jogo.jogo_fifa + " - "
         } else {
-            // jogoPrefixo = "GRUPO " + jogo.grupo + " - ";
+            jogoPrefixo = "GRUPO " + jogo.grupo + " - ";
         }
 
         const dataLocal = new Date(jogo.data_jogo);
@@ -176,42 +176,52 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             btnSalvar.onclick = (e) => salvarAposta(jogo.id, cardElement, ehPaginaFinais);
         }
 
-        // --- Lógica de Pênaltis (Injeção Cirúrgica) ---
+        // --- Lógica de Pênaltis ---
         const containerPenaltis = card.querySelector('.container-penaltis');
         if (containerPenaltis && ehPaginaFinais && jogo.fase_id > 1) {
-            // 1. Configura os nomes dos radios para serem únicos por jogo
-            const radioA = card.querySelector('.radio-penaltis-a'); // Ajuste o nome da classe se necessário
+            const radioA = card.querySelector('.radio-penaltis-a');
             const radioB = card.querySelector('.radio-penaltis-b');
-            card.querySelector('.nome-time-a').innerText = jogo.time_a?.nome || 'Time A';
-            card.querySelector('.nome-time-b').innerText = jogo.time_b?.nome || 'Time B';
 
-            if (radioA && radioB) {
-                radioA.name = `penaltis_${jogo.id}`;
-                radioB.name = `penaltis_${jogo.id}`;
-                radioA.value = jogo.time_a_id;
-                radioB.value = jogo.time_b_id;
+            // Se o jogo já ocorreu (tem resultado oficial)
+            if (jogo.gols_a !== null && jogo.gols_b !== null) {
+                // Esconde os inputs de aposta
+                containerPenaltis.classList.add('hidden');
+                
+                const divResultado = document.createElement('div');
+                divResultado.className = "mt-2 p-2 bg-gray-800 rounded text-center text-xs";
 
-                // 2. Visibilidade baseada no empate
+                if (jogo.penaltis_vencedor_id) {
+                    const timeVencedor = (jogo.penaltis_vencedor_id === jogo.time_a_id) ? jogo.time_a.nome : jogo.time_b.nome;
+                    const acertou = aposta?.penaltis_vencedor_id === jogo.penaltis_vencedor_id;
+                    
+                    divResultado.innerHTML = acertou 
+                        ? `<span class="text-gray-400 font-bold">✓ Você acertou: ${timeVencedor} venceu nos pênaltis!</span>`
+                        : `<span class="text-gray-400">Você apostou em pênaltis, mas não acertou o vencedor.</span>`;
+                } else {
+                    divResultado.innerHTML = aposta?.penaltis_vencedor_id 
+                        ? `<span class="text-gray-400 italic">Você apostou em pênaltis, mas o jogo foi decidido no tempo normal.</span>`
+                        : "";
+                }
+                cardElement.appendChild(divResultado);
+
+            } else {
+                // Jogo ainda não ocorreu: mostra os rádios para apostar
+                card.querySelector('.nome-time-a').innerText = jogo.time_a?.nome || 'Time A';
+                card.querySelector('.nome-time-b').innerText = jogo.time_b?.nome || 'Time B';
+
+                // Lógica de mostrar apenas se houver empate
                 const checkEmpate = () => {
-                    const vA = inputA.value;
-                    const vB = inputB.value;
-                    if (vA !== '' && vB !== '' && vA === vB) {
+                    const vA = parseInt(inputA.value);
+                    const vB = parseInt(inputB.value);
+                    if (!isNaN(vA) && !isNaN(vB) && vA === vB) {
                         containerPenaltis.classList.remove('hidden');
                     } else {
                         containerPenaltis.classList.add('hidden');
                     }
                 };
-
-                // 3. Monitora os inputs já existentes
                 inputA.addEventListener('input', checkEmpate);
                 inputB.addEventListener('input', checkEmpate);
-                checkEmpate(); // Estado inicial
-
-                // 4. Carrega seleção prévia
-                if (aposta?.penaltis_vencedor_id) {
-                    const radioSel = card.querySelector(`input[value="${aposta.penaltis_vencedor_id}"]`);
-                    if (radioSel) radioSel.checked = true;
-                }
+                checkEmpate();
             }
         }
 
