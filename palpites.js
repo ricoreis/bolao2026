@@ -109,7 +109,13 @@ async function carregarDadosIniciais() {
     popularSelect('sel-fase', fases.data, (f) => f.nome, 5);
 
     popularSelectAgrupado('sel-gol', jogadores.data);
+    
+    ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', validarSelecoesClassificacao);
+    });
 
+    // configurarValidacaoSelecoes();
     carregarPalpitesEComparar();
 }
 
@@ -357,6 +363,54 @@ async function salvarPalpites() {
     const { error } = await supabaseClient.from('palpites').upsert(dados, { onConflict: 'usuario_id' });
     if (error) showToast("Erro: " + error.message, true);
     else showToast("Palpites salvos com sucesso!");
+}
+
+function validarSelecoesClassificacao() {
+    const ids = ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto'];
+    const selects = ids.map(id => document.getElementById(id));
+    const spanErro = document.getElementById('erro-classificacao'); // Agora vai achar!
+    const btnSalvar = document.getElementById('btn-salvar-palpites');
+    
+    let temErro = false;
+    const contagem = {};
+
+    // 1. Limpeza visual
+    selects.forEach(s => s.classList.remove('border-red-500', 'bg-red-900/20'));
+    
+    // 2. Mapeamento
+    selects.forEach(s => {
+        if (s.value !== "") {
+            if (!contagem[s.value]) contagem[s.value] = [];
+            contagem[s.value].push(s);
+        }
+    });
+
+    // 3. Verificação de conflito
+    Object.keys(contagem).forEach(val => {
+        if (contagem[val].length > 1) {
+            contagem[val].forEach(s => {
+                s.classList.add('border-red-500', 'bg-red-900/20');
+            });
+            temErro = true;
+        }
+    });
+
+    // 4. Exibição do erro (Sem depender de classes ocultas prévias)
+    if (spanErro) {
+        if (temErro) {
+            spanErro.textContent = "Os países selecionados devem ser diferentes!";
+            spanErro.classList.remove('hidden'); // Força a exibição
+        } else {
+            spanErro.textContent = "";
+            spanErro.classList.add('hidden');    // Esconde quando não tem erro
+        }
+    }
+
+    // 5. Botão
+    if (btnSalvar) {
+        btnSalvar.disabled = temErro;
+        btnSalvar.classList.toggle('opacity-50', temErro);
+    }
 }
 
 // btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
