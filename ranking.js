@@ -8,6 +8,10 @@ document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
 
 async function carregarRanking() {
+    // 1. Obtém as referências dos elementos
+    const loader = document.getElementById('loader');
+    const tabelaWrapper = document.getElementById('tabela-wrapper');
+
     try {
         const [
             { data: headers },
@@ -21,11 +25,30 @@ async function carregarRanking() {
             supabaseClient.from('usuarios').select('*')
         ]);
 
-        const participantesFinal = await processarParticipantes(usuarios);
+        // 2. Processa os dados
+        await processarParticipantes(usuarios);
         const rankingFinal = await processarRanking(apostas, jogos, headers);
+        
+        // 3. Renderiza a tabela
         renderizarTabela(rankingFinal, headers);
+
+        // 4. Sucesso: Esconde o loader e mostra a tabela
+        if (loader) loader.classList.add('hidden');
+        if (tabelaWrapper) tabelaWrapper.classList.remove('hidden');
+
     } catch (error) {
         console.error("Erro ao carregar ranking:", error);
+        
+        // 5. Erro: Esconde o loader e mostra uma mensagem de erro no lugar dele
+        if (loader) {
+            loader.innerHTML = `
+                <div class="text-center p-6">
+                    <iconify-icon class="text-5xl text-red-500" icon="material-symbols:error-outline"></iconify-icon>
+                    <p class="text-red-400 mt-4">Erro ao carregar ranking.</p>
+                    <button onclick="window.location.reload()" class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg text-sm">Tentar novamente</button>
+                </div>
+            `;
+        }
     }
 }
 
