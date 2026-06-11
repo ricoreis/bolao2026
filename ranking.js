@@ -278,24 +278,24 @@ async function processarRanking(apostas, jogos, headers) {
 
                 // --- GOLS
                 // --- TEMPORARIAMENTE FORA
-                // const apostasDoUsuario = apostas.filter(a => String(a.usuario_id) === String(usr.usuario_id));
-                // const palpiteGols = apostasDoUsuario.reduce((soma, a) => soma + (a.gols_a || 0) + (a.gols_b || 0), 0);
+                const apostasDoUsuario = apostas.filter(a => String(a.usuario_id) === String(usr.usuario_id));
+                const palpiteGols = apostasDoUsuario.reduce((soma, a) => soma + (a.gols_a || 0) + (a.gols_b || 0), 0);
 
-                // const gabGols = jogos
-                //     .filter(j => j.gols_a !== null && j.gols_b !== null)
-                //     .reduce((soma, j) => soma + j.gols_a + j.gols_b, 0);
+                const gabGols = jogos
+                    .filter(j => j.gols_a !== null && j.gols_b !== null)
+                    .reduce((soma, j) => soma + j.gols_a + j.gols_b, 0);
 
-                // if (gabGols > 0) {
-                //     const dif = Math.abs(palpiteGols - gabGols);
-                //     const regraAllGols = headers.find(h => h.nome_reduzido === 'ALLGOLS');
+                if (gabGols > 0) {
+                    const dif = Math.abs(palpiteGols - gabGols);
+                    const regraAllGols = headers.find(h => h.nome_reduzido === 'ALLGOLS');
                     
-                //     const pontosBonus = regraAllGols ? parseInt(regraAllGols.pontos || 30) : 30;
+                    const pontosBonus = regraAllGols ? parseInt(regraAllGols.pontos || 30) : 30;
                     
-                //     usr.pontos_totais += (dif === 0 ? pontosBonus : -dif);
-                //     usr['extra_total_gols'] = `${palpiteGols} (${dif === 0 ? 'Cravou' : -dif})`;
-                // } else {
-                //     usr['extra_total_gols'] = `${palpiteGols} (Pendente)`;
-                // }
+                    usr.pontos_totais += (dif === 0 ? pontosBonus : -dif);
+                    usr['extra_total_gols'] = `${palpiteGols} (${dif === 0 ? 'Cravou' : -dif})`;
+                } else {
+                    usr['extra_total_gols'] = `${palpiteGols} (Pendente)`;
+                }
 
                 // ----------------------------------------------------------------------
 
