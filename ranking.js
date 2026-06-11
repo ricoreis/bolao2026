@@ -406,12 +406,24 @@ function renderizarTabela(dados, headers) {
         headersComFinal.push({ coluna_db: 'placar_classificado_penaltis', nome: 'Penal', nome_reduzido: 'PENAL' });
     }
 
-    // Limpa o header e adiciona tudo (incluindo a Final)
     while (thead.children.length > 3) thead.removeChild(thead.lastChild);
     headersComFinal.forEach(h => {
         const th = document.createElement('th');
-        th.className = `px-4 py-4 text-center text-xs text-emerald-400 uppercase col-${h.coluna_db}`;
-        th.innerText = h.nome_reduzido;
+        th.className = `px-2 py-4 text-center text-xs text-emerald-400 uppercase col-${h.coluna_db} relative`;
+        const textoPontos = h.pontos || 'Regra de pontuação específica.';
+        const textoTipo = h.tipo || 'Regra de pontuação específica.';
+
+        th.innerHTML = `
+            <div class="flex items-center justify-center gap-1 group cursor-help">
+                ${h.nome_reduzido}
+                <iconify-icon icon="material-symbols:info-outline" class="text-emerald-500"></iconify-icon>
+                
+                <div class="absolute top-full mt-2 hidden group-hover:block w-48 p-2 bg-gray-900 border border-emerald-600 text-white text-sm rounded-lg z-50 normal-case font-normal shadow-xl text-center">
+                    ${textoPontos > 0? "+" : ""}${textoPontos}
+                    ${textoTipo}
+                </div>
+            </div>
+        `;
         thead.appendChild(th);
     });
 
@@ -453,6 +465,23 @@ function renderizarTabela(dados, headers) {
             ${colunasDinamicas}
         </tr>`;
     }).join('');
+}
+
+function obterExplicacao(nomeReduzido) {
+    const explicacoes = {
+        'pontuacao': 'Soma total dos seus pontos no bolão.',
+        'posicao': 'Sua classificação atual no ranking.',
+        'placar_exato': 'Acerto do placar exato do jogo.',
+        'placar_saldo': 'Acerto do saldo de gols do jogo.',
+        'placar_vencedor': 'Acerto apenas de quem venceu a partida.',
+        'placar_empate': 'Acerto do resultado de empate.',
+        'placar_exato_contrario': 'Acerto do placar exato em jogos do mata-mata.',
+        'placar_saldo_contrario': 'Acerto do saldo de gols em jogos do mata-mata.',
+        'placar_vencedor_contrario': 'Acerto do vencedor em jogos do mata-mata.',
+        'placar_gols': 'Pontuação baseada no total de gols previstos.'
+    };
+    
+    return explicacoes[nomeReduzido] || 'Regra de pontuação específica desta etapa.';
 }
 
 function determinarFase(timeId, jogos, fases) {
