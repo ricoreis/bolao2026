@@ -127,8 +127,14 @@ async function processarRanking(apostas, jogos, headers) {
     const { data: todosUsuarios } = await supabaseClient.from('usuarios').select('*');
     // 1. Inicializa o map com TODOS os usuários (os 33)
     todosUsuarios.forEach(u => {
-        const usuarioObj = { usuario_id: u.id, nome: u.nome, pontos_totais: 0 };
-        headers.forEach(h => usuarioObj[h.coluna_db] = 0); // ou h.tipos dependendo do seu header
+        const usuarioObj = { 
+            usuario_id: u.id, 
+            nome: u.nome, 
+            pontos_totais: 0,
+            acertos_exatos: 0, // Adicionado
+            acertos_saldo: 0   // Adicionado
+        };
+        headers.forEach(h => usuarioObj[h.coluna_db] = 0);
         usuarioObj['placar_classificado_penaltis'] = 0;
         rankingMap[u.id] = usuarioObj;
     });
@@ -139,14 +145,13 @@ async function processarRanking(apostas, jogos, headers) {
         apostas.forEach(aposta => {
             if (String(aposta.jogo_id) === String(jogo.id)) {
                 const usr = rankingMap[aposta.usuario_id];
-                if (!usr) return; // Segurança
+                if (!usr) return;
                 
                 let mult = (parseInt(jogo.id) > 72) ? 2 : 1;
                 const res = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, headers, mult);
                 
                 if (res.total > 0 || res.coluna) {
                     usr.pontos_totais += parseInt(res.total);
-                    // ... (resto da sua lógica de soma de pontos)
                 }
             }
         });
@@ -189,6 +194,13 @@ async function processarRanking(apostas, jogos, headers) {
                 
                 if (res.total > 0 || res.coluna) {
                     usr.pontos_totais += parseInt(res.total);
+
+                    // --- ADICIONE ISSO AQUI PARA O DESEMPATE ---
+                    // (Verifique se o seu 'calcularPontos' retorna exatamente estas propriedades 'exato' e 'saldo')
+                    if (res.exato) usr.acertos_exatos += 1;
+                    if (res.saldo) usr.acertos_saldo += 1;
+                    // --------------------------------------------0
+
                     const valorRegraGols = parseInt(headers.find(h => h.nome_reduzido === 'GOLS')?.pontos || 1);
                     const qtdGols = (res.bonus || 0) / valorRegraGols;
                     if (res.coluna) usr[res.coluna] = (usr[res.coluna] || 0) + 1;
@@ -411,12 +423,47 @@ async function processarRanking(apostas, jogos, headers) {
     // return usuarios.sort((a, b) => b.pontos_totais - a.pontos_totais);
 
     // ORDENACAO - CRITÉRIOS
+    // return usuarios.sort((a, b) => {
+    //     if (b.pontos_totais !== a.pontos_totais) {
+    //         return b.pontos_totais - a.pontos_totais;
+    //     }
+    //     return a.nome.localeCompare(b.nome);
+    // });
+
     return usuarios.sort((a, b) => {
+        // 1º Critério: Pontos Totais
         if (b.pontos_totais !== a.pontos_totais) {
             return b.pontos_totais - a.pontos_totais;
         }
+        // 2º Critério: Mais Placares Exatos
+        if ((b.acertos_exatos || 0) !== (a.acertos_exatos || 0)) {
+            return (b.acertos_exatos || 0) - (a.acertos_exatos || 0);
+        }
+        // 3º Critério: Mais Placares com Saldo
+        if ((b.acertos_saldo || 0) !== (a.acertos_saldo || 0)) {
+            return (b.acertos_saldo || 0) - (a.acertos_saldo || 0);
+        }
+        // Critério Final: Ordem alfabética
         return a.nome.localeCompare(b.nome);
     });
+
+    // return usuarios.sort((a, b) => {
+    //     // 1º Critério: Pontos Totais
+    //     if (b.pontos_totais !== a.pontos_totais) {
+    //         return b.pontos_totais - a.pontos_totais;
+    //     }
+    //     // 2º Critério: Mais Placares Exatos
+    //     if ((b.acertos_exatos || 0) !== (a.acertos_exatos || 0)) {
+    //         return (b.acertos_exatos || 0) - (a.acertos_exatos || 0);
+    //     }
+    //     // 3º Critério: Mais Placares com Saldo
+    //     if ((b.acertos_saldo || 0) !== (a.acertos_saldo || 0)) {
+    //         return (b.acertos_saldo || 0) - (a.acertos_saldo || 0);
+    //     }
+    //     // Critério Final: Ordem alfabética
+    //     return a.nome.localeCompare(b.nome);
+    // });
+
 }
 
 function renderizarTabela(dados, headers) {
