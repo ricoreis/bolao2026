@@ -15,6 +15,7 @@
     <style>
         body { font-family: 'Quicksand', sans-serif; font-weight: 500; }
         h1,h2,h3 { font-family: 'Quicksand', sans-serif; font-weight: 300; }
+        #lista-apostas-modal tr:last-child { border-bottom: none !important; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
@@ -168,6 +169,10 @@
                         </div>
                     </div>
                     <div class="flex justify-center items-center gap-4">
+                        <button class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm hidden flex flex-row items-center gap-4">
+                            <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            <span>Ver Apostas</span>
+                        </button>
                         <button class="btn-salvar hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg transition text-sm">
                             Salvar
                         </button>
@@ -175,11 +180,24 @@
                             Aguardando definição de chaves
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </template>
+
+    <div id="modal-apostas" class="fixed inset-0 z-[100] hidden bg-gray-900/80 flex items-center justify-center p-4">
+        <div class="bg-gray-800 w-full max-w-md rounded-xl border border-gray-700 p-6 shadow-2xl relative">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-emerald-400 border-b border-emerald-400/20 w-full pb-4">Apostas</h3>
+                <button onclick="fecharModal()" class="text-gray-400 hover:text-white size-12 flex items-center justify-center absolute top-1 right-1">✕</button>
+            </div>
+            <div class="overflow-y-auto max-h-[60vh]">
+                <table class="w-full text-left text-sm text-gray-300">
+                    <tbody id="lista-apostas-modal"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <div id="toast" class="fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"></div>
     <script src="regras.js"></script>

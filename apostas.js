@@ -133,6 +133,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         const definitivoB = card.querySelector('.definitivo-b');
         const btnSalvar = card.querySelector('.btn-salvar');
         const statusBadge = card.querySelector('.status-badge');
+        const btnVerApostas = card.querySelector('.ver-apostas');
 
         inputA.id = `golsA_${jogo.id}`;
         inputB.id = `golsB_${jogo.id}`;
@@ -166,7 +167,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, multiplicador);
             
             const divInfo = document.createElement('div');
-            divInfo.className = "p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-2 items-center justify-center";
+            divInfo.className = "p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-2 items-center justify-center mt-1.5";
             divInfo.innerHTML = `
                 <div class="text-gray-400">Placar Oficial: ${jogo.gols_a} x ${jogo.gols_b}</div>
                 <div class="text-sm text-gray-800 ${pontos > 0 ? "bg-amber-400" : "bg-red-400"} rounded-full px-2 py-1 w-fit">${pontos > 0 ? "+" : ""}${pontos}</div>
@@ -179,7 +180,9 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             inputA.disabled = true; inputB.disabled = true; btnSalvar.disabled = true;
             inputA.classList.add("hidden"); inputB.classList.add("hidden");
             definitivoA.classList.remove("hidden"); definitivoB.classList.remove("hidden");
-            statusBadge.classList.add("hidden"); 
+            statusBadge.classList.add("hidden");
+            btnVerApostas.classList.remove("hidden"); // MOSTRA O BOTÃO
+            btnVerApostas.onclick = () => abrirModal(jogo.id, jogo.time_a.nome, jogo.time_b.nome);
         } 
         else if ((dataLocal - agora) / (1000 * 60) < 60) {
             inputA.disabled = true; inputB.disabled = true; btnSalvar.disabled = true;
@@ -190,6 +193,8 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             btnSalvar.classList.add("hidden");
             statusBadge.classList.remove("hidden");
             statusBadge.innerText = "Apostas Encerradas! Aguardando resultado";
+            btnVerApostas.classList.remove("hidden"); // MOSTRA O BOTÃO
+            btnVerApostas.onclick = () => abrirModal(jogo.id, jogo.time_a.nome, jogo.time_b.nome);
         } 
         else if (!jogo.time_a || !jogo.time_b) {
             if (jogo.fase_id > 1) {
@@ -358,6 +363,48 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
         // btnSalvar.disabled = false;
         // btnSalvar.innerHTML = textoOriginal;
     }
+}
+
+async function abrirModal(jogoId, nomeA, nomeB) {
+    const lista = document.getElementById('lista-apostas-modal');
+    
+    // 1. Atualize o título da modal com os times
+    const tituloModal = document.querySelector('#modal-apostas h3');
+    tituloModal.innerText = `${nomeA} x ${nomeB}`; // Contextualiza o título
+
+    lista.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-gray-400">Carregando...</td></tr>';
+    document.getElementById('modal-apostas').classList.remove('hidden');
+
+    // 2. Busca os palpites
+    const { data: apostas } = await supabaseClient
+        .from('apostas')
+        .select('gols_a, gols_b, usuarios(nome)')
+        .eq('jogo_id', jogoId);
+
+    if (!apostas || apostas.length === 0) {
+        lista.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-gray-400">Ninguém apostou neste jogo.</td></tr>';
+        return;
+    }
+
+    // 2. Ordena no JavaScript: Gols A primeiro, depois Gols B
+    apostas.sort((a, b) => {
+        if (a.gols_a !== b.gols_a) {
+            return a.gols_a - b.gols_a; // Ordena Gols A (Ascendente)
+        }
+        return a.gols_b - b.gols_b;     // Se Gols A forem iguais, ordena Gols B (Ascendente)
+    });
+
+    // 3. Renderiza a lista ordenada
+    lista.innerHTML = apostas.map(a => `
+        <tr class="border-b border-gray-700/50">
+            <td class="py-3 text-gray-200 font-medium">${a.usuarios?.nome || 'Anon'}</td>
+            <td class="py-3 text-center text-emerald-400 font-bold">${a.gols_a} x ${a.gols_b}</td>
+        </tr>
+    `).join('');
+}
+
+function fecharModal() {
+    document.getElementById('modal-apostas').classList.add('hidden');
 }
 
 // btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
