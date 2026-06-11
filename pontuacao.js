@@ -68,3 +68,7 @@ btnsLogout.forEach(botao => {
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', carregarPontuacao);
+
+document.addEventListener('DOMContentLoaded', () => {
+    carregarSaudacao();
+});
