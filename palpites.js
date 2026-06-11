@@ -358,7 +358,9 @@ async function verificarPrazo() {
     // Isso é universal, não importa onde o usuário esteja!
     const tempoJogo = dataJogo.getTime();
     const tempoAgora = agora.getTime();
-    
+
+    const instrucoes = document.getElementById('instrucoes');    
+
     // Duas horas em milissegundos
     const duasHorasEmMs = 2 * 60 * 60 * 1000;
 
@@ -366,7 +368,10 @@ async function verificarPrazo() {
     if ((tempoJogo - tempoAgora) < duasHorasEmMs) {
         travarInputs();
         showToast("Apostas encerradas!");
+    } else {
+        if (instrucoes) instrucoes.classList.remove('hidden');
     }
+
 }
 
 function travarInputs() {
