@@ -94,7 +94,7 @@ async function carregarDadosIniciais() {
         supabaseClient.from('resultados').select('*').eq('id', 1).single(),
         supabaseClient.from('jogadores').select('id, nome, clube, posicao').order('nome'),
         supabaseClient.from('fases').select('id, nome, codigo_regra').order('id'),
-        supabaseClient.from('paises').select('id, nome').order('nome'),
+        supabaseClient.from('paises').select('id, nome, elite').order('nome'),
         supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single(),
         supabaseClient.from('jogos').select('fase_id, time_a_id, time_b_id, vencedor_final_id')
     ]);
@@ -105,7 +105,11 @@ async function carregarDadosIniciais() {
     todosJogos = jogos.data || [];
     
     popularSelect('sel-fase', fases.data, (f) => f.nome);
-    ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => popularSelect(id, paises.data, (p) => p.nome));
+    // ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => popularSelect(id, paises.data, (p) => p.nome));
+    ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => {
+        popularSelectAgrupadoPaises(id, paises.data);
+    });
+
     popularSelect('sel-fase', fases.data, (f) => f.nome, 5);
 
     popularSelectAgrupado('sel-gol', jogadores.data);
@@ -179,6 +183,42 @@ function popularSelectAgrupado(id, dados) {
             const option = document.createElement('option');
             option.value = item.id;
             option.textContent = `${item.nome} (${item.clube})`;
+            optgroup.appendChild(option);
+        });
+        select.appendChild(optgroup);
+    });
+}
+
+function popularSelectAgrupadoPaises(id, dados) {
+    const select = document.getElementById(id);
+    if (!select) return;
+    
+    select.innerHTML = '<option value="">Selecione...</option>';
+    
+    // 1. Agrupar os países pelo campo 'elite'
+    // Supondo que elite seja true/false ou um nome como "Campeões", "Outros"
+    const grupos = dados.reduce((acc, item) => {
+        const grupo = item.elite ? "Elite" : "Outros";
+        if (!acc[grupo]) acc[grupo] = [];
+        acc[grupo].push(item);
+        return acc;
+    }, {});
+
+    // 2. Definir a ordem (Elite primeiro)
+    const chavesOrdenadas = ["Elite", "Outros"];
+
+    // 3. Adicionar ao select
+    chavesOrdenadas.forEach(nomeGrupo => {
+        if (!grupos[nomeGrupo]) return; 
+
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = nomeGrupo;
+        
+        // Ordena alfabeticamente dentro de cada grupo
+        grupos[nomeGrupo].sort((a, b) => a.nome.localeCompare(b.nome)).forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.nome;
             optgroup.appendChild(option);
         });
         select.appendChild(optgroup);
