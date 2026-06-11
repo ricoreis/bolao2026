@@ -367,40 +367,64 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
 
 async function abrirModal(jogoId, nomeA, nomeB) {
     const lista = document.getElementById('lista-apostas-modal');
-    
-    // 1. Atualize o título da modal com os times
     const tituloModal = document.querySelector('#modal-apostas h3');
-    tituloModal.innerText = `${nomeA} x ${nomeB}`; // Contextualiza o título
+    tituloModal.innerText = `${nomeA} x ${nomeB}`;
 
-    lista.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-gray-400">Carregando...</td></tr>';
+    lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
     document.getElementById('modal-apostas').classList.remove('hidden');
 
-    // 2. Busca os palpites
     const { data: apostas } = await supabaseClient
         .from('apostas')
         .select('gols_a, gols_b, usuarios(nome)')
         .eq('jogo_id', jogoId);
 
     if (!apostas || apostas.length === 0) {
-        lista.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-gray-400">Ninguém apostou neste jogo.</td></tr>';
+        lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Ninguém apostou neste jogo.</td></tr>';
         return;
     }
 
-    // 2. Ordena no JavaScript: Gols A primeiro, depois Gols B
-    apostas.sort((a, b) => {
-        if (a.gols_a !== b.gols_a) {
-            return a.gols_a - b.gols_a; // Ordena Gols A (Ascendente)
-        }
-        return a.gols_b - b.gols_b;     // Se Gols A forem iguais, ordena Gols B (Ascendente)
+    // 1. Criar os grupos
+    const grupos = {
+        vitoriaA: [],
+        vitoriaB: [],
+        empate: []
+    };
+
+    apostas.forEach(a => {
+        if (a.gols_a > a.gols_b) grupos.vitoriaA.push(a);
+        else if (a.gols_b > a.gols_a) grupos.vitoriaB.push(a);
+        else grupos.empate.push(a);
     });
 
-    // 3. Renderiza a lista ordenada
-    lista.innerHTML = apostas.map(a => `
-        <tr class="border-b border-gray-700/50">
-            <td class="py-3 text-gray-200 font-medium">${a.usuarios?.nome || 'Anon'}</td>
-            <td class="py-3 text-center text-emerald-400 font-bold">${a.gols_a} x ${a.gols_b}</td>
-        </tr>
-    `).join('');
+    // 2. Função auxiliar para ordenar dentro dos grupos (Gols A asc, depois Gols B asc)
+    const ordenar = (a, b) => (a.gols_a - b.gols_a) || (a.gols_b - b.gols_b);
+    grupos.vitoriaA.sort(ordenar);
+    grupos.vitoriaB.sort(ordenar);
+    grupos.empate.sort(ordenar);
+
+    // 3. Função para gerar o HTML de um subheader
+    const gerarSecao = (titulo, listaApostas) => {
+        if (listaApostas.length === 0) return '';
+        return `
+            <tr><td colspan="2" class="bg-gray-800 text-emerald-500 font-bold py-2 px-3 text-sm uppercase">
+                <span class="bg-black/20 w-full flex rounded-lg px-4 py-4 mb-3 mt-6">
+                    ${titulo}
+                </span>
+            </td></tr>
+            ${listaApostas.map(a => `
+                <tr class="border-b border-gray-700/50">
+                    <td class="py-3 px-3 text-gray-200">${a.usuarios?.nome || 'Anon'}</td>
+                    <td class="py-3 px-3 text-center text-emerald-400 font-bold">${a.gols_a} x ${a.gols_b}</td>
+                </tr>
+            `).join('')}
+        `;
+    };
+
+    // 4. Renderiza tudo
+    lista.innerHTML = 
+        gerarSecao(`Vitória ${nomeA}`, grupos.vitoriaA) +
+        gerarSecao(`Vitória ${nomeB}`, grupos.vitoriaB) +
+        gerarSecao('Empate', grupos.empate);
 }
 
 function fecharModal() {
