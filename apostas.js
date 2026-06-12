@@ -74,6 +74,7 @@ async function carregarJogosEApostas() {
     if (apostas) apostas.forEach(p => mapaApostas[p.jogo_id] = p);
 
     renderizarJogos(jogos, mapaApostas, ehPaginaFinais);
+    setTimeout(rolarParaUltimoResultado, 500);
 }
 
 function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
@@ -107,6 +108,11 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             jogoPrefixo = "JOGO " + jogo.jogo_fifa + " - "
         } else {
             jogoPrefixo = "GRUPO " + jogo.grupo + " - ";
+        }
+
+        const ehUltimoComResultado = jogoOcorrido && (jogos.filter(j => j.gols_a !== null && j.gols_b !== null).pop() === jogo);
+        if (ehUltimoComResultado) {
+            cardElement.id = "ultimo-placar-oficial";
         }
 
         card.querySelector('.data-jogo').innerText = jogoPrefixo + dataLocal.toLocaleString('pt-BR', {
@@ -429,6 +435,23 @@ async function abrirModal(jogoId, nomeA, nomeB) {
 
 function fecharModal() {
     document.getElementById('modal-apostas').classList.add('hidden');
+}
+
+function rolarParaUltimoResultado() {
+    const ultimo = document.getElementById('ultimo-placar-oficial');
+    const navbar = document.querySelector('nav'); // Certifique-se que sua navbar usa a tag <nav> ou selecione pela classe
+    if (!ultimo || !navbar) return;
+
+    // Pega a altura real da navbar naquele momento (seja mobile ou desktop)
+    const alturaNavbar = navbar.offsetHeight; 
+    
+    // Calcula a posição com uma margem extra de 20px de respiro
+    const posicaoTopo = ultimo.getBoundingClientRect().top + window.scrollY;
+    
+    window.scrollTo({
+        top: posicaoTopo - alturaNavbar - 20, 
+        behavior: 'smooth'
+    });
 }
 
 // btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
