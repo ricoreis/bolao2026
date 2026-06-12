@@ -13,26 +13,29 @@ async function carregarRanking() {
     const tabelaWrapper = document.getElementById('tabela-wrapper');
 
     try {
+        const apostasTemporarias = await carregarTodasAsApostas();
+
+        // 2. Buscamos o restante (Note que removi 'data: apostas' daqui)
         const [
             { data: headers },
-            { data: apostas },
             { data: jogos },
             { data: usuarios }
         ] = await Promise.all([
             supabaseClient.from('pontuacao').select('*').order('id'),
-            supabaseClient.from('apostas').select('*, usuarios(nome)'),
             supabaseClient.from('jogos').select('*, vencedor_final_id'),
             supabaseClient.from('usuarios').select('*')
         ]);
 
-        // 2. Processa os dados
+        // 3. Agora atribuímos o resultado final à variável que seu código espera
+        const apostas = apostasTemporarias;
+
+        // console.log("Total de IDs carregados:", apostas.length);
+
         await processarParticipantes(usuarios);
         const rankingFinal = await processarRanking(apostas, jogos, headers);
         
-        // 3. Renderiza a tabela
         renderizarTabela(rankingFinal, headers);
 
-        // 4. Sucesso: Esconde o loader e mostra a tabela
         if (loader) loader.classList.add('hidden');
         if (tabelaWrapper) tabelaWrapper.classList.remove('hidden');
 
@@ -185,21 +188,26 @@ async function processarRanking(apostas, jogos, headers) {
     });
 
     jogos.forEach(jogo => {
+        // Essa é a cláusula de segurança, ela já existe aí!
         if (jogo.gols_a === null || jogo.gols_b === null) return;
+        
         apostas.forEach(aposta => {
-            if (String(aposta.jogo_id) === String(jogo.id)) {
+            // A Mudança para parseInt resolve a inconsistência de tipos
+            if (parseInt(aposta.jogo_id) === parseInt(jogo.id)) {
+                
                 const usr = rankingMap[aposta.usuario_id];
+                // Se o usuário não estiver no mapa, não tem como somar pontos
+                if (!usr) return; 
+
                 let mult = (parseInt(jogo.id) > 72) ? 2 : 1;
                 const res = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, headers, mult);
                 
                 if (res.total > 0 || res.coluna) {
                     usr.pontos_totais += parseInt(res.total);
 
-                    // --- ADICIONE ISSO AQUI PARA O DESEMPATE ---
-                    // (Verifique se o seu 'calcularPontos' retorna exatamente estas propriedades 'exato' e 'saldo')
-                    if (res.exato) usr.acertos_exatos += 1;
-                    if (res.saldo) usr.acertos_saldo += 1;
-                    // --------------------------------------------0
+                    // Desempate
+                    if (res.exato) usr.acertos_exatos = (usr.acertos_exatos || 0) + 1;
+                    if (res.saldo) usr.acertos_saldo = (usr.acertos_saldo || 0) + 1;
 
                     const valorRegraGols = parseInt(headers.find(h => h.nome_reduzido === 'GOLS')?.pontos || 1);
                     const qtdGols = (res.bonus || 0) / valorRegraGols;
@@ -580,6 +588,23 @@ function sanitizarResultadoFinal(resultado, jogos) {
     }
     
     return limpo;
+}
+
+async function carregarTodasAsApostas() {
+    let todas = [];
+    let start = 0;
+    while (true) {
+        const { data } = await supabaseClient
+            .from('apostas')
+            .select('*, usuarios(nome)')
+            .range(start, start + 999);
+        
+        if (!data || data.length === 0) break;
+        todas.push(...data);
+        if (data.length < 1000) break;
+        start += 1000;
+    }
+    return todas;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
