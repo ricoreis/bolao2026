@@ -374,63 +374,80 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
 async function abrirModal(jogoId, nomeA, nomeB) {
     const lista = document.getElementById('lista-apostas-modal');
     const tituloModal = document.querySelector('#modal-apostas h3');
-    tituloModal.innerText = `${nomeA} x ${nomeB}`;
+    const containerMeuPalpite = document.getElementById('meu-palpite-container');
+    const valorMeuPalpite = document.getElementById('meu-palpite-valor');
 
+    tituloModal.innerText = `${nomeA} x ${nomeB}`;
+    
+    // Reseta estado do modal
+    if (containerMeuPalpite) containerMeuPalpite.classList.add('hidden');
     lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
     document.getElementById('modal-apostas').classList.remove('hidden');
 
+    // Busca o usuário logado e todas as apostas do jogo
+    const { data: { user } } = await supabaseClient.auth.getUser();
     const { data: apostas } = await supabaseClient
         .from('apostas')
-        .select('gols_a, gols_b, usuarios(nome)')
+        .select('gols_a, gols_b, usuarios(nome, id)')
         .eq('jogo_id', jogoId);
+
+    // 1. Identifica o palpite do usuário logado
+    const minhaAposta = apostas?.find(a => a.usuarios?.id === user?.id);
+    if (minhaAposta && containerMeuPalpite) {
+        valorMeuPalpite.innerText = `${minhaAposta.gols_a} x ${minhaAposta.gols_b}`;
+        containerMeuPalpite.classList.remove('hidden');
+    }
+
+    // 2. Filtra outras apostas (remove o usuário logado da lista principal)
+    const outrasApostas = apostas?.filter(a => a.usuarios?.id !== user?.id) || [];
 
     if (!apostas || apostas.length === 0) {
         lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Ninguém apostou neste jogo.</td></tr>';
         return;
     }
 
-    // 1. Criar os grupos
-    const grupos = {
-        vitoriaA: [],
-        vitoriaB: [],
-        empate: []
-    };
+    // 3. Criar os grupos apenas com outras apostas
+    const grupos = { vitoriaA: [], vitoriaB: [], empate: [] };
 
-    apostas.forEach(a => {
+    outrasApostas.forEach(a => {
         if (a.gols_a > a.gols_b) grupos.vitoriaA.push(a);
         else if (a.gols_b > a.gols_a) grupos.vitoriaB.push(a);
         else grupos.empate.push(a);
     });
 
-    // 2. Função auxiliar para ordenar dentro dos grupos (Gols A asc, depois Gols B asc)
     const ordenar = (a, b) => (a.gols_a - b.gols_a) || (a.gols_b - b.gols_b);
     grupos.vitoriaA.sort(ordenar);
     grupos.vitoriaB.sort(ordenar);
     grupos.empate.sort(ordenar);
 
-    // 3. Função para gerar o HTML de um subheader
+    // 4. Função auxiliar de renderização
     const gerarSecao = (titulo, listaApostas) => {
         if (listaApostas.length === 0) return '';
         return `
-            <tr><td colspan="2" class="bg-gray-800 text-emerald-500 font-bold py-2 px-3 text-sm uppercase">
-                <span class="bg-black/20 w-full flex rounded-lg px-4 py-4 mb-3 mt-6">
+            <tr><td colspan="2" class="bg-gray-800 text-emerald-500 font-bold text-sm uppercase">
+                <span class="bg-black/20 w-full flex rounded-lg px-4 py-4 mb-6">
                     ${titulo}
                 </span>
             </td></tr>
             ${listaApostas.map(a => `
                 <tr class="border-b border-gray-700/50">
-                    <td class="py-3 px-3 text-gray-200">${a.usuarios?.nome || 'Anon'}</td>
-                    <td class="py-3 px-3 text-center text-emerald-400 font-bold">${a.gols_a} x ${a.gols_b}</td>
+                    <td class="py-3 text-gray-200">${a.usuarios?.nome || 'Anon'}</td>
+                    <td class="py-3 text-center text-emerald-400 font-bold">${a.gols_a} x ${a.gols_b}</td>
                 </tr>
             `).join('')}
+            <tr><td colspan="2" class="h-16"></td></tr>
         `;
     };
 
-    // 4. Renderiza tudo
-    lista.innerHTML = 
-        gerarSecao(`Vitória ${nomeA}`, grupos.vitoriaA) +
-        gerarSecao(`Vitória ${nomeB}`, grupos.vitoriaB) +
-        gerarSecao('Empate', grupos.empate);
+    // 5. Renderiza na tabela
+    if (outrasApostas.length === 0) {
+        lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Você é o único que apostou até agora!</td></tr>';
+    } else {
+        lista.innerHTML = 
+            gerarSecao(`Vitória ${nomeA}`, grupos.vitoriaA) +
+            gerarSecao(`Vitória ${nomeB}`, grupos.vitoriaB) +
+            gerarSecao('Empate', grupos.empate);
+    }
 }
 
 function fecharModal() {
@@ -439,17 +456,17 @@ function fecharModal() {
 
 function rolarParaUltimoResultado() {
     const ultimo = document.getElementById('ultimo-placar-oficial');
-    const navbar = document.querySelector('nav'); // Certifique-se que sua navbar usa a tag <nav> ou selecione pela classe
-    if (!ultimo || !navbar) return;
+    if (!ultimo) return;
 
-    // Pega a altura real da navbar naquele momento (seja mobile ou desktop)
-    const alturaNavbar = navbar.offsetHeight; 
-    
-    // Calcula a posição com uma margem extra de 20px de respiro
+    // Calcula a posição do topo do elemento relativo ao topo da página
     const posicaoTopo = ultimo.getBoundingClientRect().top + window.scrollY;
     
+    // O valor 100 (ou mais) é a altura da sua navbar. 
+    // Ajuste este número até ficar perfeito visualmente.
+    const margemNavbar = 120; 
+
     window.scrollTo({
-        top: posicaoTopo - alturaNavbar - 20, 
+        top: posicaoTopo - margemNavbar,
         behavior: 'smooth'
     });
 }
