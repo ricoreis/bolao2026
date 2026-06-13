@@ -467,6 +467,59 @@ function validarSelecoesClassificacao() {
     }
 }
 
+async function abrirModalCritério(coluna, titulo) {
+    const tituloModal = document.querySelector('#modal-apostas h3');
+    const lista = document.getElementById('lista-apostas-modal');
+    
+    tituloModal.innerText = titulo;
+    document.getElementById('modal-apostas').classList.remove('hidden');
+    lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
+
+    // 1. Busca Paralela: Palpites + Usuários + Jogadores
+    const [ {data: apostas}, {data: usuarios}, {data: jogadores} ] = await Promise.all([
+        supabaseClient.from('palpites').select(`usuario_id, ${coluna}`),
+        supabaseClient.from('usuarios').select('id, nome'),
+        supabaseClient.from('jogadores').select('id, nome, clube')
+    ]);
+
+    if (!apostas) {
+        lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Erro ao carregar dados.</td></tr>';
+        return;
+    }
+
+    // 2. Criação de Mapas para acesso instantâneo
+    const mapaUsuarios = Object.fromEntries(usuarios.map(u => [u.id, u.nome]));
+    const mapaJogadores = Object.fromEntries(jogadores.map(j => [j.id, `${j.nome} (${j.clube})`]));
+
+    // 3. Processamento e Ordenação
+    // Filtramos apenas quem tem palpite e mapeamos para o objeto final
+    const listaFinal = apostas
+        .filter(a => a[coluna] !== null) // Remove quem não votou
+        .map(a => ({
+            usuario: mapaUsuarios[a.usuario_id] || 'Anon',
+            jogador: mapaJogadores[a[coluna]] || 'ID Desconhecido'
+        }))
+        // Ordenação alfabética pelo nome do jogador
+        .sort((a, b) => a.jogador.localeCompare(b.jogador));
+
+    if (listaFinal.length === 0) {
+        lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Ninguém apostou ainda.</td></tr>';
+        return;
+    }
+
+    // 4. Renderização
+    lista.innerHTML = listaFinal.map(item => `
+        <tr class="border-b border-gray-700/50">
+            <td class="py-3 text-gray-200 pl-4">${item.usuario}</td>
+            <td class="py-3 text-right pr-4 text-emerald-400 font-bold italic">${item.jogador}</td>
+        </tr>
+    `).join('');
+}
+
+function fecharModal() {
+    document.getElementById('modal-apostas').classList.add('hidden');
+}
+
 // btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
 document.getElementById('btn-salvar-palpites').addEventListener('click', salvarPalpites);
 
@@ -487,3 +540,21 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarSaudacao();
     iniciarPagina();
 });
+
+document.querySelectorAll('.ver-apostas').forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Pega o atributo do próprio botão
+        const coluna = btn.getAttribute('data-coluna');
+        const titulo = btn.getAttribute('data-titulo') || "Apostas";
+        abrirModalCritério(coluna, titulo);
+    });
+});
+
+document.getElementById('modal-apostas').addEventListener('click', (e) => {
+    // Se o elemento clicado for o fundo (e não o conteúdo interno), fecha
+    if (e.target.id === 'modal-apostas') {
+        fecharModal();
+    }
+});
+document.getElementById('btn-fechar-modal').addEventListener('click', fecharModal);
+window.fecharModal = fecharModal;

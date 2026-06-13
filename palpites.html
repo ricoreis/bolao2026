@@ -15,6 +15,11 @@
     <style>
         body { font-family: 'Quicksand', sans-serif; font-weight: 500; }
         h1,h2,h3 { font-family: 'Quicksand', sans-serif; font-weight: 300; }
+        .scroll-custom::-webkit-scrollbar { width: 20px; height: 20px; }
+        .scroll-custom::-webkit-scrollbar-track { background: #1f2937; }
+        .scroll-custom::-webkit-scrollbar-thumb { background: #34d399; border: 5px solid #1f2937; border-radius: 12px; }
+        .scroll-custom::-webkit-scrollbar-thumb:hover { background: #10b981; border: 4px solid #1f2937; }
+        .scroll-custom { scrollbar-width: thin; scrollbar-color: #34d399 #1f2937; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
@@ -135,6 +140,10 @@
                             <select id="sel-gol" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
                             <span id="pts-gol-brasil"></span>
                         </div>
+                        <button data-coluna="primeiro_gol_brasil_id" data-titulo="Primeiro Gol do Brasil" class="mt-2 ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                            <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            <span>Ver Apostas</span>
+                        </button>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">Brasil chega até...</label>
@@ -252,6 +261,24 @@
 
         </div>
     </main>
+
+    <div id="modal-apostas" class="fixed inset-0 z-[100] hidden bg-gray-900/80 flex items-center justify-center p-4">
+        <div class="bg-gray-800 w-full max-w-md rounded-xl border border-gray-700 p-6 shadow-2xl relative">
+            <div class="flex flex-col items-center mb-4">
+                <h3 class="text-lg font-bold text-emerald-400 w-full pb-4">Apostas</h3>
+                <div id="meu-palpite-container" class="hidden w-full my-2 p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg text-center flex items-center gap-4 justify-center">
+                    <p class="text-xs text-emerald-400 uppercase font-bold">Meu Palpite</p>
+                    <span id="meu-palpite-valor" class="text-xl font-bold text-white"></span>
+                </div>
+                <button id="btn-fechar-modal" class="text-gray-400 hover:text-white size-12 flex items-center justify-center absolute top-1 right-1">✕</button>
+            </div>
+            <div class="overflow-y-auto max-h-[60vh] scroll-custom pr-6">
+                <table class="w-full text-left text-sm text-gray-300">
+                    <tbody id="lista-apostas-modal"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <div id="toast" class="fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"></div>
     <script type="module" src="palpites.js"></script>

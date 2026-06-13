@@ -480,6 +480,13 @@ btnsLogout.forEach(botao => {
     });
 });
 
+document.getElementById('modal-apostas').addEventListener('click', (e) => {
+    // Se o elemento clicado for o fundo (e não o conteúdo interno), fecha
+    if (e.target.id === 'modal-apostas') {
+        fecharModal();
+    }
+});
+
 // document.addEventListener('DOMContentLoaded', verificarSessao);
 document.addEventListener('DOMContentLoaded', () => {
     carregarSaudacao();
