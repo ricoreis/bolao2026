@@ -417,10 +417,24 @@ async function processarRanking(apostas, jogos, headers) {
                         }
                         if (gabaritoID != null) {
                             const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
-                            usr[m.db] = `${acertou ? 'S' : 'N'} (${formatarValor(m.tabela, palpiteID, m.tipo)})`;
-                            if (acertou) usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
-                        } else usr[m.db] = "-";
+                            
+                            // Define a cor baseada no resultado
+                            const cor = acertou ? "text-emerald-300" : "text-gray-300";
+                            
+                            // Aplica a cor tanto no ícone quanto no texto
+                            const icone = acertou 
+                                ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="${cor} text-lg"></iconify-icon>` 
+                                : `<iconify-icon icon="dashicons:no" class="${cor} text-lg opacity-25"></iconify-icon>`;
 
+                            // Renderiza usando a mesma variável 'cor'
+                            usr[m.db] = `${icone} <span class="text-xs ${cor} ml-1">${formatarValor(m.tabela, palpiteID, m.tipo)}</span>`;
+                            
+                            if (acertou) {
+                                usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
+                            }
+                        } else {
+                            usr[m.db] = "-";
+                        }
 
                     }
                 });
@@ -489,20 +503,25 @@ function renderizarTabela(dados, headers) {
         headersComFinal.push({ coluna_db: 'placar_classificado_penaltis', nome: 'Penal', nome_reduzido: 'PENAL' });
     }
 
+    const colunasComIcones = ['brasil_primeiro_gol'];
+
     while (thead.children.length > 3) thead.removeChild(thead.lastChild);
+
     headersComFinal.forEach(h => {
         const th = document.createElement('th');
-        th.className = `px-2 py-4 text-center text-xs text-emerald-400 uppercase col-${h.coluna_db} relative`;
+        const alinhamento = colunasComIcones.includes(h.coluna_db) ? 'justify-start' : 'justify-center';
+        th.className = `px-2 py-4 ${alinhamento} text-xs text-emerald-400 uppercase col-${h.coluna_db} relative`;        
+        // th.className = `px-2 py-4 text-center text-xs text-emerald-400 uppercase col-${h.coluna_db} relative`;
         const textoPontos = h.pontos || 'Regra de pontuação específica.';
         const textoTipo = h.tipo || 'Regra de pontuação específica.';
 
         th.innerHTML = `
-            <div class="flex items-center justify-center gap-1 group cursor-help">
+            <div class="flex items-center ${alinhamento} gap-1 group cursor-help">
                 ${h.nome_reduzido}
                 <iconify-icon icon="material-symbols:info-outline" class="text-emerald-500"></iconify-icon>
                 
                 <div class="absolute top-full mt-2 hidden group-hover:block w-48 p-2 bg-gray-900 border border-emerald-600 text-white text-sm rounded-lg z-50 normal-case font-normal shadow-xl text-center">
-                    ${textoPontos > 0? "+" : ""}${textoPontos}
+                    ${textoPontos > 0 ? "+" : ""}${textoPontos}
                     ${textoTipo}
                 </div>
             </div>
@@ -510,13 +529,28 @@ function renderizarTabela(dados, headers) {
         thead.appendChild(th);
     });
 
+    const dadosOrdenados = [...dados].sort((a, b) => {
+        if (b.pontos_totais !== a.pontos_totais) return b.pontos_totais - a.pontos_totais;
+        return b.qtd_exatos - a.qtd_exatos;
+    });
     tbody.innerHTML = dados.map((usr, index) => {
-        const total = usr.pontos_totais || 0; 
-        
-        // AGORA USAMOS headersComFinal AQUI!
+
+        let posicao = index + 1;
+        if (index > 0 && usr.pontos_totais === dadosOrdenados[index - 1].pontos_totais) {
+            posicao = dadosOrdenados[index - 1].posicao;
+        }
+        usr.posicao = posicao;
+
+        const total = usr.pontos_totais || 0;
+
         const colunasDinamicas = headersComFinal.map(h => {
             let valor = usr[h.coluna_db];
             const classeColuna = `col-${h.coluna_db}`;
+
+            // Alinhamento à esquerda para colunas de ícones
+            if (colunasComIcones.includes(h.coluna_db)) {
+                return `<td class="${classeColuna} px-2 py-3 text-left text-xs"><span class="flex items-center gap-1">${valor ?? '-'}</span></td>`;
+            }
 
             // 1. Lógica específica para a FINAL
             if (h.coluna_db === 'final_copa') {
@@ -540,14 +574,16 @@ function renderizarTabela(dados, headers) {
         }).join('');
 
         return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
-            <td class="md:sticky px-2 py-3 min-w-[50px] max-w-[50px] w-[50px] left-0 text-center bg-gray-700 text-xs text-center col-posicao">${index + 1}º</td>
-            <td class="md:sticky px-2 py-3 min-w-[150px] max-w-[150px] w-[150px] left-[50px] bg-gray-700">${usr.nome}</td>
-            <td class="md:sticky px-2 py-3 min-w-[100px] max-w-[100px] w-[100px] left-[200px] text-center bg-gray-700 col-pontuacao">
-                ${total ?? 0}
-            </td>
-            ${colunasDinamicas}
-        </tr>`;
-    }).join('');
+                <td class="md:sticky px-2 py-3 min-w-[50px] max-w-[50px] w-[50px] left-0 text-center bg-gray-700 text-xs font-bold text-emerald-400 col-posicao">
+                    ${posicao}º
+                </td>
+                <td class="md:sticky px-2 py-3 min-w-[150px] max-w-[150px] w-[150px] left-[50px] bg-gray-700">${usr.nome}</td>
+                <td class="md:sticky px-2 py-3 min-w-[100px] max-w-[100px] w-[100px] left-[200px] text-center bg-gray-700 col-pontuacao font-bold">
+                    ${total ?? 0}
+                </td>
+                ${colunasDinamicas}
+            </tr>`;
+        }).join('');
 }
 
 function obterExplicacao(nomeReduzido) {
