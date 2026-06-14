@@ -532,11 +532,13 @@ function renderizarTabela(dados, headers) {
         thead.appendChild(th);
     });
 
-    // Substitua o sort dentro de renderizarTabela por esta versão completa:
+    // O sort agora reflete exatamente a mesma hierarquia que usamos para definir a posição
     const dadosOrdenados = [...dados].sort((a, b) => {
         if (b.pontos_totais !== a.pontos_totais) return b.pontos_totais - a.pontos_totais;
         if ((b.acertos_exatos || 0) !== (a.acertos_exatos || 0)) return (b.acertos_exatos || 0) - (a.acertos_exatos || 0);
         if ((b.acertos_saldo || 0) !== (a.acertos_saldo || 0)) return (b.acertos_saldo || 0) - (a.acertos_saldo || 0);
+        if ((b.acertos_empate || 0) !== (a.acertos_empate || 0)) return (b.acertos_empate || 0) - (a.acertos_empate || 0); // Adicionado
+        if ((b.acertos_vencedor || 0) !== (a.acertos_vencedor || 0)) return (b.acertos_vencedor || 0) - (a.acertos_vencedor || 0); // Adicionado
         return a.nome.localeCompare(b.nome);
     });
 
@@ -544,10 +546,19 @@ function renderizarTabela(dados, headers) {
     tbody.innerHTML = dadosOrdenados.map((usr, index) => {
 
         let posicao = index + 1;
-        if (index > 0 && usr.pontos_totais === dadosOrdenados[index - 1].pontos_totais && 
-            (usr.acertos_exatos || 0) === (dadosOrdenados[index - 1].acertos_exatos || 0) &&
-            (usr.acertos_saldo || 0) === (dadosOrdenados[index - 1].acertos_saldo || 0)) {
-            posicao = dadosOrdenados[index - 1].posicao;
+        if (index > 0) {
+            const anterior = dadosOrdenados[index - 1];
+            
+            // Eles só compartilham a posição se TUDO for igual
+            const pontosIguais = usr.pontos_totais === anterior.pontos_totais;
+            const exatosIguais = (usr.acertos_exatos || 0) === (anterior.acertos_exatos || 0);
+            const saldoIguais  = (usr.acertos_saldo || 0) === (anterior.acertos_saldo || 0);
+            const empateIguais = (usr.acertos_empate || 0) === (anterior.acertos_empate || 0);
+            const vencIguais   = (usr.acertos_vencedor || 0) === (anterior.acertos_vencedor || 0);
+
+            if (pontosIguais && exatosIguais && saldoIguais && empateIguais && vencIguais) {
+                posicao = anterior.posicao;
+            }
         }
         usr.posicao = posicao;
 
