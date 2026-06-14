@@ -8,7 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-    <script src="auth-header.js"></script>
+    <script type="module" src="auth-header.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
@@ -95,7 +95,7 @@
         </div>
 
         <div class="gap-3 items-center hidden md:flex">
-            <p id="saudacao-user" class="text-xs text-gray-400 mt-1 italic hidden md:block">Carregando...</p>
+            <p id="saudacao-user" class="text-sm text-gray-400 mt-1 italic hidden md:block">Carregando...</p>
             <button id="btn-logout" class="btn-logout bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg w-full sm:w-auto transition">
                 Sair
             </button>
@@ -198,7 +198,7 @@
                     <p class="text-xs text-emerald-400 uppercase font-bold">Meu Palpite</p>
                     <span id="meu-palpite-valor" class="text-xl font-bold text-white"></span>
                 </div>
-                <button onclick="fecharModal()" class="text-gray-400 hover:text-white size-12 flex items-center justify-center absolute top-1 right-1">✕</button>
+                <button id="btn-fechar-modal" class="text-gray-400 hover:text-white size-12 flex items-center justify-center absolute top-1 right-1">✕</button>
             </div>
             <div class="overflow-y-auto max-h-[60vh] scroll-custom pr-6">
                 <table class="w-full text-left text-sm text-gray-300">
@@ -210,6 +210,6 @@
 
     <div id="toast" class="fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"></div>
     <script src="regras.js"></script>
-    <script src="apostas.js"></script>
+    <script type="module" src="apostas.js"></script>
 </body>
 </html>

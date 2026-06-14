@@ -1,10 +1,5 @@
-/**
- * pontuacao.js
- */
-
-const SUPABASE_URL = "https://rximgiwpqmshqaducvla.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ4aW1naXdwcW1zaHFhZHVjdmxhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MjgwNDYsImV4cCI6MjA5NjEwNDA0Nn0.O3Uy5fYgc7CedVThLza_yCvuM4wHd4IpHrXoCYW2w-I";
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+import { supabaseClient } from './supabase-config.js';
+import { carregarSaudacao } from './auth-header.js';
 
 const btnsLogout = document.querySelectorAll('.btn-logout');
 
