@@ -40,39 +40,68 @@ async function verificarSessao() {
 }
 
 async function carregarJogosEApostas() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) return;
+    // 1. Obtém as referências dos elementos
+    const loader = document.getElementById('loader');
+    const jogosContainer = document.getElementById('jogos-container'); // Ajuste o ID conforme o seu HTML
 
-    const ehPaginaFinais = window.location.pathname.includes('apostas-finais.html');
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) return;
 
-    let query = supabaseClient
-        .from('jogos')
-        .select(`
-            *,
-            fase:fases(nome),
-            time_a:paises!jogos_time_a_id_fkey(nome, sigla, id),
-            time_b:paises!jogos_time_b_id_fkey(nome, sigla, id)
-        `);
+        const ehPaginaFinais = window.location.pathname.includes('apostas-finais.html');
 
-    if (ehPaginaFinais) {
-        query = query.gt('fase_id', 1).order('fase_id', { ascending: true }).order('data_jogo', { ascending: true });
-    } else {
-        query = query.eq('fase_id', 1).order('data_jogo', { ascending: true });
+        let query = supabaseClient
+            .from('jogos')
+            .select(`
+                *,
+                fase:fases(nome),
+                time_a:paises!jogos_time_a_id_fkey(nome, sigla, id),
+                time_b:paises!jogos_time_b_id_fkey(nome, sigla, id)
+            `);
+
+        if (ehPaginaFinais) {
+            query = query.gt('fase_id', 1).order('fase_id', { ascending: true }).order('data_jogo', { ascending: true });
+        } else {
+            query = query.eq('fase_id', 1).order('data_jogo', { ascending: true });
+        }
+
+        const tempoMinimo = new Promise(resolve => setTimeout(resolve, 3000));
+
+        // Usando Promise.all para carregar tudo de uma vez, igual ao ranking
+        const [ {data: jogos, error: erroJogos}, {data: apostas} ] = await Promise.all([
+            query,
+            supabaseClient.from('apostas').select('*').eq('usuario_id', session.user.id),
+            tempoMinimo
+        ]);
+
+        if (erroJogos) throw erroJogos;
+
+        const mapaApostas = {};
+        if (apostas) apostas.forEach(p => mapaApostas[p.jogo_id] = p);
+
+        // 2. Renderiza
+        renderizarJogos(jogos, mapaApostas, ehPaginaFinais);
+        
+        // 3. Sucesso: esconde o loader e mostra o conteúdo
+        if (loader) loader.classList.add('hidden');
+        if (jogosContainer) jogosContainer.classList.remove('hidden');
+
+        setTimeout(rolarParaUltimoResultado, 500);
+
+    } catch (error) {
+        console.error("Erro ao carregar jogos:", error);
+        
+        // 4. Erro: mostra o feedback visual
+        if (loader) {
+            loader.innerHTML = `
+                <div class="text-center p-6">
+                    <iconify-icon class="text-5xl text-red-500" icon="material-symbols:error-outline"></iconify-icon>
+                    <p class="text-red-400 mt-4">Erro ao carregar jogos.</p>
+                    <button onclick="window.location.reload()" class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg text-sm">Tentar novamente</button>
+                </div>
+            `;
+        }
     }
-
-    const { data: jogos, error: erroJogos } = await query;
-    if (erroJogos) { console.error(erroJogos); return; }
-
-    const { data: apostas } = await supabaseClient
-        .from('apostas')
-        .select('*')
-        .eq('usuario_id', session.user.id);
-
-    const mapaApostas = {};
-    if (apostas) apostas.forEach(p => mapaApostas[p.jogo_id] = p);
-
-    renderizarJogos(jogos, mapaApostas, ehPaginaFinais);
-    setTimeout(rolarParaUltimoResultado, 500);
 }
 
 function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {

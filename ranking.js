@@ -6,28 +6,28 @@ document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
 
 async function carregarRanking() {
-    // 1. Obtém as referências dos elementos
     const loader = document.getElementById('loader');
     const tabelaWrapper = document.getElementById('tabela-wrapper');
 
     try {
-        const apostasTemporarias = await carregarTodasAsApostas();
+        // Criamos o tempo mínimo de 3 segundos
+        const tempoMinimo = new Promise(resolve => setTimeout(resolve, 3000));
 
-        // 2. Buscamos o restante (Note que removi 'data: apostas' daqui)
+        // Iniciamos o carregamento dos dados E o timer em paralelo
         const [
+            apostasTemporarias, 
             { data: headers },
             { data: jogos },
             { data: usuarios }
         ] = await Promise.all([
+            carregarTodasAsApostas(),
             supabaseClient.from('pontuacao').select('*').order('id'),
             supabaseClient.from('jogos').select('*, vencedor_final_id'),
-            supabaseClient.from('usuarios').select('*')
+            supabaseClient.from('usuarios').select('*'),
+            tempoMinimo // <-- O segredo: o Promise.all só termina quando o mais lento acabar
         ]);
 
-        // 3. Agora atribuímos o resultado final à variável que seu código espera
         const apostas = apostasTemporarias;
-
-        // console.log("Total de IDs carregados:", apostas.length);
 
         await processarParticipantes(usuarios);
         const rankingFinal = await processarRanking(apostas, jogos, headers);
@@ -40,7 +40,6 @@ async function carregarRanking() {
     } catch (error) {
         console.error("Erro ao carregar ranking:", error);
         
-        // 5. Erro: Esconde o loader e mostra uma mensagem de erro no lugar dele
         if (loader) {
             loader.innerHTML = `
                 <div class="text-center p-6">
