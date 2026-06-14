@@ -563,6 +563,23 @@ function renderizarTabela(dados, headers) {
         usr.posicao = posicao;
 
         const total = usr.pontos_totais || 0;
+        const totalParticipantes = dadosOrdenados.length;
+
+        let classeCor = "";
+        let corPosicao = "text-emerald-400";
+        let iconPodio = "";
+
+        if (usr.posicao === 1) {
+            classeCor = "bg-yellow-500/45";
+            corPosicao = "text-yellow-400";
+            iconPodio = ' <iconify-icon icon="emojione:trophy"></iconify-icon>';
+        } else if (usr.posicao === 2) {
+            classeCor = "bg-gray-400/45";
+            corPosicao = "text-gray-300";
+        } else if (usr.posicao === 3) {
+            classeCor = "bg-amber-700/45";
+            corPosicao = "text-orange-400";
+        }
 
         const colunasDinamicas = headersComFinal.map(h => {
             let valor = usr[h.coluna_db];
@@ -594,12 +611,14 @@ function renderizarTabela(dados, headers) {
             return `<td class="${classeColuna} px-2 py-3 text-center text-xs">${valor ?? 0}</td>`;
         }).join('');
 
-        return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
-                <td class="md:sticky px-2 py-3 min-w-[50px] max-w-[50px] w-[50px] left-0 text-center bg-gray-700 text-xs font-bold text-emerald-400 col-posicao">
+        return `<tr class="border-b border-gray-700 hover:bg-gray-700/20 ${classeCor}">
+                <td class="md:sticky left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-2 py-3">
                     ${posicao}º
                 </td>
-                <td class="md:sticky px-2 py-3 min-w-[150px] max-w-[150px] w-[150px] left-[50px] bg-gray-700">${usr.nome}</td>
-                <td class="md:sticky px-2 py-3 min-w-[100px] max-w-[100px] w-[100px] left-[200px] text-center bg-gray-700 col-pontuacao font-bold">
+                <td class="md:sticky left-[50px] bg-gray-700 ${classeCor} px-2 py-3">
+                    ${usr.nome}
+                </td>
+                <td class="md:sticky left-[200px] text-center bg-gray-700 col-pontuacao font-bold px-2 py-3 ${classeCor}">
                     ${total ?? 0}
                 </td>
                 ${colunasDinamicas}
