@@ -131,8 +131,10 @@ async function processarRanking(apostas, jogos, headers) {
             usuario_id: u.id, 
             nome: u.nome, 
             pontos_totais: 0,
-            acertos_exatos: 0, // Adicionado
-            acertos_saldo: 0   // Adicionado
+            acertos_exatos: 0,
+            acertos_saldo: 0,
+            acertos_vencedor: 0,
+            acertos_empate: 0
         };
         headers.forEach(h => usuarioObj[h.coluna_db] = 0);
         usuarioObj['placar_classificado_penaltis'] = 0;
@@ -189,6 +191,7 @@ async function processarRanking(apostas, jogos, headers) {
         if (jogo.gols_a === null || jogo.gols_b === null) return;
         
         apostas.forEach(aposta => {
+  
             // A Mudança para parseInt resolve a inconsistência de tipos
             if (parseInt(aposta.jogo_id) === parseInt(jogo.id)) {
                 
@@ -198,13 +201,18 @@ async function processarRanking(apostas, jogos, headers) {
 
                 let mult = (parseInt(jogo.id) > 72) ? 2 : 1;
                 const res = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, headers, mult);
-                
-                if (res.total > 0 || res.coluna) {
-                    usr.pontos_totais += parseInt(res.total);
+                // console.log(res);
 
-                    // Desempate
-                    if (res.exato) usr.acertos_exatos = (usr.acertos_exatos || 0) + 1;
-                    if (res.saldo) usr.acertos_saldo = (usr.acertos_saldo || 0) + 1;
+                if (aposta.usuario_id === "874f9d4e-8583-4494-bfc4-4b981406426c") {
+                    // console.log(`Jogo ${jogo.id} | ${usr.nome} | Aposta: ${aposta.gols_a}x${aposta.gols_b} (${jogo.gols_a}x${jogo.gols_b}) | Pts: ${res.total} | Exato: ${res.exato} | Saldo: ${res.saldo} | Venc: ${res.venc} | Empate: ${res.empate}`);
+                }
+
+                if (res.total > 0 || res.coluna) {
+                    usr.pontos_totais += res.total;
+                    if (res.exato) usr.acertos_exatos++;
+                    if (res.saldo) usr.acertos_saldo++;
+                    if (res.venc)  usr.acertos_vencedor++;
+                    if (res.empate) usr.acertos_empate++;
 
                     const valorRegraGols = parseInt(headers.find(h => h.nome_reduzido === 'GOLS')?.pontos || 1);
                     const qtdGols = (res.bonus || 0) / valorRegraGols;
@@ -448,21 +456,19 @@ async function processarRanking(apostas, jogos, headers) {
     //     }
     //     return a.nome.localeCompare(b.nome);
     // });
+    usuarios.forEach(usr => {
+        usr['placar_exato'] = usr.acertos_exatos;
+        usr['placar_saldo'] = usr.acertos_saldo;
+        usr['placar_vencedor'] = usr.acertos_vencedor;
+        usr['placar_empate'] = usr.acertos_empate;
+    });
 
     return usuarios.sort((a, b) => {
-        // 1º Critério: Pontos Totais
-        if (b.pontos_totais !== a.pontos_totais) {
-            return b.pontos_totais - a.pontos_totais;
-        }
-        // 2º Critério: Mais Placares Exatos
-        if ((b.acertos_exatos || 0) !== (a.acertos_exatos || 0)) {
-            return (b.acertos_exatos || 0) - (a.acertos_exatos || 0);
-        }
-        // 3º Critério: Mais Placares com Saldo
-        if ((b.acertos_saldo || 0) !== (a.acertos_saldo || 0)) {
-            return (b.acertos_saldo || 0) - (a.acertos_saldo || 0);
-        }
-        // Critério Final: Ordem alfabética
+        if (b.pontos_totais !== a.pontos_totais) return b.pontos_totais - a.pontos_totais;
+        if ((b.acertos_exatos || 0) !== (a.acertos_exatos || 0)) return b.acertos_exatos - a.acertos_exatos;
+        if ((b.acertos_saldo || 0) !== (a.acertos_saldo || 0)) return b.acertos_saldo - a.acertos_saldo;
+        if ((b.acertos_empate || 0) !== (a.acertos_empate || 0)) return b.acertos_empate - a.acertos_empate;
+        if ((b.acertos_vencedor || 0) !== (a.acertos_vencedor || 0)) return b.acertos_vencedor - a.acertos_vencedor;
         return a.nome.localeCompare(b.nome);
     });
 
@@ -526,14 +532,21 @@ function renderizarTabela(dados, headers) {
         thead.appendChild(th);
     });
 
+    // Substitua o sort dentro de renderizarTabela por esta versão completa:
     const dadosOrdenados = [...dados].sort((a, b) => {
         if (b.pontos_totais !== a.pontos_totais) return b.pontos_totais - a.pontos_totais;
-        return b.qtd_exatos - a.qtd_exatos;
+        if ((b.acertos_exatos || 0) !== (a.acertos_exatos || 0)) return (b.acertos_exatos || 0) - (a.acertos_exatos || 0);
+        if ((b.acertos_saldo || 0) !== (a.acertos_saldo || 0)) return (b.acertos_saldo || 0) - (a.acertos_saldo || 0);
+        return a.nome.localeCompare(b.nome);
     });
-    tbody.innerHTML = dados.map((usr, index) => {
+
+    // console.log("DEBUG: Dados recebidos pelo renderizador:", dados.map(u => ({ nome: u.nome, saldo: u.acertos_saldo })));
+    tbody.innerHTML = dadosOrdenados.map((usr, index) => {
 
         let posicao = index + 1;
-        if (index > 0 && usr.pontos_totais === dadosOrdenados[index - 1].pontos_totais) {
+        if (index > 0 && usr.pontos_totais === dadosOrdenados[index - 1].pontos_totais && 
+            (usr.acertos_exatos || 0) === (dadosOrdenados[index - 1].acertos_exatos || 0) &&
+            (usr.acertos_saldo || 0) === (dadosOrdenados[index - 1].acertos_saldo || 0)) {
             posicao = dadosOrdenados[index - 1].posicao;
         }
         usr.posicao = posicao;

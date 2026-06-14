@@ -43,8 +43,9 @@
         <div class="w-full sm:w-auto text-center sm:text-left">
             <div class="w-full sm:w-auto text-center sm:text-left flex justify-between">
                 <h1 class="text-xl font-bold tracking-wide text-emerald-400">BOLÃO 2026</h1>
-                <!-- <button id="btn-logout" class="btn-logout block md:hidden bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
-                    <iconify-icon class="text-3xl" icon="material-symbols:logout"></iconify-icon>
+                <!-- <button id="btn-logout" class="btn-logout block md:hidden bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition flex gap-1 items-center justify-center">
+                    <p class="saudacao-user text-sm text-gray-400 mt-1 italic block md:hidden">Carregando...</p>
+                    <iconify-icon class="text-xl" icon="material-symbols:logout"></iconify-icon>
                 </button> -->
                 <button id="btn-logout" class="btn-logout block md:hidden bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
                     Sair
@@ -112,7 +113,7 @@
         </div>
 
         <div class="gap-3 items-center hidden md:flex">
-            <p id="saudacao-user" class="text-sm text-gray-400 mt-1 italic hidden md:block">Carregando...</p>
+            <p id="saudacao-user" class="saudacao-user text-sm text-gray-400 mt-1 italic hidden md:block">Carregando...</p>
             <button id="btn-logout" class="btn-logout bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg w-full sm:w-auto transition">
                 Sair
             </button>

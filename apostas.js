@@ -197,7 +197,8 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             // Se fase_id > 1 (Mata-mata), multiplicador é 2, senão é 1
             const multiplicador = (jogo.fase_id > 1) ? 2 : 1;
             
-            const pontos = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, multiplicador);
+            const resultado = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, multiplicador);
+            const pontos = resultado.total; // Pega apenas o número para exibir            
             
             const divInfo = document.createElement('div');
             divInfo.className = "p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-2 items-center justify-center mt-1.5";
