@@ -442,6 +442,26 @@ async function abrirModal(jogoId, nomeA, nomeB) {
         else grupos.empate.push(a);
     });
 
+    const ctx = document.getElementById('meuGraficoDonut').getContext('2d');
+    if (window.meuGrafico instanceof Chart) window.meuGrafico.destroy();
+    window.meuGrafico = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [grupos.vitoriaA.length, grupos.empate.length, grupos.vitoriaB.length],
+                backgroundColor: ['#10B981', '#4B5563', '#D1FAE5'],
+                borderWidth: 0,
+                cutout: '75%'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } }
+        }
+    });
+    document.getElementById('legenda-A').innerText = nomeA;
+    document.getElementById('legenda-B').innerText = nomeB;
+
     const ordenar = (a, b) => (a.gols_a - b.gols_a) || (a.gols_b - b.gols_b);
     grupos.vitoriaA.sort(ordenar);
     grupos.vitoriaB.sort(ordenar);
