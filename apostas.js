@@ -208,13 +208,22 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             const resultado = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, multiplicador);
             const pontos = resultado.total; // Pega apenas o número para exibir            
             
+            // LOGICA NOVA DE CORES:
+            // pontos > 0: verde/âmbar (ganhou)
+            // pontos === 0: cinza (neutro)
+            // pontos < 0: vermelho (perdeu - se existir essa regra)
+            let corPontos = "bg-gray-700 text-gray-400"; // Cor para ZERO
+            if (pontos > 0) corPontos = "bg-amber-400 text-gray-800 font-bold";
+            if (pontos < 0) corPontos = "bg-red-400 text-gray-800 font-bold";
+
             const divInfo = document.createElement('div');
             divInfo.className = "p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-2 items-center justify-center mt-1.5";
             divInfo.innerHTML = `
                 <div class="text-gray-400">Placar Oficial: ${jogo.gols_a} x ${jogo.gols_b}</div>
-                <div class="text-sm text-gray-800 ${pontos > 0 ? "bg-amber-400" : "bg-red-400"} rounded-full px-2 py-1 w-fit">${pontos > 0 ? "+" : ""}${pontos}</div>
+                <div class="text-sm rounded-full px-2 py-1 w-fit ${corPontos}">
+                    ${pontos == 0 ? "-" : pontos > 0 ? "+" + pontos : pontos}
+                </div>
             `;
-            // ${multiplicador > 1 ? '<span class="text-xs font-bold text-amber-500 uppercase bg-amber-500/10 px-4 py-2 rounded-full">Dobrado</span>' : ''}
             cardElement.appendChild(divInfo);
         }
 
