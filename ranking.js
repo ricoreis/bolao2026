@@ -134,7 +134,11 @@ async function processarRanking(apostas, jogos, headers) {
             acertos_exatos: 0,
             acertos_saldo: 0,
             acertos_vencedor: 0,
-            acertos_empate: 0
+            acertos_empate: 0,
+            acertos_gols: 0,
+            acertos_exato_neg: 0,
+            acertos_saldo_neg: 0,
+            acertos_venc_neg: 0
         };
         headers.forEach(h => usuarioObj[h.coluna_db] = 0);
         usuarioObj['placar_classificado_penaltis'] = 0;
@@ -209,15 +213,18 @@ async function processarRanking(apostas, jogos, headers) {
 
                 if (res.total > 0 || res.coluna) {
                     usr.pontos_totais += res.total;
+
+                    // Positivos
                     if (res.exato) usr.acertos_exatos++;
                     if (res.saldo) usr.acertos_saldo++;
                     if (res.venc)  usr.acertos_vencedor++;
                     if (res.empate) usr.acertos_empate++;
 
-                    const valorRegraGols = parseInt(headers.find(h => h.nome_reduzido === 'GOLS')?.pontos || 1);
-                    const qtdGols = (res.bonus || 0) / valorRegraGols;
-                    if (res.coluna) usr[res.coluna] = (usr[res.coluna] || 0) + 1;
-                    usr['placar_gols'] = (usr['placar_gols'] || 0) + qtdGols;
+                    // Novos critérios
+                    if (res.bonus > 0) usr.acertos_gols = (usr.acertos_gols || 0) + res.bonus;
+                    if (res.exatoNeg) usr.acertos_exato_neg++;
+                    if (res.saldoNeg) usr.acertos_saldo_neg++;
+                    if (res.vencNeg)  usr.acertos_venc_neg++;
                 }
             }
         });
@@ -461,14 +468,30 @@ async function processarRanking(apostas, jogos, headers) {
         usr['placar_saldo'] = usr.acertos_saldo;
         usr['placar_vencedor'] = usr.acertos_vencedor;
         usr['placar_empate'] = usr.acertos_empate;
+        usr['placar_gols'] = usr.acertos_gols;
+        usr['placar_exato_neg'] = usr.acertos_exato_neg;
+        usr['placar_saldo_neg'] = usr.acertos_saldo_neg;
+        usr['placar_venc_neg'] = usr.acertos_venc_neg;
     });
 
     return usuarios.sort((a, b) => {
+        // Pontos
         if (b.pontos_totais !== a.pontos_totais) return b.pontos_totais - a.pontos_totais;
-        if ((b.acertos_exatos || 0) !== (a.acertos_exatos || 0)) return b.acertos_exatos - a.acertos_exatos;
-        if ((b.acertos_saldo || 0) !== (a.acertos_saldo || 0)) return b.acertos_saldo - a.acertos_saldo;
-        if ((b.acertos_empate || 0) !== (a.acertos_empate || 0)) return b.acertos_empate - a.acertos_empate;
-        if ((b.acertos_vencedor || 0) !== (a.acertos_vencedor || 0)) return b.acertos_vencedor - a.acertos_vencedor;
+        
+        // Positivos (Decrescente)
+        if ((b.acertos_exatos || 0) !== (a.acertos_exatos || 0)) return (b.acertos_exatos || 0) - (a.acertos_exatos || 0);
+        if ((b.acertos_saldo || 0) !== (a.acertos_saldo || 0)) return (b.acertos_saldo || 0) - (a.acertos_saldo || 0);
+        if ((b.acertos_vencedor || 0) !== (a.acertos_vencedor || 0)) return (b.acertos_vencedor || 0) - (a.acertos_vencedor || 0);
+        if ((b.acertos_empate || 0) !== (a.acertos_empate || 0)) return (b.acertos_empate || 0) - (a.acertos_empate || 0);
+        
+        // GOLS (Decrescente)
+        if ((b.acertos_gols || 0) !== (a.acertos_gols || 0)) return (b.acertos_gols || 0) - (a.acertos_gols || 0);
+        
+        // Negativos (Crescente: menor erro ganha)
+        if ((a.acertos_exato_neg || 0) !== (b.acertos_exato_neg || 0)) return (a.acertos_exato_neg || 0) - (b.acertos_exato_neg || 0);
+        if ((a.acertos_saldo_neg || 0) !== (b.acertos_saldo_neg || 0)) return (a.acertos_saldo_neg || 0) - (b.acertos_saldo_neg || 0);
+        if ((a.acertos_venc_neg || 0) !== (b.acertos_venc_neg || 0)) return (a.acertos_venc_neg || 0) - (b.acertos_venc_neg || 0);
+        
         return a.nome.localeCompare(b.nome);
     });
 
@@ -532,13 +555,24 @@ function renderizarTabela(dados, headers) {
         thead.appendChild(th);
     });
 
-    // O sort agora reflete exatamente a mesma hierarquia que usamos para definir a posição
     const dadosOrdenados = [...dados].sort((a, b) => {
+        // 1. Pontos
         if (b.pontos_totais !== a.pontos_totais) return b.pontos_totais - a.pontos_totais;
+        
+        // 2. Critérios Positivos (Decrescente)
         if ((b.acertos_exatos || 0) !== (a.acertos_exatos || 0)) return (b.acertos_exatos || 0) - (a.acertos_exatos || 0);
         if ((b.acertos_saldo || 0) !== (a.acertos_saldo || 0)) return (b.acertos_saldo || 0) - (a.acertos_saldo || 0);
-        if ((b.acertos_empate || 0) !== (a.acertos_empate || 0)) return (b.acertos_empate || 0) - (a.acertos_empate || 0); // Adicionado
-        if ((b.acertos_vencedor || 0) !== (a.acertos_vencedor || 0)) return (b.acertos_vencedor || 0) - (a.acertos_vencedor || 0); // Adicionado
+        if ((b.acertos_vencedor || 0) !== (a.acertos_vencedor || 0)) return (b.acertos_vencedor || 0) - (a.acertos_vencedor || 0);
+        if ((b.acertos_empate || 0) !== (a.acertos_empate || 0)) return (b.acertos_empate || 0) - (a.acertos_empate || 0);
+        
+        // 3. Gols
+        if ((b.acertos_gols || 0) !== (a.acertos_gols || 0)) return (b.acertos_gols || 0) - (a.acertos_gols || 0);
+        
+        // 4. Critérios Negativos (Crescente: Menor é melhor)
+        if ((a.acertos_exato_neg || 0) !== (b.acertos_exato_neg || 0)) return (a.acertos_exato_neg || 0) - (b.acertos_exato_neg || 0);
+        if ((a.acertos_saldo_neg || 0) !== (b.acertos_saldo_neg || 0)) return (a.acertos_saldo_neg || 0) - (b.acertos_saldo_neg || 0);
+        if ((a.acertos_venc_neg || 0) !== (b.acertos_venc_neg || 0)) return (a.acertos_venc_neg || 0) - (b.acertos_venc_neg || 0);
+        
         return a.nome.localeCompare(b.nome);
     });
 
