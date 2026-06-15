@@ -467,7 +467,9 @@ async function abrirModalCritério(coluna, titulo) {
     const lista = document.getElementById('lista-apostas-modal');
     
     tituloModal.innerText = titulo;
+    document.body.classList.add('modal-aberto');
     document.getElementById('modal-apostas').classList.remove('hidden');
+
     lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
 
     // 1. Busca Paralela: Palpites + Usuários + Jogadores
@@ -512,6 +514,7 @@ async function abrirModalCritério(coluna, titulo) {
 }
 
 function fecharModal() {
+    document.body.classList.remove('modal-aberto');
     document.getElementById('modal-apostas').classList.add('hidden');
 }
 

@@ -20,6 +20,12 @@
         .scroll-custom::-webkit-scrollbar-thumb { background: #34d399; border: 5px solid #1f2937; border-radius: 12px; }
         .scroll-custom::-webkit-scrollbar-thumb:hover { background: #10b981; border: 4px solid #1f2937; }
         .scroll-custom { scrollbar-width: thin; scrollbar-color: #34d399 #1f2937; }
+        @keyframes pulso {
+            0%, 100% { transform: scale(0.9); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        .meu-pulso-lento { display: inline-block; animation: pulso 2s ease-in-out infinite; }
+        .modal-aberto { overflow: hidden; height: 100vh; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen">

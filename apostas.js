@@ -409,8 +409,9 @@ async function abrirModal(jogoId, nomeA, nomeB) {
     // Reseta estado do modal
     if (containerMeuPalpite) containerMeuPalpite.classList.add('hidden');
     lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
+    document.body.classList.add('modal-aberto');
     document.getElementById('modal-apostas').classList.remove('hidden');
-
+    
     // Busca o usuário logado e todas as apostas do jogo
     const { data: { user } } = await supabaseClient.auth.getUser();
     const { data: apostas } = await supabaseClient
@@ -498,6 +499,7 @@ async function abrirModal(jogoId, nomeA, nomeB) {
 }
 
 function fecharModal() {
+    document.body.classList.remove('modal-aberto');
     document.getElementById('modal-apostas').classList.add('hidden');
 }
 
