@@ -116,7 +116,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         if (ehPaginaFinais && jogo.fase?.nome !== faseAtualRegistrada) {
             faseAtualRegistrada = jogo.fase?.nome;
             const header = document.createElement('h3');
-            header.className = "text-sm font-bold uppercase tracking-wider text-emerald-400 bg-gray-800/30 border border-gray-700/40 px-4 py-2.5 rounded-lg mt-6 mb-3 w-full";
+            header.className = "text-sm font-bold uppercase tracking-wider text-emerald-400 bg-gray-800/30 border border-gray-700/40 px-4 py-2.5 rounded-lg flex items-center justify-center text-lg h-24 mt-6 mb-3 w-full";
             header.innerText = faseAtualRegistrada || "Mata-Mata";
             container.appendChild(header);
         }
@@ -133,8 +133,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         let jogoPrefixo = "";
         if(jogo.jogo_fifa) {
             jogoPrefixo = "JOGO " + jogo.jogo_fifa + " - "
-        } else {
-            jogoPrefixo = "GRUPO " + jogo.grupo + " - ";
         }
 
         const ehUltimoComResultado = jogoOcorrido && (jogos.filter(j => j.gols_a !== null && j.gols_b !== null).pop() === jogo);
@@ -142,6 +140,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             cardElement.id = "ultimo-placar-oficial";
         }
 
+        card.querySelector('.fase').innerText = jogo.jogo_fifa ? jogo.fase?.nome : "Grupo " + jogo.grupo;
         card.querySelector('.data-jogo').innerText = jogoPrefixo + dataLocal.toLocaleString('pt-BR', {
             weekday: 'long', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
         }).replace(' ', '').replace(',', ' ').replace(', ', ' ').toUpperCase();
