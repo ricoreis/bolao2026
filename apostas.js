@@ -14,6 +14,22 @@ async function carregarRegras() {
     if (data) configRegras = data;
 }
 
+function toggleSalvar(inputA, inputB, btnSalvar) {
+    if (!inputA || !inputB || !btnSalvar) return;
+    
+    // Compara o valor atual com o valor original guardado no dataset
+    const houveMudanca = (String(inputA.value) !== String(inputA.dataset.valorOriginal)) || 
+                         (String(inputB.value) !== String(inputB.dataset.valorOriginal));
+    const preenchido = (inputA.value !== '' && inputB.value !== '');
+
+    if (preenchido && houveMudanca) {
+        btnSalvar.classList.remove("hidden");
+        btnSalvar.disabled = false;
+    } else {
+        btnSalvar.classList.add("hidden");
+    }
+}
+
 function showToast(mensagem) {
     const toast = document.getElementById('toast');
     if (toast) {
@@ -175,21 +191,14 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         definitivoA.textContent = inputA.value;
         definitivoB.textContent = inputB.value;
 
-        const toggleSalvar = () => {
-            const preenchidoA = inputA.value !== '';
-            const preenchidoB = inputB.value !== '';
-            
-            definitivoA.textContent = inputA.value;
-            definitivoB.textContent = inputB.value;
+        inputA.dataset.valorOriginal = String(aposta?.gols_a ?? '');
+        inputB.dataset.valorOriginal = String(aposta?.gols_b ?? '');
 
-            if (preenchidoA && preenchidoB) {
-                btnSalvar.classList.remove("hidden");
-            } else {
-                btnSalvar.classList.add("hidden");
-            }
-        };
-        inputA.addEventListener('input', toggleSalvar);
-        inputB.addEventListener('input', toggleSalvar);
+        const listener = () => toggleSalvar(inputA, inputB, btnSalvar);
+        inputA.addEventListener('input', listener);
+        inputB.addEventListener('input', listener);
+
+        toggleSalvar(inputA, inputB, btnSalvar);
 
         // Cálculo dinâmico com Multiplicador
         if (jogo.gols_a !== null && jogo.gols_b !== null && aposta) {
@@ -274,7 +283,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                 // mensagemHTML = `<span class="text-gray-400 italic">Você apostou em pênaltis, mas o jogo foi decidido no tempo normal.</span>`;
             }
 
-            // 2. Só cria e adiciona a div SE houver mensagem
             if (mensagemHTML !== "") {
                 const divResultado = document.createElement('div');
                 divResultado.className = "mt-2 p-2 rounded text-center text-xs";
@@ -282,14 +290,11 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                 cardElement.appendChild(divResultado);
             }
 
-            // cardElement.appendChild(divResultado);
 
             } else {
-                // Jogo ainda não ocorreu: mostra os rádios para apostar
                 card.querySelector('.nome-time-a').innerText = jogo.time_a?.nome || 'Time A';
                 card.querySelector('.nome-time-b').innerText = jogo.time_b?.nome || 'Time B';
 
-                // Lógica de mostrar apenas se houver empate
                 const checkEmpate = () => {
                     const vA = parseInt(inputA.value);
                     const vB = parseInt(inputB.value);
@@ -314,87 +319,61 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
     const inputB = cardElement.querySelector('.input-b');
     const btnSalvar = cardElement.querySelector('.btn-salvar');
 
-    const atualizarVisibilidadeBotao = () => {
-        const preenchidoA = inputA.value !== '';
-        const preenchidoB = inputB.value !== '';
-
-        if (preenchidoA && preenchidoB) {
-            btnSalvar.disabled = false;
-            btnSalvar.classList.remove('hidden');
-        } else {
-            btnSalvar.classList.add('hidden');
-        }
-    };
-
-    inputA.addEventListener('input', atualizarVisibilidadeBotao);
-    inputB.addEventListener('input', atualizarVisibilidadeBotao);
-
-    // 2. Estado de Carregamento
+    // 1. Estado de "Salvando" (seu estilo)
     const textoOriginal = btnSalvar.innerHTML;
     btnSalvar.disabled = true;
     btnSalvar.innerHTML = `<span class="opacity-70">Salvando...</span>`;
-
     inputA.disabled = true;
     inputB.disabled = true;
 
     try {
         const { data: { user } } = await supabaseClient.auth.getUser();
-        const golsA = parseInt(inputA.value);
-        const golsB = parseInt(inputB.value);
-
         const dadosAposta = { 
             usuario_id: user.id, 
             jogo_id: jogoId, 
-            gols_a: golsA, 
-            gols_b: golsB 
+            gols_a: parseInt(inputA.value), 
+            gols_b: parseInt(inputB.value) 
         };
 
         if (ehPaginaFinais) {
-            const ehEmpate = (golsA === golsB);
-            if (ehEmpate) {
-                const radio = cardElement.querySelector(`input[name="penaltis_${jogoId}"]:checked`);
-                dadosAposta.penaltis_vencedor_id = radio ? parseInt(radio.value) : null;
-            } else {
-                dadosAposta.penaltis_vencedor_id = null;
-            }
+            const radio = cardElement.querySelector(`input[name="penaltis_${jogoId}"]:checked`);
+            dadosAposta.penaltis_vencedor_id = radio ? parseInt(radio.value) : null;
         }
+
+        const { error } = await supabaseClient.from('apostas').upsert(dadosAposta, { onConflict: 'usuario_id, jogo_id' });
         
+        if (error) throw error;
+
         btnSalvar.innerHTML = `<span class="text-emerald-400 font-bold">Aposta salva!</span>`;
         btnSalvar.classList.add('bg-emerald-900/20', 'border-emerald-700');
         btnSalvar.classList.remove('hover:bg-emerald-700');
 
-        const { error } = await supabaseClient
-            .from('apostas')
-            .upsert(dadosAposta, { onConflict: 'usuario_id, jogo_id' });
+        showToast("Aposta salva!");
         
-        if (error) {
-            console.error("Erro Supabase:", error);
-            showToast("Erro ao salvar.", true);
-        } else {
-            showToast("Aposta salva!");
-        }
-
+        inputA.dataset.valorOriginal = String(inputA.value);
+        inputB.dataset.valorOriginal = String(inputB.value);
+        
         setTimeout(() => {
-            btnSalvar.classList.add('hidden'); 
             btnSalvar.innerHTML = textoOriginal;
             btnSalvar.classList.remove('bg-emerald-900/20', 'border-emerald-700');
             btnSalvar.classList.add('hover:bg-emerald-700');
+            
             inputA.disabled = false;
             inputB.disabled = false;
-            // Opcional: btnSalvar.disabled = false; // Não precisa, o hidden já bloqueia
+            btnSalvar.disabled = false;
+
+            toggleSalvar(inputA, inputB, btnSalvar);
         }, 3000);
+
     } catch (e) { 
         console.error(e);
-        btnSalvar.disabled = false;
-        btnSalvar.innerHTML = textoOriginal; 
-        btnSalvar.classList.remove('bg-emerald-900/20', 'border-emerald-700');
-        btnSalvar.classList.add('hover:bg-emerald-700');
+        showToast("Erro ao processar.", true);
+        
+        // Restaura em caso de erro
+        btnSalvar.innerHTML = textoOriginal;
         inputA.disabled = false;
         inputB.disabled = false;
-        showToast("Erro ao processar.", true); 
-    } finally {
-        // btnSalvar.disabled = false;
-        // btnSalvar.innerHTML = textoOriginal;
+        btnSalvar.disabled = false;
     }
 }
 
@@ -406,27 +385,23 @@ async function abrirModal(jogoId, nomeA, nomeB) {
 
     tituloModal.innerText = `${nomeA} x ${nomeB}`;
     
-    // Reseta estado do modal
     if (containerMeuPalpite) containerMeuPalpite.classList.add('hidden');
     lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
     document.body.classList.add('modal-aberto');
     document.getElementById('modal-apostas').classList.remove('hidden');
     
-    // Busca o usuário logado e todas as apostas do jogo
     const { data: { user } } = await supabaseClient.auth.getUser();
     const { data: apostas } = await supabaseClient
         .from('apostas')
         .select('gols_a, gols_b, usuarios(nome, id)')
         .eq('jogo_id', jogoId);
 
-    // 1. Identifica o palpite do usuário logado
     const minhaAposta = apostas?.find(a => a.usuarios?.id === user?.id);
     if (minhaAposta && containerMeuPalpite) {
         valorMeuPalpite.innerText = `${minhaAposta.gols_a} x ${minhaAposta.gols_b}`;
         containerMeuPalpite.classList.remove('hidden');
     }
 
-    // 2. Filtra outras apostas (remove o usuário logado da lista principal)
     const outrasApostas = apostas?.filter(a => a.usuarios?.id !== user?.id) || [];
 
     if (!apostas || apostas.length === 0) {
@@ -434,7 +409,6 @@ async function abrirModal(jogoId, nomeA, nomeB) {
         return;
     }
 
-    // 3. Criar os grupos apenas com outras apostas
     const grupos = { vitoriaA: [], vitoriaB: [], empate: [] };
 
     outrasApostas.forEach(a => {
@@ -507,11 +481,8 @@ function rolarParaUltimoResultado() {
     const ultimo = document.getElementById('ultimo-placar-oficial');
     if (!ultimo) return;
 
-    // Calcula a posição do topo do elemento relativo ao topo da página
     const posicaoTopo = ultimo.getBoundingClientRect().top + window.scrollY;
     
-    // O valor 100 (ou mais) é a altura da sua navbar. 
-    // Ajuste este número até ficar perfeito visualmente.
     const margemNavbar = 120; 
 
     window.scrollTo({
