@@ -166,14 +166,8 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         card.querySelector('.sigla-a').innerText = jogo.time_a?.sigla || jogo.time_a_placeholder || 'A definir';
         card.querySelector('.sigla-b').innerText = jogo.time_b?.sigla || jogo.time_b_placeholder || 'A definir';
 
-        if (jogo.time_a?.id) {
-            card.querySelector('.band-a').src = `./assets/images/paises/${jogo.time_a?.id}.svg`;
-            card.querySelector('.band-a').setAttribute("title", jogo.time_a?.nome);
-        }
-        if (jogo.time_b?.id) {
-            card.querySelector('.band-b').src = `./assets/images/paises/${jogo.time_b?.id}.svg`;
-            card.querySelector('.band-b').setAttribute("title", jogo.time_b?.nome);
-        }
+        configurarBandeira(card, '.band-a', jogo.time_a);
+        configurarBandeira(card, '.band-b', jogo.time_b);
 
         const inputA = card.querySelector('.input-a');
         const inputB = card.querySelector('.input-b');
@@ -498,6 +492,18 @@ function rolarParaUltimoResultado() {
         top: posicaoTopo - margemNavbar,
         behavior: 'smooth'
     });
+}
+
+function configurarBandeira(card, seletor, time) {
+    const imgElement = card.querySelector(seletor);
+    if (time?.id) {
+        imgElement.src = `./assets/images/paises/${time.id}.svg`;
+        imgElement.setAttribute("title", time.nome);
+        imgElement.classList.remove("opacity-0"); // Garante que reaparece se o dado voltar
+    } else {
+        imgElement.classList.add("opacity-0");
+        imgElement.src = ""; // Boa prática limpar o src antigo
+    }
 }
 
 // btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
