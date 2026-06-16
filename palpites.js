@@ -733,28 +733,40 @@ async function abrirModalCriterio(coluna, titulo, tipo) {
 async function abrirModalGols(coluna, titulo) {
     const tituloModal = document.querySelector('#modal-apostas h3');
     const lista = document.getElementById('lista-apostas-modal');
+    const containerMeuPalpite = document.getElementById('meu-palpite-container');
+    const valorMeuPalpite = document.getElementById('meu-palpite-valor');
     
-    // UI Inicial
+    // 1. UI Inicial
     tituloModal.innerText = titulo;
     document.body.classList.add('modal-aberto');
     document.getElementById('modal-apostas').classList.remove('hidden');
     lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
-
-    // 1. Mostrar container de barras e esconder donut
+    containerMeuPalpite.classList.add('hidden');
+    
+    // 2. Mostrar container certo
     document.getElementById('container-grafico-donut').classList.add('hidden');
     document.getElementById('container-grafico-bar').classList.remove('hidden');
     document.getElementById('container-legendas').classList.add('hidden');
 
-    // 2. Buscas
-    const [resPalpites, resUsuarios] = await Promise.all([
+    // 3. BUSCA ÚNICA (Resolve o erro do Identifier e melhora performance)
+    const userId = (await supabaseClient.auth.getUser()).data.user.id;
+    
+    const [resPalpites, resUsuarios, resMeuPalpite] = await Promise.all([
         supabaseClient.from('palpites').select(`usuario_id, ${coluna}`),
-        supabaseClient.from('usuarios').select('id, nome')
+        supabaseClient.from('usuarios').select('id, nome'),
+        supabaseClient.from('palpites').select(coluna).eq('usuario_id', userId).single()
     ]);
 
     const apostas = resPalpites.data;
     const mapaUsuarios = Object.fromEntries(resUsuarios.data.map(u => [u.id, u.nome]));
 
-    // 3. Processamento
+    // 4. Preencher Meu Palpite (se existir)
+    if (resMeuPalpite.data && resMeuPalpite.data[coluna] !== null) {
+        valorMeuPalpite.innerText = resMeuPalpite.data[coluna] + " gol(s)";
+        containerMeuPalpite.classList.remove('hidden');
+    }
+
+    // 5. Processamento
     const palpitesValidos = apostas.filter(a => a[coluna] !== null);
     const max = Math.max(...palpitesValidos.map(a => a[coluna]), 0);
     
@@ -768,7 +780,7 @@ async function abrirModalGols(coluna, titulo) {
         });
     }
 
-    // 4. Renderização (APONTANDO PARA canvas-bar)
+    // 6. Renderização do Gráfico
     const canvas = document.getElementById('canvas-bar');
     const ctx = canvas.getContext('2d');
     
@@ -788,58 +800,29 @@ async function abrirModalGols(coluna, titulo) {
             maintainAspectRatio: false,
             plugins: { legend: { display: false } },
             scales: { 
-                y: { 
-                    beginAtZero: true, 
-                    ticks: { stepSize: 1 },
-                    title: {
-                        display: true,
-                        text: 'PALPITES',
-                        color: '#9CA3AF',
-                        font: { size: 12, weight: 'bold' }
-                    }
-                },
-                x: { 
-                    grid: { display: false },
-                    title: {
-                        display: true,
-                        text: 'GOLS',
-                        color: '#9CA3AF',
-                        font: { size: 12, weight: 'bold' }
-                    },
-                    ticks: {
-                        maxRotation: 0,
-                        minRotation: 0,
-                        callback: function(value) {
-                            return this.getLabelForValue(value).split(' ')[0];
-                        }
-                    }
-                }
+                y: { beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'PALPITES', color: '#9CA3AF', font: { size: 12, weight: 'bold' } } },
+                x: { grid: { display: false }, title: { display: true, text: 'GOLS', color: '#9CA3AF', font: { size: 12, weight: 'bold' } }, ticks: { maxRotation: 0, minRotation: 0, callback: function(v) { return this.getLabelForValue(v).split(' ')[0]; } } }
             }
         }
     });
 
+    // 7. Lista final
     if (estaBloqueado(coluna)) {
-        lista.innerHTML = `
-            <tr>
-                <td class="text-center text-gray-500">
-                    <div class="flex flex-col items-center justify-center h-64">
-                        <iconify-icon icon="gg:lock" class="text-5xl mb-4 text-emerald-600 block"></iconify-icon>
-                        <p class="font-bold">Palpites Ocultos</p>
-                        <p class="text-xs">Será revelado depois...</p>
-                    </div>
-                </td>
-            </tr>`;
+        lista.innerHTML = `<tr><td class="text-center text-gray-500"><div class="flex flex-col items-center justify-center h-64"><iconify-icon icon="gg:lock" class="text-5xl mb-4 text-emerald-600 block"></iconify-icon><p class="font-bold">Palpites Ocultos</p><p class="text-xs">Será revelado depois...</p></div></td></tr>`;
     } else {
         lista.innerHTML = dadosFinais.filter(d => d.contagem > 0)
             .map(d => gerarSecaoCriterio(d.valor, d.lista.map(n => ({ usuario: n }))))
             .join('');
     }
-
 }
 
 function fecharModal() {
-    document.body.classList.remove('modal-aberto');
     document.getElementById('modal-apostas').classList.add('hidden');
+    document.body.classList.remove('modal-aberto');
+    
+    // LIMPEZA OBRIGATÓRIA
+    document.getElementById('meu-palpite-container').classList.add('hidden');
+    document.getElementById('meu-palpite-valor').innerText = '';
 }
 
 // btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
