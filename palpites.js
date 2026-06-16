@@ -260,9 +260,19 @@ async function carregarPalpitesEComparar() {
         inputGols.disabled = true; // Assim o usuário sabe que é automático
 
         if (gabaritoGlobal) {
-            document.getElementById('box-bonus').classList.remove('hidden');
             exibirPontos(p, gabaritoGlobal, totalGolsCalculado, totalGolsOficial);
             verificarPenalidadeCampeao(p.campeao_id);
+
+            // LÓGICA NOVA: Só mostra se houver elementos filhos em 'lista-bonus'
+            const listaBonus = document.getElementById('lista-bonus');
+            const boxBonus = document.getElementById('box-bonus');
+            
+            // Verifica se a lista tem conteúdo (se há penalidades ou avisos)
+            if (listaBonus.children.length > 0) {
+                boxBonus.classList.remove('hidden');
+            } else {
+                boxBonus.classList.add('hidden');
+            }
         }
     }
 }
