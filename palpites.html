@@ -12,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Quicksand', sans-serif; font-weight: 500; }
         h1,h2,h3 { font-family: 'Quicksand', sans-serif; font-weight: 300; }
@@ -145,17 +146,19 @@
                         <div class="flex gap-4 items-center">
                             <select id="sel-gol" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
                             <span id="pts-gol-brasil"></span>
+                            <button data-coluna="primeiro_gol_brasil_id" data-titulo="Primeiro Gol do Brasil" data-tipo="jogadores" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
-                        <button data-coluna="primeiro_gol_brasil_id" data-titulo="Primeiro Gol do Brasil" class="mt-2 ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
-                            <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
-                            <span>Ver Apostas</span>
-                        </button>
                     </div>
                     <div class="flex flex-col">
                         <label class="text-xs text-gray-400">Brasil chega até...</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-fase" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
                             <span id="pts-fase-brasil"></span>
+                            <button data-coluna="fase_brasil_id" data-titulo="Brasil chega até..." data-tipo="fases" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
                     </div>
                     <div class="flex flex-col">
@@ -163,6 +166,9 @@
                         <div class="flex gap-4 items-center">
                             <input type="number" id="inp-gols-pro" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
                             <span id="pts-gols-pro"></span>
+                            <button data-coluna="gols_feitos_brasil" data-titulo="Gols do Brasil" data-tipo="gols_pro" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
                     </div>
                     <div class="flex flex-col">
@@ -170,6 +176,9 @@
                         <div class="flex gap-4 items-center">
                             <input type="number" id="inp-gols-contra" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
                             <span id="pts-gols-contra"></span>
+                            <button data-coluna="gols_sofridos_brasil" data-titulo="Gols sofridos pelo Brasil" data-tipo="gols_contra" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -183,6 +192,9 @@
                         <div class="flex gap-4 items-center">
                             <select id="sel-campeao" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
                             <span id="pts-campeao"></span>
+                            <button data-coluna="campeao_id" data-titulo="Campeão da Copa" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
                     </div>
                     <div class="flex flex-col">
@@ -190,6 +202,9 @@
                         <div class="flex gap-4 items-center">
                             <select id="sel-vice" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
                             <span id="pts-vice"></span>
+                            <button data-coluna="vice_id" data-titulo="Vice-Campeão da Copa" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
                     </div>
                     <div class="flex flex-col">
@@ -197,6 +212,9 @@
                         <div class="flex gap-4 items-center">
                             <select id="sel-terceiro" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
                             <span id="pts-terceiro"></span>
+                            <button data-coluna="terceiro_id" data-titulo="3º Lugar da Copa" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
                     </div>
                     <div class="flex flex-col">
@@ -204,6 +222,9 @@
                         <div class="flex gap-4 items-center">
                             <select id="sel-quarto" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
                             <span id="pts-quarto"></span>
+                            <button data-coluna="quarto_id" data-titulo="4º Lugar da Copa" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -223,6 +244,9 @@
                         <div class="flex gap-4 items-center">
                             <select id="sel-pior" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
                             <span id="pts-pior"></span>
+                            <button data-coluna="pior_time_id" data-titulo="Pior Time da Copa" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
                     </div>
                     <div class="flex flex-col">
@@ -230,6 +254,9 @@
                         <div class="flex gap-4 items-center">
                             <select id="sel-artilheiro-pais" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
                             <span id="pts-artilheiro"></span>
+                            <button data-coluna="artilheiro_pais_id" data-titulo="País do Artilheiro" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
                     </div>
                     <div class="flex flex-col">
@@ -241,7 +268,10 @@
                                 <option value="MESSI">Lionel Messi</option>
                                 <option value="EMPATE">Empate</option>
                             </select>
-                            <span id="pts-cr7-messi opacity-0"></span>
+                            <span id="pts-cr7-messi opacity-100"></span>
+                            <button data-coluna="duelo_gigantes" data-titulo="Quem participará mais com gols + assistências?" data-tipo="fixo" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
+                                <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            </button>
                         </div>
                     </div>
                     <div class="flex flex-col opacity-0">
@@ -272,6 +302,16 @@
         <div class="bg-gray-800 w-full h-full md:h-auto md:max-w-md md:rounded-xl border border-gray-700 p-6 shadow-2xl relative flex flex-col max-h-none md:max-h-[90vh]">
             <div class="flex flex-col items-center mb-4 flex-shrink-0">
                 <h3 class="text-lg font-bold text-emerald-400 w-full pb-4">Apostas</h3>
+                <div class="flex items-center gap-12 w-[90%] justify-center">
+                    <div id="container-grafico-donut" class="hidden relative w-40 h-40 my-4">
+                        <canvas id="canvas-donut"></canvas>
+                    </div>
+                    <div id="container-grafico-bar" class="hidden relative w-full h-48 my-4">
+                        <canvas id="canvas-bar"></canvas>
+                    </div>
+                    <div id="container-legendas" class="flex flex-col items-start gap-1 text-xs text-gray-400 mb-4">
+                    </div>
+                </div>
                 <div id="meu-palpite-container" class="hidden w-full my-2 p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg text-center flex items-center gap-4 justify-center">
                     <p class="text-xs text-emerald-400 uppercase font-bold">Meu Palpite</p>
                     <span id="meu-palpite-valor" class="text-xl font-bold text-white"></span>

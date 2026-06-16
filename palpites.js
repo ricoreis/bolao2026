@@ -11,6 +11,20 @@ let listaFases = [];
 let todosJogos = [];
 let gabaritoGlobal = null;
 
+const STATUS_TRAVAS = {
+    'primeiro_gol_brasil_id': false,
+    'campeao_id': true,
+    'vice_id': true,
+    'terceiro_id': true,
+    'quarto_id': true,
+    'pior_time_id': true,
+    'duelo_gigantes': true,
+    'artilheiro_pais_id': true,
+    'fase_brasil_id': true,  
+    'gols_feitos_brasil': true, 
+    'gols_sofridos_brasil': true
+};
+
 function showToast(mensagem) {
     const toast = document.getElementById('toast');
     if (toast) {
@@ -462,55 +476,365 @@ function validarSelecoesClassificacao() {
     }
 }
 
-async function abrirModalCritério(coluna, titulo) {
+async function verificarStatusTrava(coluna) {
+    // 1. Busca a data de trava para essa categoria específica
+    const { data, error } = await supabaseClient
+        .from('config_trava')
+        .select('data_trava')
+        .eq('categoria', coluna)
+        .single();
+
+    if (error || !data) return true; // Se não tiver config, trava por segurança
+
+    // 2. Compara com a data atual
+    const agora = new Date();
+    const dataTrava = new Date(data.data_trava);
+    
+    return agora < dataTrava; // Retorna true se estiver bloqueado
+}
+
+function estaBloqueado(coluna) {
+    // Se não estiver no objeto, assume que está bloqueado (por segurança)
+    return STATUS_TRAVAS.hasOwnProperty(coluna) ? STATUS_TRAVAS[coluna] : true;
+}
+
+function atualizarLegendas(dadosFinais, hexCores) {
+    const container = document.getElementById('container-legendas');
+    container.innerHTML = ''; // Limpa as legendas antigas
+
+    dadosFinais.forEach((item, index) => {
+        const nome = item[0];
+        const votos = item[1];
+        const cor = hexCores[index] || '#64748B'; // Usa a cor ou cinza padrão
+
+        const span = document.createElement('span');
+        span.className = 'flex items-center gap-1';
+        span.innerHTML = `
+            <i class="w-3 h-3 rounded-full" style="background-color: ${cor}"></i> 
+            <span>${nome} (${votos}v)</span>
+        `;
+        container.appendChild(span);
+    });
+}
+
+const gerarSecaoCriterio = (titulo, listaApostas) => {
+    // Retorna apenas a lista de usuários, sem o valor ao lado
+    return `
+        <tr><td colspan="2" class="bg-gray-800 text-emerald-500 font-bold text-sm uppercase">
+            <span class="bg-black/20 w-full flex rounded-lg px-4 py-4 mb-6">
+                ${titulo}
+            </span>
+        </td></tr>
+        ${listaApostas.map(a => `
+            <tr class="border-b border-gray-700/30">
+                <td class="py-2 text-gray-300 pl-2">${a.usuario}</td>
+            </tr>
+        `).join('')}
+        <tr><td class="h-16"></td></tr>
+    `;
+};
+
+function mostrarGrafico(tipo) {
+    const contDonut = document.getElementById('container-grafico-donut');
+    const contBar = document.getElementById('container-grafico-bar');
+    
+    // Esconde tudo
+    contDonut.classList.add('hidden');
+    contBar.classList.add('hidden');
+    
+    // Mostra o escolhido
+    if (tipo === 'donut') {
+        contDonut.classList.remove('hidden');
+        return document.getElementById('canvas-donut').getContext('2d');
+    } else {
+        contBar.classList.remove('hidden');
+        return document.getElementById('canvas-bar').getContext('2d');
+    }
+}
+
+async function abrirModalCriterio(coluna, titulo, tipo) {
+    // No início da abrirModalCriterio:
+    document.getElementById('container-grafico-donut').classList.remove('hidden');
+    document.getElementById('container-grafico-bar').classList.add('hidden');
+    document.getElementById('container-legendas').classList.remove('hidden');
+
     const tituloModal = document.querySelector('#modal-apostas h3');
     const lista = document.getElementById('lista-apostas-modal');
+    lista.innerHTML = '<tr><td class="text-red-500 font-bold">TESTE: INJEÇÃO FUNCIONANDO</td></tr>';
+    const containerLegendas = document.getElementById('container-legendas');
     
+    // Elementos do palpite pessoal
+    const containerMeuPalpite = document.getElementById('meu-palpite-container');
+    const valorMeuPalpite = document.getElementById('meu-palpite-valor');
+
     tituloModal.innerText = titulo;
     document.body.classList.add('modal-aberto');
     document.getElementById('modal-apostas').classList.remove('hidden');
+    lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
+    
+    // Esconde o container do seu palpite inicialmente
+    if (containerMeuPalpite) containerMeuPalpite.classList.add('hidden');
 
+    const tabelaMap = {
+        'jogadores': { tabela: 'jogadores', coluna: 'nome' },
+        'fases': { tabela: 'fases', coluna: 'nome' },
+        'paises': { tabela: 'paises', coluna: 'nome' },
+        'fixo': { tabela: null }    
+    };
+    
+    const config = tabelaMap[tipo] || { tabela: 'jogadores', coluna: 'nome' };
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    
+    const promessas = [
+        supabaseClient.from('palpites').select(`usuario_id, ${coluna}`),
+        supabaseClient.from('usuarios').select('id, nome')
+    ];
+
+    if (config.tabela) {
+        promessas.push(supabaseClient.from(config.tabela).select('id, nome'));
+    }
+
+    const resultados = await Promise.all(promessas);
+    const apostas = resultados[0].data;
+    const usuarios = resultados[1].data;
+    const itens = config.tabela ? resultados[2].data : null;
+
+    if (!apostas || !usuarios) return;
+
+    // 2. Mapeamento
+    const mapaUsuarios = Object.fromEntries(usuarios.map(u => [u.id, u.nome]));
+    const mapaItens = itens ? Object.fromEntries(itens.map(i => [i.id, i.nome])) : {};
+
+    // 3. Processamento e Lógica do Meu Palpite
+    const minhaAposta = apostas.find(a => a.usuario_id === user?.id);
+    if (minhaAposta && minhaAposta[coluna] !== null && containerMeuPalpite) {
+        let valorAposta = minhaAposta[coluna];
+        
+        // CORREÇÃO: Tratamento específico para gols OU labels fixos
+        if (tipo === 'gols_pro' || tipo === 'gols_contra') {
+            valorAposta = `${valorAposta} gol(s)`;
+        } 
+        else if (tipo === 'fixo' && coluna === 'duelo_gigantes') {
+            const labels = { 'CR7': 'Cristiano Ronaldo', 'MESSI': 'Lionel Messi', 'EMPATE': 'Empate' };
+            valorAposta = labels[valorAposta] || valorAposta;
+        } 
+        // Só busca no mapaItens se não for nenhum dos casos acima
+        else if (mapaItens && mapaItens[valorAposta]) {
+            valorAposta = mapaItens[valorAposta];
+        }
+
+        valorMeuPalpite.innerText = valorAposta;
+        containerMeuPalpite.classList.remove('hidden');
+    }
+
+    const listaFinal = apostas
+        .filter(a => a[coluna] !== null)
+        .map(a => {
+            let valor = a[coluna];
+            if (tipo === 'fixo' && coluna === 'duelo_gigantes') {
+                const labels = { 'CR7': 'Cristiano Ronaldo', 'MESSI': 'Lionel Messi', 'EMPATE': 'Empate' };
+                valor = labels[valor] || valor;
+            } else {
+                valor = mapaItens[valor] || 'ID Desconhecido';
+            }
+            return { usuario: mapaUsuarios[a.usuario_id] || 'Anon', valor };
+        })
+        .sort((a, b) => a.usuario.localeCompare(b.usuario));
+
+    // 4. Lógica do Gráfico (Agrupamento inteligente)
+    const contagem = listaFinal.reduce((acc, item) => {
+        acc[item.valor] = (acc[item.valor] || 0) + 1;
+        return acc;
+    }, {});
+
+    const entradas = Object.entries(contagem).sort((a, b) => b[1] - a[1]);
+    const principais = entradas.filter(item => item[1] >= 2);
+    const outrosTotal = entradas.filter(item => item[1] < 2).reduce((soma, item) => soma + item[1], 0);
+
+    let dadosFinais = [...principais];
+    if (outrosTotal > 0) dadosFinais.push(['Outros', outrosTotal]);
+
+    // 5. Cores e Legendas
+    const hexCores = [
+        '#10B981', '#3B82F6', '#F59E0B', '#F43F5E', '#8B5CF6', 
+        '#06B6D4', '#F97316', '#A3E635', '#EC4899', '#64748B'
+    ];    
+
+    // Lógica para garantir que o "Outros" seja SEMPRE cinza (#64748B)
+    const coresParaUso = dadosFinais.map((item, index) => {
+        if (item[0] === 'Outros') {
+            return hexCores[hexCores.length - 1]; // Retorna o cinza
+        }
+        return hexCores[index % (hexCores.length - 1)]; // Usa as outras cores
+    });
+
+    // Atualiza HTML da legenda dinamicamente
+    if (containerLegendas) {
+        containerLegendas.innerHTML = dadosFinais.map((item, i) => `
+            <span class="flex items-center gap-2">
+                <i class="w-3 h-3 rounded-full" style="background-color: ${coresParaUso[i]}"></i> 
+                <span>${item[0]}</span>
+            </span>
+        `).join('');
+    }
+
+    // 6. Renderiza Gráfico USANDO A COR CALCULADA
+    const ctx = mostrarGrafico('donut');
+    // const ctx = document.getElementById('meuGraficoDonut').getContext('2d');
+    if (window.meuGrafico instanceof Chart) window.meuGrafico.destroy();
+
+    window.meuGrafico = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: dadosFinais.map(i => i[0]),
+            datasets: [{
+                data: dadosFinais.map(i => i[1]),
+                backgroundColor: coresParaUso, // <--- AQUI ESTAVA O ERRO (mudamos de hexCores para coresParaUso)
+                borderWidth: 0,
+                cutout: '75%'
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+
+    if (estaBloqueado(coluna)) {
+        lista.innerHTML = `
+            <tr>
+                <td class="text-center text-gray-500">
+                    <div class="flex flex-col items-center justify-center h-64">
+                        <iconify-icon icon="gg:lock" class="text-5xl mb-4 text-emerald-600 block"></iconify-icon>
+                        <p class="font-bold">Palpites Ocultos</p>
+                        <p class="text-xs">Será revelado depois...</p>
+                    </div>
+                </td>
+            </tr>`;
+    } else {
+        // Agrupa os palpites por valor (ex: CR7, Messi, etc.) sem agrupar em "Outros"
+        const grupos = listaFinal.reduce((acc, item) => {
+            if (!acc[item.valor]) acc[item.valor] = [];
+            acc[item.valor].push(item);
+            return acc;
+        }, {});
+
+        // Ordena para que os times com mais votos apareçam primeiro na lista
+        const titulosOrdenados = Object.keys(grupos).sort((a, b) => {
+            return grupos[b].length - grupos[a].length;
+        });
+
+        // Renderiza a lista completa, mostrando todos os nomes
+        lista.innerHTML = titulosOrdenados.map(titulo => {
+            return gerarSecaoCriterio(titulo, grupos[titulo]);
+        }).join('');
+    }
+
+}
+
+async function abrirModalGols(coluna, titulo) {
+    const tituloModal = document.querySelector('#modal-apostas h3');
+    const lista = document.getElementById('lista-apostas-modal');
+    
+    // UI Inicial
+    tituloModal.innerText = titulo;
+    document.body.classList.add('modal-aberto');
+    document.getElementById('modal-apostas').classList.remove('hidden');
     lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
 
-    // 1. Busca Paralela: Palpites + Usuários + Jogadores
-    const [ {data: apostas}, {data: usuarios}, {data: jogadores} ] = await Promise.all([
+    // 1. Mostrar container de barras e esconder donut
+    document.getElementById('container-grafico-donut').classList.add('hidden');
+    document.getElementById('container-grafico-bar').classList.remove('hidden');
+    document.getElementById('container-legendas').classList.add('hidden');
+
+    // 2. Buscas
+    const [resPalpites, resUsuarios] = await Promise.all([
         supabaseClient.from('palpites').select(`usuario_id, ${coluna}`),
-        supabaseClient.from('usuarios').select('id, nome'),
-        supabaseClient.from('jogadores').select('id, nome, clube')
+        supabaseClient.from('usuarios').select('id, nome')
     ]);
 
-    if (!apostas) {
-        lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Erro ao carregar dados.</td></tr>';
-        return;
+    const apostas = resPalpites.data;
+    const mapaUsuarios = Object.fromEntries(resUsuarios.data.map(u => [u.id, u.nome]));
+
+    // 3. Processamento
+    const palpitesValidos = apostas.filter(a => a[coluna] !== null);
+    const max = Math.max(...palpitesValidos.map(a => a[coluna]), 0);
+    
+    let dadosFinais = [];
+    for (let i = 0; i <= max; i++) {
+        const apostasNesteValor = palpitesValidos.filter(a => a[coluna] === i);
+        dadosFinais.push({ 
+            valor: `${i} gol(s)`, 
+            contagem: apostasNesteValor.length,
+            lista: apostasNesteValor.map(a => mapaUsuarios[a.usuario_id] || 'Anon')
+        });
     }
 
-    // 2. Criação de Mapas para acesso instantâneo
-    const mapaUsuarios = Object.fromEntries(usuarios.map(u => [u.id, u.nome]));
-    const mapaJogadores = Object.fromEntries(jogadores.map(j => [j.id, `${j.nome} (${j.clube})`]));
+    // 4. Renderização (APONTANDO PARA canvas-bar)
+    const canvas = document.getElementById('canvas-bar');
+    const ctx = canvas.getContext('2d');
+    
+    if (window.meuGrafico) window.meuGrafico.destroy();
 
-    // 3. Processamento e Ordenação
-    // Filtramos apenas quem tem palpite e mapeamos para o objeto final
-    const listaFinal = apostas
-        .filter(a => a[coluna] !== null) // Remove quem não votou
-        .map(a => ({
-            usuario: mapaUsuarios[a.usuario_id] || 'Anon',
-            jogador: mapaJogadores[a[coluna]] || 'ID Desconhecido'
-        }))
-        // Ordenação alfabética pelo nome do jogador
-        .sort((a, b) => a.jogador.localeCompare(b.jogador));
+    window.meuGrafico = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: dadosFinais.map(d => d.valor),
+            datasets: [{
+                data: dadosFinais.map(d => d.contagem),
+                backgroundColor: '#10B981'
+            }]
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { stepSize: 1 },
+                    title: {
+                        display: true,
+                        text: 'PALPITES',
+                        color: '#9CA3AF',
+                        font: { size: 12, weight: 'bold' }
+                    }
+                },
+                x: { 
+                    grid: { display: false },
+                    title: {
+                        display: true,
+                        text: 'GOLS',
+                        color: '#9CA3AF',
+                        font: { size: 12, weight: 'bold' }
+                    },
+                    ticks: {
+                        maxRotation: 0,
+                        minRotation: 0,
+                        callback: function(value) {
+                            return this.getLabelForValue(value).split(' ')[0];
+                        }
+                    }
+                }
+            }
+        }
+    });
 
-    if (listaFinal.length === 0) {
-        lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Ninguém apostou ainda.</td></tr>';
-        return;
+    if (estaBloqueado(coluna)) {
+        lista.innerHTML = `
+            <tr>
+                <td class="text-center text-gray-500">
+                    <div class="flex flex-col items-center justify-center h-64">
+                        <iconify-icon icon="gg:lock" class="text-5xl mb-4 text-emerald-600 block"></iconify-icon>
+                        <p class="font-bold">Palpites Ocultos</p>
+                        <p class="text-xs">Será revelado depois...</p>
+                    </div>
+                </td>
+            </tr>`;
+    } else {
+        lista.innerHTML = dadosFinais.filter(d => d.contagem > 0)
+            .map(d => gerarSecaoCriterio(d.valor, d.lista.map(n => ({ usuario: n }))))
+            .join('');
     }
 
-    // 4. Renderização
-    lista.innerHTML = listaFinal.map(item => `
-        <tr class="border-b border-gray-700/50">
-            <td class="py-3 text-gray-200 pl-4">${item.usuario}</td>
-            <td class="py-3 text-right pr-4 text-emerald-400 font-bold italic">${item.jogador}</td>
-        </tr>
-    `).join('');
 }
 
 function fecharModal() {
@@ -541,10 +865,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.querySelectorAll('.ver-apostas').forEach(btn => {
     btn.addEventListener('click', () => {
-        // Pega o atributo do próprio botão
         const coluna = btn.getAttribute('data-coluna');
         const titulo = btn.getAttribute('data-titulo') || "Apostas";
-        abrirModalCritério(coluna, titulo);
+        const tipo = btn.getAttribute('data-tipo') || "jogadores";
+        
+        // A LÓGICA DE ROTEAMENTO:
+        if (tipo === 'gols_pro' || tipo === 'gols_contra') {
+            abrirModalGols(coluna, titulo);
+        } else {
+            abrirModalCriterio(coluna, titulo, tipo);
+        }
     });
 });
 
