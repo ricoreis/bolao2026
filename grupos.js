@@ -14,6 +14,13 @@ function showToast(mensagem) {
     }
 }
 
+const STATUS_TRAVAS = {
+    'A': false,
+    'B': true, 'C': true, 'D': true, 'E': true, 
+    'F': true, 'G': true, 'H': true, 'I': true, 
+    'J': true, 'K': true, 'L': true
+};
+
 const btnsLogout = document.querySelectorAll('.btn-logout');
 
 async function carregarEstrutura() {
@@ -327,8 +334,11 @@ function fecharModal() {
 }
 
 async function abrirModalClassificacao(grupo, titulo) {
+    document.body.classList.add('modal-aberto');
+
     document.getElementById('modal-apostas').classList.remove('hidden');
     document.querySelector('#modal-apostas h3').textContent = titulo;
+    const lista = document.getElementById('lista-apostas-modal');
 
     const { data: { user } } = await supabaseClient.auth.getUser();
 
@@ -336,6 +346,13 @@ async function abrirModalClassificacao(grupo, titulo) {
         supabaseClient.from('paises').select('id, nome, sigla').eq('grupo', grupo).order('id'),
         supabaseClient.from('palpites').select('palpites_grupos, usuario_id')
     ]);
+
+    // 2. BUSCA OS NOMES DOS USUÁRIOS
+    const idsUsuarios = palpitesRegistrados.map(p => p.usuario_id);
+    const { data: usuarios } = await supabaseClient
+        .from('usuarios')
+        .select('id, nome')
+        .in('id', idsUsuarios);
 
     // 2. Busca O SEU palpite específico para este grupo
     const meuPalpite = palpitesRegistrados.find(p => p.usuario_id === user.id);
@@ -391,6 +408,58 @@ async function abrirModalClassificacao(grupo, titulo) {
 
         // Passa o array de cores para o desenharBarra também!
         desenharBarra(canvas, stats, cores);
+
+        if (estaBloqueado(grupo)) {
+            lista.innerHTML = `
+                <tr>
+                    <td class="text-center text-gray-500">
+                        <div class="flex flex-col items-center justify-center h-64">
+                            <iconify-icon icon="gg:lock" class="text-5xl mb-4 text-emerald-600 block"></iconify-icon>
+                            <p class="font-bold">Palpites Ocultos</p>
+                            <p class="text-xs">Será revelado depois...</p>
+                        </div>
+                    </td>
+                </tr>`;
+        } else {
+            // 1. Limpa a lista
+            lista.innerHTML = '';
+
+            // 2. ORDENA OS USUÁRIOS ALFABETICAMENTE
+            // Se o usuário não tiver nome (fallback "Participante"), ele vai para o final ou início dependendo da lógica
+            usuarios.sort((a, b) => a.nome.localeCompare(b.nome));
+
+            // 3. Itera sobre os usuários ordenados e busca o palpite correspondente
+            usuarios.forEach(usuario => {
+                // --- ADICIONE ESTA LINHA ---
+                // Pula o seu próprio palpite se o ID do usuário da lista for o seu
+                if (usuario.id === user.id) return; 
+                // ---------------------------
+
+                const registro = palpitesRegistrados.find(p => p.usuario_id === usuario.id);
+                
+                if (registro && registro.palpites_grupos && registro.palpites_grupos[grupo]) {
+                    const palpitesDoParticipante = registro.palpites_grupos[grupo]; 
+                    
+                    const ordem = [null, null, null, null];
+                    
+                    Object.entries(palpitesDoParticipante).forEach(([nomePais, pos]) => {
+                        const pais = paises.find(p => p.nome === nomePais);
+                        if (pais && pos >= 1 && pos <= 4) {
+                            ordem[pos - 1] = pais.sigla;
+                        }
+                    });
+
+                    const tr = document.createElement('tr');
+                    tr.className = "border-b border-gray-800 hover:bg-gray-800/50";
+                    tr.innerHTML = `
+                        <td class="py-3 px-4 ">${usuario.nome}</td> 
+                        <td class="py-3 px-4 text-right text-emerald-400">${ordem.join(' - ')}</td>
+                    `;
+                    lista.appendChild(tr);
+                }
+            });
+        }
+
     });
 
     // Pinta as legendas
@@ -421,6 +490,11 @@ function desenharBarra(canvas, stats, cores) {
     });
 }
 
+function estaBloqueado(coluna) {
+    // Se não estiver no objeto, assume que está bloqueado (por segurança)
+    return STATUS_TRAVAS.hasOwnProperty(coluna) ? STATUS_TRAVAS[coluna] : true;
+}
+
 btnsLogout.forEach(botao => {
     botao.addEventListener('click', async () => { 
         await supabaseClient.auth.signOut(); 
@@ -432,6 +506,13 @@ btnsLogout.forEach(botao => {
 document.addEventListener('DOMContentLoaded', () => {
     carregarSaudacao();
     iniciarPagina();
+});
+
+document.getElementById('modal-apostas').addEventListener('click', (e) => {
+    // Se o elemento clicado for o fundo (e não o conteúdo interno), fecha
+    if (e.target.id === 'modal-apostas') {
+        fecharModal();
+    }
 });
 
 // Este listener é colocado no elemento PAI que SEMPRE existe (container-grupos)
