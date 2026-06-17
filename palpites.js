@@ -713,7 +713,7 @@ async function abrirModalCriterio(coluna, titulo, tipo) {
     if (containerLegendas) {
         containerLegendas.innerHTML = dadosFinais.map((item, i) => `
             <span class="flex items-center gap-2">
-                <i class="w-3 h-3 rounded-full" style="background-color: ${coresParaUso[i]}"></i> 
+                <i class="w-3 h-3 max-w-3 max-h-3 min-w-3 min-h-3 rounded-full" style="background-color: ${coresParaUso[i]}"></i> 
                 <span>${item[0]}</span>
             </span>
         `).join('');
