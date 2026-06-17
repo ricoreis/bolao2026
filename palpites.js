@@ -402,11 +402,13 @@ async function verificarPrazo() {
 
     // Elementos da UI
     const containerPai = document.getElementById('container-controle-apostas'); // O ID do novo container pai
-    const btnSalvar = document.getElementById('btn-salvar-palpites');
+    const btnSalvar = document.getElementById('btn-salvar');
     const divEncerrado = document.getElementById('msg-apostas-encerradas');
     const instrucoes = document.getElementById('instrucoes');
 
     // Lógica de Prazo
+    // const prazoEncerrado = false; 
+    // if (prazoEncerrado) {
     if ((dataJogo - agora) < duasHorasEmMs) {
         // PRAZO ENCERRADO
         travarInputs(); // Desabilita os inputs
@@ -427,13 +429,9 @@ async function verificarPrazo() {
 }
 
 function travarInputs() {
-    const inputs = document.querySelectorAll('select, input, textarea');
-    const btnSalvar = document.getElementById('btn-salvar-palpites');
-    const instrucoes = document.getElementById('instrucoes');
-    
-    inputs.forEach(i => {
+    // 1. Trava e oculta todos os campos de entrada (select, input, textarea)
+    document.querySelectorAll('select, input, textarea').forEach(i => {
         i.disabled = true;
-        // Esconde o input/select
         i.classList.add('hidden');
         
         // Mostra o span correspondente
@@ -441,13 +439,15 @@ function travarInputs() {
         if (span) span.classList.remove('hidden');
     });
 
-    if (btnSalvar) {
-        btnSalvar.disabled = true;
-        btnSalvar.classList.add('bg-transparent', 'cursor-not-allowed', 'opacity-50');
-        btnSalvar.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'font-bold');
-        btnSalvar.textContent = "Apostas Encerradas";
-    }
-
+    // 2. Gerencia a visibilidade dos botões de rodapé
+    const btnSalvar = document.getElementById('btn-salvar-palpites');
+    const divEncerrado = document.getElementById('msg-apostas-encerradas');
+    const instrucoes = document.getElementById('instrucoes');
+    
+    if (btnSalvar) btnSalvar.classList.add('hidden');
+    if (divEncerrado) divEncerrado.classList.remove('hidden');
+    
+    // 3. Oculta instruções se existirem
     if (instrucoes) instrucoes.classList.add('hidden');
 }
 
@@ -477,7 +477,7 @@ function validarSelecoesClassificacao() {
     const ids = ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto'];
     const selects = ids.map(id => document.getElementById(id));
     const spanErro = document.getElementById('erro-classificacao'); // Agora vai achar!
-    const btnSalvar = document.getElementById('btn-salvar-palpites');
+    const btnSalvar = document.getElementById('btn-salvar');
     
     let temErro = false;
     const contagem = {};
@@ -871,7 +871,7 @@ function fecharModal() {
 }
 
 // btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
-document.getElementById('btn-salvar-palpites').addEventListener('click', salvarPalpites);
+document.getElementById('btn-salvar').addEventListener('click', salvarPalpites);
 
 btnsLogout.forEach(botao => {
     botao.addEventListener('click', async () => { 

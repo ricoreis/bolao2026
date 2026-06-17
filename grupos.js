@@ -137,7 +137,7 @@ async function carregarDados() {
 
     atualizarBoxBonus(contagemAcertos, gruposPerfeitos, r.data, TOTAL_GRUPOS);
 
-    const btnSalvar = document.getElementById('btn-salvar-grupos');
+    const btnSalvar = document.getElementById('btn-salvar');
     if (btnSalvar && btnSalvar.disabled) {
         alternarModoVisualizacao(true);
     }
@@ -196,44 +196,56 @@ async function verificarPrazo() {
         .eq('id', 1)
         .single();
 
-    // 1. O Supabase sempre retorna data em ISO string (formato UTC)
-    // Ao usar new Date(jogo.data_jogo), o JS cria o objeto de data corretamente
-    const dataJogo = new Date(jogo.data_jogo); 
-    const agora = new Date();
-
-    // 2. getTime() retorna o número de milissegundos desde 1970 em UTC.
-    // Isso é universal, não importa onde o usuário esteja!
-    const tempoJogo = dataJogo.getTime();
-    const tempoAgora = agora.getTime();
-
-    const instrucoes = document.getElementById('instrucoes');    
-
-    // Duas horas em milissegundos
+    const dataJogo = new Date(jogo.data_jogo).getTime();
+    const agora = new Date().getTime();
     const duasHorasEmMs = 2 * 60 * 60 * 1000;
 
-    // 3. A comparação agora é matemática pura, sem fuso horário envolvido
-    if ((tempoJogo - tempoAgora) < duasHorasEmMs) {
-        travarInputs();
-        showToast("Apostas encerradas!");
+    // Elementos da UI
+    const containerPai = document.getElementById('container-controle-apostas'); // O ID do novo container pai
+    const btnSalvar = document.getElementById('btn-salvar');
+    const divEncerrado = document.getElementById('msg-apostas-encerradas');
+    const instrucoes = document.getElementById('instrucoes');
+
+    // Lógica de Prazo
+    // const prazoEncerrado = false; 
+    // if (prazoEncerrado) {
+    if ((dataJogo - agora) < duasHorasEmMs) {
+        // PRAZO ENCERRADO
+        travarInputs(); // Desabilita os inputs
+        if (btnSalvar) btnSalvar.classList.add('hidden');
+        if (divEncerrado) divEncerrado.classList.remove('hidden');
+        if (instrucoes) instrucoes.classList.add('hidden');        
+        // showToast("Apostas encerradas!");
     } else {
+        // PRAZO ABERTO
+        if (btnSalvar) btnSalvar.classList.remove('hidden');
+        if (divEncerrado) divEncerrado.classList.add('hidden');
         if (instrucoes) instrucoes.classList.remove('hidden');
     }
 
+    // A MÁGICA: Só remove o 'hidden' do container pai AGORA, 
+    // após o JS decidir o que deve ser mostrado dentro dele.
+    if (containerPai) containerPai.classList.remove('hidden');
 }
 
 function travarInputs() {
-    const inputs = document.querySelectorAll('.grp-input');
+    // 1. Trava os campos de input
+    document.querySelectorAll('.grp-input').forEach(i => i.disabled = true);
+    
+    // 2. Troca a visibilidade dos botões de rodapé
     const btnSalvar = document.getElementById('btn-salvar-grupos');
+    const btnEncerrado = document.getElementById('btn-encerrado');
     const instrucoes = document.getElementById('instrucoes');
     
-    inputs.forEach(i => i.disabled = true);
-    if (btnSalvar) {
-        btnSalvar.disabled = true;
-        btnSalvar.classList.add('bg-transparent', 'cursor-not-allowed');
-        btnSalvar.classList.remove('bg-emerald-600', 'hover:bg-emerald-700', 'font-bold' );
-        btnSalvar.textContent = "Apostas de Classificação Encerradas";
-        instrucoes.classList.add('hidden');
-    }
+    if (btnSalvar) btnSalvar.classList.add('hidden');
+    if (btnEncerrado) btnEncerrado.classList.remove('hidden');
+    
+    // 3. Oculta instruções
+    if (instrucoes) instrucoes.classList.add('hidden');
+    
+    // 4. (Opcional) Se você quiser que, ao travar, ele já converta 
+    // os campos para visualização de texto:
+    alternarModoVisualizacao(true);
 }
 
 async function salvar() {
@@ -247,7 +259,7 @@ async function salvar() {
     if (error) showToast("Erro ao salvar"); else { showToast("Grupos salvos!"); carregarDados(); }
 }
 
-document.getElementById('btn-salvar-grupos').addEventListener('click', salvar);
+document.getElementById('btn-salvar').addEventListener('click', salvar);
 
 async function iniciarPagina() {
     await carregarEstrutura();
@@ -258,7 +270,7 @@ const validarGrupo = (grupoLetra) => {
     const card = document.getElementById(`card-grupo-${grupoLetra}`);
     const inputs = card.querySelectorAll('.grp-input');
     const spanErro = card.querySelector('.erro-grupo');
-    const btnSalvar = document.getElementById('btn-salvar-grupos');
+    const btnSalvar = document.getElementById('btn-salvar');
     
     // 1. Limpa todos os estados de erro primeiro
     inputs.forEach(i => i.classList.remove('border-red-500', 'bg-red-900/20'));
