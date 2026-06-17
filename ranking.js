@@ -469,9 +469,9 @@ async function processarRanking(apostas, jogos, headers) {
         usr['placar_vencedor'] = usr.acertos_vencedor;
         usr['placar_empate'] = usr.acertos_empate;
         usr['placar_gols'] = usr.acertos_gols;
-        usr['placar_exato_neg'] = usr.acertos_exato_neg;
-        usr['placar_saldo_neg'] = usr.acertos_saldo_neg;
-        usr['placar_venc_neg'] = usr.acertos_venc_neg;
+        usr['placar_exato_contrario'] = usr.acertos_exato_neg;
+        usr['placar_saldo_contrario'] = usr.acertos_saldo_neg;
+        usr['placar_vencedor_contrario'] = usr.acertos_venc_neg;
     });
 
     return usuarios.sort((a, b) => {
