@@ -185,6 +185,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         const btnSalvar = card.querySelector('.btn-salvar');
         const statusBadge = card.querySelector('.status-badge');
         const btnVerApostas = card.querySelector('.ver-apostas');
+        const confrontoDefinido = jogo.time_a && jogo.time_b;
 
         inputA.id = `golsA_${jogo.id}`;
         inputB.id = `golsB_${jogo.id}`;
@@ -237,18 +238,25 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             statusBadge.classList.add("hidden");
             btnVerApostas.classList.remove("hidden"); // MOSTRA O BOTÃO
             btnVerApostas.onclick = () => abrirModal(jogo.id, jogo.time_a.nome, jogo.time_b.nome);
-        } 
+        }
         else if ((dataLocal - agora) / (1000 * 60) < 60) {
             inputA.disabled = true; inputB.disabled = true; btnSalvar.disabled = true;
             inputA.classList.add("opacity-50", "cursor-not-allowed", "hidden");
             inputB.classList.add("opacity-50", "cursor-not-allowed", "hidden");
             definitivoA.classList.remove("hidden"); definitivoB.classList.remove("hidden");
             
-            btnSalvar.classList.add("hidden");
-            statusBadge.classList.remove("hidden");
-            statusBadge.innerText = "Apostas Encerradas! Aguardando resultado";
-            btnVerApostas.classList.remove("hidden"); // MOSTRA O BOTÃO
-            btnVerApostas.onclick = () => abrirModal(jogo.id, jogo.time_a.nome, jogo.time_b.nome);
+            if (confrontoDefinido) {
+                btnSalvar.classList.add("hidden");
+                statusBadge.classList.remove("hidden");
+                statusBadge.innerText = "Apostas Encerradas! Aguardando resultado";
+
+                btnVerApostas.classList.remove("hidden");
+                btnVerApostas.onclick = () => abrirModal(jogo.id, jogo.time_a.nome, jogo.time_b.nome);
+            } else {
+                btnVerApostas.classList.add("hidden");
+                statusBadge.classList.remove("hidden");
+                statusBadge.innerText = "Aguardando definição de chaves";
+            }
         } 
         else if (!jogo.time_a || !jogo.time_b) {
             if (jogo.fase_id > 1) {
