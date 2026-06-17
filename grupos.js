@@ -34,6 +34,11 @@ async function carregarEstrutura() {
 
     Object.entries(grupos).forEach(([letra, lista]) => {
         const clone = document.importNode(document.getElementById('template-grupo').content, true);
+
+        const btn = clone.querySelector('.ver-apostas');
+        btn.dataset.grupo = letra; 
+        btn.dataset.titulo = `Grupo ${letra}`;
+
         clone.querySelector('.grupo-titulo').textContent = `${letra}`;
         const divPrincipal = clone.querySelector('div');
         divPrincipal.id = `card-grupo-${letra}`;
@@ -316,6 +321,106 @@ function alternarModoVisualizacao(modoSpan) {
     });
 }
 
+function fecharModal() {
+    document.getElementById('modal-apostas').classList.add('hidden');
+    document.body.classList.remove('modal-aberto');
+}
+
+async function abrirModalClassificacao(grupo, titulo) {
+    document.getElementById('modal-apostas').classList.remove('hidden');
+    document.querySelector('#modal-apostas h3').textContent = titulo;
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+
+    const [{ data: paises }, { data: palpitesRegistrados }] = await Promise.all([
+        supabaseClient.from('paises').select('id, nome, sigla').eq('grupo', grupo).order('id'),
+        supabaseClient.from('palpites').select('palpites_grupos, usuario_id')
+    ]);
+
+    // 2. Busca O SEU palpite específico para este grupo
+    const meuPalpite = palpitesRegistrados.find(p => p.usuario_id === user.id);
+    const containerPalpite = document.getElementById('meu-palpite-container');
+    const spanPalpite = document.getElementById('meu-palpite-valor');
+
+    if (meuPalpite && meuPalpite.palpites_grupos[grupo]) {
+        const meuJson = meuPalpite.palpites_grupos[grupo]; // Ex: {"Brasil": 1, "Marrocos": 2...}
+        
+        // Converte o objeto {Pais: Posicao} para um array ordenado [1, 2, 3, 4]
+        const ordem = [null, null, null, null];
+        Object.entries(meuJson).forEach(([nomePais, pos]) => {
+            const pais = paises.find(p => p.nome === nomePais);
+            if (pais) ordem[pos - 1] = pais.sigla;
+        });
+
+        // Formata: "BRA - MAR - HAI - ESC"
+        spanPalpite.textContent = ordem.join(' - ');
+        containerPalpite.classList.remove('hidden');
+    } else {
+        containerPalpite.classList.add('hidden');
+    }
+
+    if (!palpitesRegistrados) return;
+
+    // DEFINA AS CORES AQUI DENTRO para garantir o escopo
+    const cores = ['#ffdf20', '#e5e5e5', '#e17100', '#4a5565'];
+
+    const IDs = ['A', 'B', 'C', 'D'];
+    
+    paises.forEach((pais, index) => {
+        const id = IDs[index];
+        const canvas = document.getElementById(`canvas-bar-${id}`);
+        
+        // --- ADICIONE ESTA LINHA PARA GARANTIR TAMANHO ---
+        if(canvas) {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+
+        document.getElementById(`sigla-${id}`).textContent = pais.sigla;
+        document.querySelector(`#band-${id} img`).src = `./assets/images/paises/${pais.id}.svg`;
+
+        const stats = { 1: 0, 2: 0, 3: 0, 4: 0 };
+        
+        palpitesRegistrados.forEach(registro => {
+            const json = registro.palpites_grupos; 
+            if (json && json[grupo] && json[grupo][pais.nome]) {
+                const posicao = json[grupo][pais.nome];
+                if (posicao >= 1 && posicao <= 4) stats[posicao]++;
+            }
+        });
+
+        // Passa o array de cores para o desenharBarra também!
+        desenharBarra(canvas, stats, cores);
+    });
+
+    // Pinta as legendas
+    const legendas = document.querySelectorAll('.legenda-bolinha'); 
+    legendas.forEach((el, i) => {
+        if (i < cores.length) {
+            el.style.backgroundColor = cores[i];
+        }
+    });
+}
+
+function desenharBarra(canvas, stats, cores) {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const total = (stats[1] + stats[2] + stats[3] + stats[4]) || 0;
+    
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (total === 0) return;
+    
+    let x = 0;
+    [1, 2, 3, 4].forEach((pos, i) => {
+        const largura = (stats[pos] / total) * canvas.width;
+        if (largura > 0) {
+            ctx.fillStyle = cores[i]; // Usa as cores passadas por parâmetro
+            ctx.fillRect(x, 0, largura, canvas.height);
+            x += largura;
+        }
+    });
+}
+
 btnsLogout.forEach(botao => {
     botao.addEventListener('click', async () => { 
         await supabaseClient.auth.signOut(); 
@@ -328,3 +433,14 @@ document.addEventListener('DOMContentLoaded', () => {
     carregarSaudacao();
     iniciarPagina();
 });
+
+document.getElementById('container-grupos').addEventListener('click', (e) => {
+    const btn = e.target.closest('.ver-apostas');
+    if (btn) {
+        const grupo = btn.dataset.grupo;
+        const titulo = btn.dataset.titulo;
+        abrirModalClassificacao(grupo, titulo);
+    }
+});
+document.getElementById('btn-fechar-modal').addEventListener('click', fecharModal);
+window.fecharModal = fecharModal;
