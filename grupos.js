@@ -15,7 +15,7 @@ function showToast(mensagem) {
 }
 
 const STATUS_TRAVAS = {
-    'A': false,
+    'A': true,
     'B': true, 'C': true, 'D': true, 'E': true, 
     'F': true, 'G': true, 'H': true, 'I': true, 
     'J': true, 'K': true, 'L': true
