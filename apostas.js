@@ -31,19 +31,28 @@ function toggleSalvar(inputA, inputB, btnSalvar) {
 }
 
 function showToast(mensagem) {
-    const toast = document.getElementById('toast');
-    if (toast) {
-        toast.textContent = mensagem;
-        
-        // POSICIONAMENTO: top-5, right-5
-        // ANIMAÇÃO: translate-y-[-20px] para surgir de cima (negativo)
-        toast.className = "fixed top-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 opacity-100 translate-y-0";
-        
-        setTimeout(() => {
-            // Ao esconder: volta para cima (translate-y-[-20px]) e opacidade 0
-            toast.className = "fixed top-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 translate-y-[-20px] opacity-0";
-        }, 3000);
-    }
+    const container = document.getElementById('toast-container');
+    
+    const toast = document.createElement('div');
+    // Adicione a classe 'pointer-events-auto' para poder clicar no toast se necessário
+    toast.className = `px-6 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 text-white transition-all duration-300 transform opacity-0 translate-y-5 pointer-events-auto`;
+    toast.textContent = mensagem;
+
+    container.appendChild(toast);
+
+    // Trigger da animação
+    requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-5');
+        toast.classList.add('opacity-100', 'translate-y-0');
+    });
+
+    // Remove após 3s
+    setTimeout(() => {
+        toast.classList.remove('opacity-100', 'translate-y-0');
+        toast.classList.add('opacity-0', 'translate-y-5');
+        // Remove do DOM após a animação de saída terminar
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
 }
 
 async function verificarSessao() {
@@ -322,6 +331,12 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
     const inputB = cardElement.querySelector('.input-b');
     const btnSalvar = cardElement.querySelector('.btn-salvar');
 
+    // 1. Capture os nomes dos times e valores aqui
+    const nomeTimeA = cardElement.querySelector('.time-a').innerText;
+    const nomeTimeB = cardElement.querySelector('.time-b').innerText;
+    const placarA = inputA.value;
+    const placarB = inputB.value;
+
     // 1. Estado de "Salvando" (seu estilo)
     const textoOriginal = btnSalvar.innerHTML;
     btnSalvar.disabled = true;
@@ -351,8 +366,9 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
         btnSalvar.classList.add('bg-emerald-900/20', 'border-emerald-700');
         btnSalvar.classList.remove('hover:bg-emerald-700');
 
-        showToast("Aposta salva!");
-        
+        // showToast("Aposta salva!");
+        showToast(`Aposta salva: ${nomeTimeA} ${placarA} x ${placarB} ${nomeTimeB}`);
+
         inputA.dataset.valorOriginal = String(inputA.value);
         inputB.dataset.valorOriginal = String(inputB.value);
         
