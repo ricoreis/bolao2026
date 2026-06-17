@@ -440,7 +440,7 @@ document.getElementById('container-grupos').addEventListener('click', (e) => {
     const btn = e.target.closest('.ver-apostas');
     
     if (btn) {
-        console.log("Botão clicado! Grupo:", btn.dataset.grupo);
+        // console.log("Botão clicado! Grupo:", btn.dataset.grupo);
         const grupo = btn.dataset.grupo;
         const titulo = btn.dataset.titulo;
         
