@@ -38,6 +38,25 @@ function showToast(mensagem) {
     }
 }
 
+function atualizarCampoEView(idCampo, valor) {
+    const el = document.getElementById(idCampo);
+    const span = document.getElementById('display-' + idCampo);
+    
+    if (!el) return;
+    
+    el.value = valor;
+    
+    if (span) {
+        if (el.tagName === 'SELECT') {
+            // Se for select, busca o texto da opção pelo valor
+            const option = el.querySelector(`option[value="${valor}"]`);
+            span.textContent = option ? option.text : "-";
+        } else {
+            span.textContent = valor || "-";
+        }
+    }
+}
+
 // --- LÓGICA DE MOTOR E PENALIDADES ---
 const faseEstaCompleta = (faseId) => {
     const jogos = todosJogos.filter(j => parseInt(j.fase_id) === parseInt(faseId));
@@ -236,17 +255,29 @@ async function carregarPalpitesEComparar() {
     const { data: p } = await supabaseClient.from('palpites').select('*').eq('usuario_id', user.id).single();
     
     if (p) {
-        document.getElementById('sel-gol').value = p.primeiro_gol_brasil_id || '';
-        document.getElementById('sel-fase').value = p.fase_brasil_id || '';
-        document.getElementById('sel-campeao').value = p.campeao_id || '';
-        document.getElementById('sel-vice').value = p.vice_id || '';
-        document.getElementById('sel-terceiro').value = p.terceiro_id || '';
-        document.getElementById('sel-quarto').value = p.quarto_id || '';
-        document.getElementById('sel-pior').value = p.pior_time_id || '';
-        document.getElementById('sel-artilheiro-pais').value = p.artilheiro_pais_id || '';
-        document.getElementById('inp-gols-pro').value = p.gols_feitos_brasil || 0;
-        document.getElementById('inp-gols-contra').value = p.gols_sofridos_brasil || 0;
-        document.getElementById('sel-cr7-messi').value = p.duelo_gigantes || '';
+        // document.getElementById('sel-gol').value = p.primeiro_gol_brasil_id || '';
+        // document.getElementById('sel-fase').value = p.fase_brasil_id || '';
+        // document.getElementById('sel-campeao').value = p.campeao_id || '';
+        // document.getElementById('sel-vice').value = p.vice_id || '';
+        // document.getElementById('sel-terceiro').value = p.terceiro_id || '';
+        // document.getElementById('sel-quarto').value = p.quarto_id || '';
+        // document.getElementById('sel-pior').value = p.pior_time_id || '';
+        // document.getElementById('sel-artilheiro-pais').value = p.artilheiro_pais_id || '';
+        // document.getElementById('inp-gols-pro').value = p.gols_feitos_brasil || 0;
+        // document.getElementById('inp-gols-contra').value = p.gols_sofridos_brasil || 0;
+        // document.getElementById('sel-cr7-messi').value = p.duelo_gigantes || '';
+
+        atualizarCampoEView('sel-gol', p.primeiro_gol_brasil_id);
+        atualizarCampoEView('sel-fase', p.fase_brasil_id);
+        atualizarCampoEView('sel-campeao', p.campeao_id);
+        atualizarCampoEView('sel-vice', p.vice_id);
+        atualizarCampoEView('sel-terceiro', p.terceiro_id);
+        atualizarCampoEView('sel-quarto', p.quarto_id);
+        atualizarCampoEView('sel-pior', p.pior_time_id);
+        atualizarCampoEView('sel-artilheiro-pais', p.artilheiro_pais_id);
+        atualizarCampoEView('inp-gols-pro', p.gols_feitos_brasil);
+        atualizarCampoEView('inp-gols-contra', p.gols_sofridos_brasil);
+        atualizarCampoEView('sel-cr7-messi', p.duelo_gigantes);
 
         const totalGolsCalculado = await calcularTotalGolsReal(user.id);
         const totalGolsOficial = await calcularTotalGolsOficial(); // <--- NOVA CHAMADA
@@ -391,15 +422,20 @@ async function verificarPrazo() {
 }
 
 function travarInputs() {
-    // Busca todos os selects, inputs e textareas do formulário
     const inputs = document.querySelectorAll('select, input, textarea');
     const btnSalvar = document.getElementById('btn-salvar-palpites');
-    const instrucoes = document.getElementById('instrucoes'); // Ajustado para o ID correto que você usa no HTML
+    const instrucoes = document.getElementById('instrucoes');
     
-    // Desabilita todos os campos
-    inputs.forEach(i => i.disabled = true);
-    
-    // Ajusta o botão
+    inputs.forEach(i => {
+        i.disabled = true;
+        // Esconde o input/select
+        i.classList.add('hidden');
+        
+        // Mostra o span correspondente
+        const span = document.getElementById('display-' + i.id);
+        if (span) span.classList.remove('hidden');
+    });
+
     if (btnSalvar) {
         btnSalvar.disabled = true;
         btnSalvar.classList.add('bg-transparent', 'cursor-not-allowed', 'opacity-50');
@@ -407,10 +443,7 @@ function travarInputs() {
         btnSalvar.textContent = "Apostas Encerradas";
     }
 
-    // Esconde instruções se existir
-    if (instrucoes) {
-        instrucoes.classList.add('hidden');
-    }
+    if (instrucoes) instrucoes.classList.add('hidden');
 }
 
 async function salvarPalpites() {
@@ -843,8 +876,16 @@ btnsLogout.forEach(botao => {
 });
 
 async function iniciarPagina() {
-    await carregarDadosIniciais();
-    await verificarPrazo();
+    // 1. Carrega os dados (Isso popula os inputs E os spans)
+    await carregarDadosIniciais(); 
+    
+    // 2. Verifica se o prazo acabou
+    const prazoEncerrado = await verificarPrazo();
+    
+    // 3. Se acabou, esconde os inputs (que já estão com spans preenchidos)
+    if (prazoEncerrado) {
+        travarInputs();
+    }
 }
 
 // document.addEventListener('DOMContentLoaded', iniciarPagina);

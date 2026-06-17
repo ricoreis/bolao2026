@@ -83,7 +83,15 @@ async function carregarDados() {
         Object.entries(p.data.palpites_grupos).forEach(([g, paises]) => {
             Object.entries(paises).forEach(([pais, val]) => {
                 const el = document.querySelector(`.grp-input[data-grupo="${g}"][data-pais="${pais}"]`);
-                if (el) el.value = val;
+                if (el) {
+                    el.value = val;
+                    
+                    // BUSCA PELO SPAN CORRETO (baseado na classe que definimos)
+                    const displaySpan = el.parentElement.querySelector('.grp-display');
+                    if (displaySpan) {
+                        displaySpan.textContent = val;
+                    }
+                }
             });
         });
     }
@@ -116,6 +124,11 @@ async function carregarDados() {
     }
 
     atualizarBoxBonus(contagemAcertos, gruposPerfeitos, r.data, TOTAL_GRUPOS);
+
+    const btnSalvar = document.getElementById('btn-salvar-grupos');
+    if (btnSalvar && btnSalvar.disabled) {
+        alternarModoVisualizacao(true);
+    }
 }
 
 function atualizarBoxBonus(contagem, gruposPerfeitos, regras, totalGrupos) {
@@ -286,6 +299,22 @@ const validarGrupo = (grupoLetra) => {
     btnSalvar.classList.toggle('opacity-50', temErro);
     btnSalvar.classList.toggle('cursor-not-allowed', temErro);
 };
+
+function alternarModoVisualizacao(modoSpan) {
+    document.querySelectorAll('.grp-input').forEach(input => {
+        const span = input.parentElement.querySelector('.grp-display');
+        if (!span) return;
+        
+        if (modoSpan) {
+            span.textContent = input.value; // Garante que o número está lá
+            input.classList.add('hidden');  // Esconde o input
+            span.classList.remove('hidden'); // Mostra o span
+        } else {
+            input.classList.remove('hidden');
+            span.classList.add('hidden');
+        }
+    });
+}
 
 btnsLogout.forEach(botao => {
     botao.addEventListener('click', async () => { 

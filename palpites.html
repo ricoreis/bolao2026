@@ -145,6 +145,7 @@
                         <label class="text-xs text-gray-400">Primeiro Gol do Brasil</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-gol" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                            <span id="display-sel-gol" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-gol-brasil"></span>
                             <button data-coluna="primeiro_gol_brasil_id" data-titulo="Primeiro Gol do Brasil" data-tipo="jogadores" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
@@ -155,6 +156,7 @@
                         <label class="text-xs text-gray-400">Brasil chega até...</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-fase" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                            <span id="display-sel-fase" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-fase-brasil"></span>
                             <button data-coluna="fase_brasil_id" data-titulo="Brasil chega até..." data-tipo="fases" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
@@ -165,6 +167,7 @@
                         <label class="text-xs text-gray-400">Gols do Brasil</label>
                         <div class="flex gap-4 items-center">
                             <input type="number" id="inp-gols-pro" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
+                            <span id="display-inp-gols-pro" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-gols-pro"></span>
                             <button data-coluna="gols_feitos_brasil" data-titulo="Gols do Brasil" data-tipo="gols_pro" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
@@ -175,6 +178,7 @@
                         <label class="text-xs text-gray-400">Gols sofridos pelo Brasil</label>
                         <div class="flex gap-4 items-center">
                             <input type="number" id="inp-gols-contra" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1 text-white">
+                            <span id="display-inp-gols-contra" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-gols-contra"></span>
                             <button data-coluna="gols_sofridos_brasil" data-titulo="Gols sofridos pelo Brasil" data-tipo="gols_contra" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
@@ -191,6 +195,7 @@
                         <label class="text-xs text-gray-400">Campeão</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-campeao" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                            <span id="display-sel-campeao" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-campeao"></span>
                             <button data-coluna="campeao_id" data-titulo="Campeão da Copa" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
@@ -201,6 +206,7 @@
                         <label class="text-xs text-gray-400">Vice-Campeão</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-vice" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                            <span id="display-sel-vice" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-vice"></span>
                             <button data-coluna="vice_id" data-titulo="Vice-Campeão da Copa" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
@@ -211,6 +217,7 @@
                         <label class="text-xs text-gray-400">3º Lugar</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-terceiro" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                            <span id="display-sel-terceiro" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-terceiro"></span>
                             <button data-coluna="terceiro_id" data-titulo="3º Lugar da Copa" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
@@ -221,6 +228,7 @@
                         <label class="text-xs text-gray-400">4º Lugar</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-quarto" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                            <span id="display-sel-quarto" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-quarto"></span>
                             <button data-coluna="quarto_id" data-titulo="4º Lugar da Copa" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
@@ -243,6 +251,7 @@
                         <label class="text-xs text-gray-400">Pior time da Copa</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-pior" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                            <span id="display-sel-pior" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-pior"></span>
                             <button data-coluna="pior_time_id" data-titulo="Pior Time da Copa" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
@@ -253,6 +262,7 @@
                         <label class="text-xs text-gray-400">País do Artilheiro</label>
                         <div class="flex gap-4 items-center">
                             <select id="sel-artilheiro-pais" class="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 mt-1"></select>
+                            <span id="display-sel-artilheiro-pais" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-artilheiro"></span>
                             <button data-coluna="artilheiro_pais_id" data-titulo="País do Artilheiro" data-tipo="paises" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
@@ -268,6 +278,7 @@
                                 <option value="MESSI">Lionel Messi</option>
                                 <option value="EMPATE">Empate</option>
                             </select>
+                            <span id="display-sel-cr7-messi" class="grp-display hidden w-full bg-gray-800 border-b rounded-none border-gray-700 p-2 text-left text-sm font-bold text-gray-400 rounded-lg"></span>
                             <span id="pts-cr7-messi"></span>
                             <button data-coluna="duelo_gigantes" data-titulo="Quem participará mais com gols + assistências?" data-tipo="fixo" class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm flex flex-row items-center gap-4">
                                 <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
