@@ -434,11 +434,17 @@ document.addEventListener('DOMContentLoaded', () => {
     iniciarPagina();
 });
 
+// Este listener é colocado no elemento PAI que SEMPRE existe (container-grupos)
 document.getElementById('container-grupos').addEventListener('click', (e) => {
+    // Procura o botão mais próximo, mesmo que o clique tenha sido no ícone dentro dele
     const btn = e.target.closest('.ver-apostas');
+    
     if (btn) {
+        console.log("Botão clicado! Grupo:", btn.dataset.grupo);
         const grupo = btn.dataset.grupo;
         const titulo = btn.dataset.titulo;
+        
+        // Chama a função
         abrirModalClassificacao(grupo, titulo);
     }
 });
