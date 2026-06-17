@@ -412,9 +412,8 @@ async function verificarPrazo() {
         travarInputs(); // Desabilita os inputs
         if (btnSalvar) btnSalvar.classList.add('hidden');
         if (divEncerrado) divEncerrado.classList.remove('hidden');
-        if (instrucoes) instrucoes.classList.add('hidden');
-        
-        showToast("Apostas encerradas!");
+        if (instrucoes) instrucoes.classList.add('hidden');        
+        // showToast("Apostas encerradas!");
     } else {
         // PRAZO ABERTO
         if (btnSalvar) btnSalvar.classList.remove('hidden');
