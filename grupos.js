@@ -6,16 +6,14 @@ function showToast(mensagem) {
     if (toast) {
         toast.textContent = mensagem;
         
-        // POSICIONAMENTO: top-5, right-5
-        // ANIMAÇÃO: translate-y-[-20px] para surgir de cima (negativo)
-        toast.className = "fixed top-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 opacity-100 translate-y-0";
+        toast.className = "fixed bottom-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 opacity-100 translate-y-0";
         
         setTimeout(() => {
-            // Ao esconder: volta para cima (translate-y-[-20px]) e opacidade 0
-            toast.className = "fixed top-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 translate-y-[-20px] opacity-0";
+            toast.className = "fixed bottom-5 right-5 z-[60] text-white px-5 py-3 rounded-lg shadow-xl font-medium bg-emerald-600 transition-all duration-300 translate-y-[-20px] opacity-0";
         }, 3000);
     }
 }
+
 const btnsLogout = document.querySelectorAll('.btn-logout');
 
 async function carregarEstrutura() {
@@ -221,7 +219,7 @@ async function salvar() {
         dados[i.dataset.grupo][i.dataset.pais] = parseInt(i.value) || 0;
     });
     const { error } = await supabaseClient.from('palpites').upsert({ usuario_id: user.id, palpites_grupos: dados });
-    if (error) showToast("Erro ao salvar"); else { showToast("Salvo!"); carregarDados(); }
+    if (error) showToast("Erro ao salvar"); else { showToast("Grupos salvos!"); carregarDados(); }
 }
 
 document.getElementById('btn-salvar-grupos').addEventListener('click', salvar);
