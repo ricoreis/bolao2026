@@ -416,7 +416,7 @@ async function abrirModalClassificacao(grupo, titulo) {
                         <div class="flex flex-col items-center justify-center h-64">
                             <iconify-icon icon="gg:lock" class="text-5xl mb-4 text-emerald-600 block"></iconify-icon>
                             <p class="font-bold">Palpites Ocultos</p>
-                            <p class="text-xs">Será revelado depois...</p>
+                            <p class="text-xs">Será revelado quando acabar a segunda rodada...</p>
                         </div>
                     </td>
                 </tr>`;
