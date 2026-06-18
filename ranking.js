@@ -604,14 +604,14 @@ function renderizarTabela(dados, headers) {
         let iconPodio = "";
 
         if (usr.posicao === 1) {
-            classeCor = "bg-yellow-500/45";
+            classeCor = "bg-yellow-500";
             corPosicao = "text-yellow-400";
             iconPodio = ' <iconify-icon icon="emojione:trophy"></iconify-icon>';
         } else if (usr.posicao === 2) {
-            classeCor = "bg-gray-400/45";
+            classeCor = "bg-gray-400";
             corPosicao = "text-gray-300";
         } else if (usr.posicao === 3) {
-            classeCor = "bg-amber-700/45";
+            classeCor = "bg-amber-800";
             corPosicao = "text-orange-400";
         }
 
@@ -645,14 +645,14 @@ function renderizarTabela(dados, headers) {
             return `<td class="${classeColuna} px-2 py-3 text-center text-xs">${valor ?? 0}</td>`;
         }).join('');
 
-        return `<tr class="border-b border-gray-700 hover:bg-gray-700/20 ${classeCor}">
-                <td class="md:sticky left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-2 py-3">
+        return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
+                <td class="sticky left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-1 md:px-2 py-3">
                     ${posicao}º
                 </td>
-                <td class="md:sticky left-[50px] bg-gray-700 ${classeCor} px-2 py-3">
+                <td class="sticky left-[40px] md:left-[50px] bg-gray-700 ${classeCor} px-1 md:px-2 py-3">
                     ${usr.nome}
                 </td>
-                <td class="md:sticky left-[200px] text-center bg-gray-700 col-pontuacao font-bold px-2 py-3 ${classeCor}">
+                <td class="sticky left-[140px] md:left-[200px] text-center bg-gray-700 col-pontuacao font-bold px-1 md:px-2 py-3 ${classeCor}">
                     ${total ?? 0}
                 </td>
                 ${colunasDinamicas}
