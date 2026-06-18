@@ -435,12 +435,12 @@ async function processarRanking(apostas, jogos, headers) {
 
                         if (m.db === 'extra_duelo') {
                             const valoresValidos = ['CR7', 'MESSI', 'EMPATE'];
-                            if (!valoresValidos.includes(palpiteID)) {
+                            if (!valoresValidos.includes(palpiteID) && gabaritoID == null) {
                                 usr[m.db] = "-";
                                 return;
                             }
                         }
-                        if (gabaritoID != null) {
+                        if (gabaritoID !== null && gabaritoID !== undefined && String(gabaritoID).trim() !== '') {
                             const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
                             
                             // Define a cor baseada no resultado

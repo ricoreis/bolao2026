@@ -435,12 +435,12 @@ async function processarRanking(apostas, jogos, headers) {
 
                         if (m.db === 'extra_duelo') {
                             const valoresValidos = ['CR7', 'MESSI', 'EMPATE'];
-                            if (!valoresValidos.includes(palpiteID)) {
+                            if (!valoresValidos.includes(palpiteID) && gabaritoID == null) {
                                 usr[m.db] = "-";
                                 return;
                             }
                         }
-                        if (gabaritoID != null) {
+                        if (gabaritoID !== null && gabaritoID !== undefined && String(gabaritoID).trim() !== '') {
                             const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
                             
                             // Define a cor baseada no resultado
@@ -542,7 +542,16 @@ function renderizarTabela(dados, headers) {
         headersComFinal.push({ coluna_db: 'placar_classificado_penaltis', nome: 'Penal', nome_reduzido: 'PENAL' });
     }
 
-    const colunasComIcones = ['brasil_primeiro_gol', 'final_pior'];
+    const colunasComIcones = [
+        'brasil_primeiro_gol',
+        'final_campeao',
+        'final_vice',
+        'final_terceiro',
+        'final_campeao',
+        'final_quarto',
+        'final_pior',
+        'extra_duelo',
+    ];
 
     while (thead.children.length > 3) thead.removeChild(thead.lastChild);
 
