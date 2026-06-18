@@ -5,6 +5,19 @@ import { carregarSaudacao } from './auth-header.js';
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
 
+const DB_CONFIG = {
+    RESULTADOS: 'resultados',
+    GRUPOS: 'grupos',
+    PAISES: 'paises',
+    JOGADORES: 'jogadores',
+    FASES: 'fases',
+    APOSTAS: 'apostas',
+    PONTUACAO: 'pontuacao',
+	JOGOS: 'jogos',
+	USUARIOS: 'usuarios',
+	PALPITES: 'palpites'
+};
+
 async function carregarRanking() {
     const loader = document.getElementById('loader');
     const tabelaWrapper = document.getElementById('tabela-wrapper');
@@ -21,9 +34,9 @@ async function carregarRanking() {
             { data: usuarios }
         ] = await Promise.all([
             carregarTodasAsApostas(),
-            supabaseClient.from('pontuacao').select('*').order('id'),
-            supabaseClient.from('jogos').select('*, vencedor_final_id'),
-            supabaseClient.from('usuarios').select('*'),
+            supabaseClient.from(DB_CONFIG.PONTUACAO).select('*').order('id'),
+            supabaseClient.from(DB_CONFIG.JOGOS).select('*, vencedor_final_id'),
+            supabaseClient.from(DB_CONFIG.USUARIOS).select('*'),
             tempoMinimo // <-- O segredo: o Promise.all só termina quando o mais lento acabar
         ]);
 
@@ -54,8 +67,8 @@ async function carregarRanking() {
 
 async function processarGrupos(usuarioId, regras, totalGrupos) {
 
-    const { data: gabaritos } = await supabaseClient.from('grupos').select('*');
-    const { data: palpiteDB } = await supabaseClient.from('palpites').select('palpites_grupos').eq('usuario_id', usuarioId);
+    const { data: gabaritos } = await supabaseClient.from(DB_CONFIG.GRUPOS).select('*');
+    const { data: palpiteDB } = await supabaseClient.from(DB_CONFIG.PALPITES).select('palpites_grupos').eq('usuario_id', usuarioId);
 
     if (!gabaritos || !palpiteDB || palpiteDB.length === 0) return { total: 0, contagem: {1:0, 2:0, 3:0, 4:0, ALL1: 0, ALL2: 0, ALL3: 0, ALL4: 0, ALLG: 0} };
 
@@ -124,7 +137,7 @@ async function processarRanking(apostas, jogos, headers) {
 
     const rankingMap = {};
 
-    const { data: todosUsuarios } = await supabaseClient.from('usuarios').select('*');
+    const { data: todosUsuarios } = await supabaseClient.from(DB_CONFIG.USUARIOS).select('*');
     // 1. Inicializa o map com TODOS os usuários (os 33)
     todosUsuarios.forEach(u => {
         const usuarioObj = { 
@@ -166,10 +179,10 @@ async function processarRanking(apostas, jogos, headers) {
     const [
         { data: gabaritoBruto }, { data: paises }, { data: jogadores }, { data: fases }
     ] = await Promise.all([
-        supabaseClient.from('resultados').select('*').single(),
-        supabaseClient.from('paises').select('*'),
-        supabaseClient.from('jogadores').select('*'),
-        supabaseClient.from('fases').select('*')
+        supabaseClient.from(DB_CONFIG.RESULTADOS).select('*').single(),
+        supabaseClient.from(DB_CONFIG.PAISES).select('*'),
+        supabaseClient.from(DB_CONFIG.JOGADORES).select('*'),
+        supabaseClient.from(DB_CONFIG.FASES).select('*')
     ]);
 
     const gabaritoFinal = sanitizarResultadoFinal(gabaritoBruto, jogos);
@@ -246,7 +259,7 @@ async function processarRanking(apostas, jogos, headers) {
         usr['grupo_todos_exatos'] = resG.contagem.ALLG;
 
         try {
-            const { data: pList } = await supabaseClient.from('palpites').select('*').eq('usuario_id', usr.usuario_id);
+            const { data: pList } = await supabaseClient.from(DB_CONFIG.PALPITES).select('*').eq('usuario_id', usr.usuario_id);
 
             // if (!pList || pList.length === 0) {
             //     console.log(`Usuário ${usr.nome} não tem palpites. Pulando lógica extra.`);
@@ -704,7 +717,7 @@ async function carregarTodasAsApostas() {
     let start = 0;
     while (true) {
         const { data } = await supabaseClient
-            .from('apostas')
+            .from(DB_CONFIG.APOSTAS)
             .select('*, usuarios(nome)')
             .range(start, start + 999);
         
