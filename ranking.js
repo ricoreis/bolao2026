@@ -536,13 +536,13 @@ function renderizarTabela(dados, headers) {
     headersComFinal.forEach(h => {
         const th = document.createElement('th');
         const alinhamento = colunasComIcones.includes(h.coluna_db) ? 'justify-start' : 'justify-center';
-        th.className = `px-2 py-4 ${alinhamento} text-xs text-emerald-400 uppercase col-${h.coluna_db} relative`;        
+        th.className = `px-4 py-4 ${alinhamento} text-xs text-emerald-400 uppercase col-${h.coluna_db} relative`;        
         // th.className = `px-2 py-4 text-center text-xs text-emerald-400 uppercase col-${h.coluna_db} relative`;
         const textoPontos = h.pontos || 'Regra de pontuação específica.';
         const textoTipo = h.tipo || 'Regra de pontuação específica.';
 
         th.innerHTML = `
-            <div class="flex items-center ${alinhamento} gap-1 group cursor-help whitespace-nowrap flex- flex-col justify-center px-4">
+            <div class="flex items-center ${alinhamento} gap-1 group cursor-help whitespace-nowrap">
                 ${h.nome_reduzido}
                 <iconify-icon icon="material-symbols:info-outline" class="text-emerald-500 text-xl"></iconify-icon>
                 <div class="absolute top-full mt-2 hidden group-hover:block w-48 p-2 bg-gray-900 border border-emerald-600 text-white text-sm rounded-lg z-50 normal-case font-normal shadow-xl text-center">
@@ -620,38 +620,38 @@ function renderizarTabela(dados, headers) {
 
             // Alinhamento à esquerda para colunas de ícones
             if (colunasComIcones.includes(h.coluna_db)) {
-                return `<td class="${classeColuna} px-2 py-3 text-left text-xs"><span class="flex items-center gap-1">${valor ?? '-'}</span></td>`;
+                return `<td class="${classeColuna} px-4 py-3 text-left text-xs"><span class="flex items-center gap-1">${valor ?? '-'}</span></td>`;
             }
 
             // 1. Lógica específica para a FINAL
             if (h.coluna_db === 'final_copa') {
-                return `<td class="${classeColuna} px-2 py-3 text-center text-xs whitespace-nowrap font-medium text-white">${valor}</td>`;
+                return `<td class="${classeColuna} px-4 py-3 text-center text-xs whitespace-nowrap font-medium text-white">${valor}</td>`;
             }
             
             // 2. Colunas de penalidade
             const colunasCamp = ['campeao_perde_grupos', 'campeao_perde_16', 'campeao_perde_8', 'campeao_perde_4', 'campeao_perde_3', 'campeao_perde_final'];
             if (colunasCamp.includes(h.coluna_db)) {
-                return `<td class="${classeColuna} px-2 py-3 text-center text-xs">${valor ?? 'N'}</td>`;
+                return `<td class="${classeColuna} px-4 py-3 text-center text-xs">${valor ?? 'N'}</td>`;
             }
 
             // 3. Colunas de grupo
             const colunasGrupos = ['grupo_primeiro', 'grupo_segundo', 'grupo_terceiro', 'grupo_quarto', 'grupo_todos_exatos'];
             if (colunasGrupos.includes(h.coluna_db)) {
-                return `<td class="${classeColuna} px-2 py-3 text-center text-xs">${valor ?? 0}/12</td>`;
+                return `<td class="${classeColuna} px-4 py-3 text-center text-xs">${valor ?? 0}/12</td>`;
             }
 
             // 4. Restante
-            return `<td class="${classeColuna} px-2 py-3 text-center text-xs">${valor ?? 0}</td>`;
+            return `<td class="${classeColuna} px-4 py-3 text-center text-xs">${valor ?? 0}</td>`;
         }).join('');
 
         return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
-                <td class="sticky left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-1 md:px-2 py-3">
+                <td class="sticky left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-1 md:px-4 py-3">
                     ${posicao}º
                 </td>
-                <td class="sticky left-[40px] md:left-[50px] bg-gray-700 ${classeCor} px-1 md:px-2 py-3">
+                <td class="sticky left-[40px] md:left-[50px] bg-gray-700 ${classeCor} px-1 md:px-4 py-3">
                     ${usr.nome}
                 </td>
-                <td class="sticky left-[140px] md:left-[200px] text-center bg-gray-700 col-pontuacao font-bold px-1 md:px-2 py-3 ${classeCor}">
+                <td class="sticky left-[140px] md:left-[200px] text-center bg-gray-700 col-pontuacao font-bold px-1 md:px-4 py-3 ${classeCor}">
                     ${total ?? 0}
                 </td>
                 ${colunasDinamicas}
