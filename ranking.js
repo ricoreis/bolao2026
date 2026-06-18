@@ -444,15 +444,15 @@ async function processarRanking(apostas, jogos, headers) {
                             const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
                             
                             // Define a cor baseada no resultado
-                            const cor = acertou ? "text-emerald-300" : "text-gray-300";
+                            const cor = acertou ? "text-emerald-300" : "text-gray-300/35";
                             
                             // Aplica a cor tanto no ícone quanto no texto
                             const icone = acertou 
                                 ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="${cor} text-lg"></iconify-icon>` 
-                                : `<iconify-icon icon="dashicons:no" class="${cor} text-lg opacity-25"></iconify-icon>`;
+                                : `<iconify-icon icon="dashicons:no" class="${cor} text-lg"></iconify-icon>`;
 
                             // Renderiza usando a mesma variável 'cor'
-                            usr[m.db] = `${icone} <span class="text-xs ${cor} ml-1">${formatarValor(m.tabela, palpiteID, m.tipo)}</span>`;
+                            usr[m.db] = `${icone} <span class="text-xs ${cor} ml-1 whitespace-nowrap">${formatarValor(m.tabela, palpiteID, m.tipo)}</span>`;
                             
                             if (acertou) {
                                 usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
