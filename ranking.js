@@ -542,10 +542,9 @@ function renderizarTabela(dados, headers) {
         const textoTipo = h.tipo || 'Regra de pontuação específica.';
 
         th.innerHTML = `
-            <div class="flex items-center ${alinhamento} gap-1 group cursor-help">
+            <div class="flex items-center ${alinhamento} gap-1 group cursor-help whitespace-nowrap flex- flex-col justify-center px-4">
                 ${h.nome_reduzido}
-                <iconify-icon icon="material-symbols:info-outline" class="text-emerald-500"></iconify-icon>
-                
+                <iconify-icon icon="material-symbols:info-outline" class="text-emerald-500 text-xl"></iconify-icon>
                 <div class="absolute top-full mt-2 hidden group-hover:block w-48 p-2 bg-gray-900 border border-emerald-600 text-white text-sm rounded-lg z-50 normal-case font-normal shadow-xl text-center">
                     ${textoPontos > 0 ? "+" : ""}${textoPontos}
                     ${textoTipo}
