@@ -66,15 +66,14 @@ async function carregarRanking() {
 }
 
 async function processarGrupos(usuarioId, regras, totalGrupos) {
-
     const { data: gabaritos } = await supabaseClient.from(DB_CONFIG.GRUPOS).select('*');
     const { data: palpiteDB } = await supabaseClient.from(DB_CONFIG.PALPITES).select('palpites_grupos').eq('usuario_id', usuarioId);
 
-    if (!gabaritos || !palpiteDB || palpiteDB.length === 0) return { total: 0, contagem: {1:0, 2:0, 3:0, 4:0, ALL1: 0, ALL2: 0, ALL3: 0, ALL4: 0, ALLG: 0} };
+    if (!gabaritos || !palpiteDB || palpiteDB.length === 0) return { total: 0, contagem: {1:0, 2:0, 3:0, 4:0, ALL1: 0, ALL2: 0, ALL3: 0, ALL4: 0, ALLG: 0, NULL1: true, NULL2: true, NULL3: true, NULL4: true} };
 
     const palpites = palpiteDB[0].palpites_grupos;
     let pontosGrupo = 0;
-    const contagem = { 1: 0, 2: 0, 3: 0, 4: 0, ALL1: 0, ALL2: 0, ALL3: 0, ALL4: 0, ALLG: 0 };
+    const contagem = { 1: 0, 2: 0, 3: 0, 4: 0, ALL1: 0, ALL2: 0, ALL3: 0, ALL4: 0, ALLG: 0, NULL1: true, NULL2: true, NULL3: true, NULL4: true };
     let gruposPerfeitos = 0;
 
     gabaritos.forEach(g => {
@@ -249,13 +248,21 @@ async function processarRanking(apostas, jogos, headers) {
 
         const resG = await processarGrupos(usr.usuario_id, headers, 12);
 
+        const iconeS = `<iconify-icon icon="material-symbols:check-circle-rounded" class="text-emerald-300 text-lg"></iconify-icon>`; 
+        const iconeN = `<iconify-icon icon="dashicons:no" class="text-gray-300/35 text-lg"></iconify-icon>`; 
+        const iconeHifen = `<span class="text-gray-500 text-lg font-bold">-</span>`;
+
         usr.pontos_totais += resG.total;
-        usr['grupo_primeiro'] = resG.contagem[1]; usr['grupo_segundo'] = resG.contagem[2];
-        usr['grupo_terceiro'] = resG.contagem[3]; usr['grupo_quarto'] = resG.contagem[4];
-        usr['grupo_todos_primeiros'] = resG.contagem.ALL1 ? 'S' : 'N';
-        usr['grupo_todos_segundos'] = resG.contagem.ALL2 ? 'S' : 'N';
-        usr['grupo_todos_terceiros'] = resG.contagem.ALL3 ? 'S' : 'N';
-        usr['grupo_todos_quartos'] = resG.contagem.ALL4 ? 'S' : 'N';
+        usr['grupo_primeiro'] = resG.contagem[1];
+        usr['grupo_segundo'] = resG.contagem[2];
+        usr['grupo_terceiro'] = resG.contagem[3];
+        usr['grupo_quarto'] = resG.contagem[4];
+        
+        usr['grupo_todos_primeiros'] = resG.contagem.ALL1 ? iconeS : iconeN;
+        usr['grupo_todos_segundos'] = resG.contagem.ALL2 ? iconeS : iconeN;
+        usr['grupo_todos_terceiros'] = resG.contagem.ALL3 ? iconeS : iconeN;
+        usr['grupo_todos_quartos'] = resG.contagem.ALL4 ? iconeS : iconeN;
+
         usr['grupo_todos_exatos'] = resG.contagem.ALLG;
 
         try {
@@ -550,6 +557,7 @@ function renderizarTabela(dados, headers) {
         'final_campeao',
         'final_quarto',
         'final_pior',
+        'final_copa',
         'extra_duelo',
     ];
 
@@ -564,8 +572,8 @@ function renderizarTabela(dados, headers) {
         const textoTipo = h.tipo || 'Regra de pontuação específica.';
 
         th.innerHTML = `
-            <div class="flex items-center ${alinhamento} gap-1 group cursor-help whitespace-nowrap">
-                ${h.nome_reduzido}
+            <div class="flex items-center ${alinhamento} gap-1 group cursor-help">
+                <span class="whitespace-nowrap">${h.nome_reduzido}</span>
                 <iconify-icon icon="material-symbols:info-outline" class="text-emerald-500 text-xl"></iconify-icon>
                 <div class="absolute top-full mt-2 hidden group-hover:block w-48 p-2 bg-gray-900 border border-emerald-600 text-white text-sm rounded-lg z-50 normal-case font-normal shadow-xl text-center">
                     ${textoPontos > 0 ? "+" : ""}${textoPontos}
@@ -659,7 +667,24 @@ function renderizarTabela(dados, headers) {
             // 3. Colunas de grupo
             const colunasGrupos = ['grupo_primeiro', 'grupo_segundo', 'grupo_terceiro', 'grupo_quarto', 'grupo_todos_exatos'];
             if (colunasGrupos.includes(h.coluna_db)) {
-                return `<td class="${classeColuna} px-4 py-3 text-center text-xs">${valor ?? 0}/12</td>`;
+                const acertos = valor ?? 0;
+                let corBarra = "bg-emerald-800"; // 1 a 3
+                if (acertos >= 8) {
+                    corBarra = "bg-emerald-400"; // 8 a 12
+                } else if (acertos >= 4) {
+                    corBarra = "bg-emerald-600"; // 4 a 7
+                }
+                const porcentagem = Math.min((acertos / 12) * 100, 100);
+
+                return `<td class="${classeColuna} px-4 py-3 text-center text-xs">
+                    <div class="flex items-center justify-center gap-1 px-2">
+                        <div class="w-8 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                            <!-- Aqui a classe é dinâmica -->
+                            <div class="h-full ${corBarra} transition-all duration-500" style="width: ${porcentagem}%;"></div>
+                        </div>
+                        <span class="text-xs font-medium w-4">${acertos}</span>
+                    </div>
+                </td>`;
             }
 
             // 4. Restante
