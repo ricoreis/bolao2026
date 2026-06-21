@@ -376,6 +376,8 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         //     btnSalvar.onclick = (e) => salvarAposta(jogo.id, cardElement, ehPaginaFinais);
         // }
 
+
+
         // --- Lógica de Pênaltis ---
         const containerPenaltis = card.querySelector('.container-penaltis');
         if (containerPenaltis && ehPaginaFinais && jogo.fase_id > 1) {
