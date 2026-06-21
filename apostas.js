@@ -474,10 +474,12 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
     // -----------------------
 
     if (agora + margemSeguranca >= dataJogo) {
+        console.log("agora + margemSeguranca >= dataJogo");
         congelarCard(cardElement, "O jogo começou! Aposta não permitida.");
         abrirModalMensagem("Atenção", "Ops! O jogo já começou ou acabou. Não é mais permitido alterar.");
         return;
     }
+    console.log("NAO!!! agora + margemSeguranca >= dataJogo");
 
     const inputA = cardElement.querySelector('.input-a');
     const inputB = cardElement.querySelector('.input-b');
