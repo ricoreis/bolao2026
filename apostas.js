@@ -302,8 +302,10 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                     statusBadge.innerText = "Aguardando definição de chaves";
                     btnVerApostas.classList.add("hidden");
                 }
-            } 
-            else {
+            }
+            // const confrontoDefinido = jogo.time_a && jogo.time_b;
+            // else if (!jogo.time_a || !jogo.time_b) {
+            else if (!confrontoDefinido) {
                 // Estado 3: Sem confronto definido (Aguardando chaves)
                 if (jogo.fase_id > 1) {
                     statusBadge.classList.remove("hidden");
