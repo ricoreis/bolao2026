@@ -463,20 +463,14 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
         .eq('id', jogoId)
         .single();
 
-    // Converta a data do banco para um timestamp UTC real
     const dataJogo = new Date(jogo.data_jogo).getTime();
-    // Pegue o tempo agora em UTC (o Date.now() é independente de fuso)
     const agora = Date.now();
-
-    // Adicione uma margem de segurança de 1 minuto para evitar erros de milissegundos
-    const margemSeguranca = 60 * 1000;
+    const margemSeguranca = 60 * 60 * 1000; // 60 minutos * 60 segundos * 1000ms
 
     // DEBUG CORRIGIDO
-    // console.log("--- DEBUG DE TEMPO ---");
-    // console.log("Data do Banco (Raw):", jogo.data_jogo);
-    // console.log("Data Jogo (Timestamp):", dataJogo);
-    // console.log("Agora (Timestamp):", agora);
-    // console.log("É maior ou igual (com margem)?", agora + margemSeguranca >= dataJogo);
+    console.log("Horário Local (Agora):", new Date(agora).toLocaleString());
+    console.log("Horário Jogo (Banco):", new Date(dataJogo).toLocaleString());
+    console.log("Diferença (segundos):", (dataJogo - agora) / 1000);
     // -----------------------
 
     if (agora + margemSeguranca >= dataJogo) {
