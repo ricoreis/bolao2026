@@ -267,8 +267,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
         const estaBloqueado = jogoOcorrido || faltamMenosDeUmaHora || !confrontoDefinido;
 
-        const estaBloqueado = jogoOcorrido || faltamMenosDeUmaHora || !confrontoDefinido;
-
         if (estaBloqueado) {
             // DESABILITA TUDO
             inputA.disabled = true; 
