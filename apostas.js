@@ -459,18 +459,16 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
     const { data: jogo } = await supabaseClient
         .from('jogos')
-        .select('data_jogo, gols_a, gols_b') // campo que indica se o jogo iniciou
+        .select('data_jogo, gols_a, gols_b')
         .eq('id', jogoId)
         .single();
 
-    // 2. Converta a data do jogo para comparar
     const dataJogo = new Date(jogo.data_jogo);
     const agora = new Date();
 
-    // 3. Verifica se já passou ou está muito próximo
     if (agora >= dataJogo) {
-        alert("Ops! O jogo já começou ou acabou. Não é mais permitido alterar.");
-        location.reload(); // Força o refresh para travar os campos
+        congelarCard(cardElement, "O jogo começou! Aposta não permitida.");
+        abrirModalMensagem("Atenção", "Ops! O jogo já começou ou acabou. Não é mais permitido alterar.");
         return;
     }
 
@@ -657,6 +655,40 @@ async function abrirModal(jogoId, nomeA, nomeB) {
     }
 }
 
+function abrirModalMensagem(titulo, texto) {
+    document.getElementById('modal-titulo').innerText = titulo;
+    document.getElementById('modal-texto').innerText = texto;
+    document.getElementById('modal-mensagem').classList.remove('hidden');
+}
+
+function congelarCard(card, mensagemStatus) {
+    const inputA = card.querySelector('.input-a');
+    const inputB = card.querySelector('.input-b');
+    const btnSalvar = card.querySelector('.btn-salvar');
+    const statusBadge = card.querySelector('.status-badge');
+    const definitivoA = card.querySelector('.definitivo-a');
+    const definitivoB = card.querySelector('.definitivo-b');
+
+    // Esconde inputs e mostra textos definitivos
+    inputA.classList.add('hidden');
+    inputB.classList.add('hidden');
+    definitivoA.classList.remove('hidden');
+    definitivoB.classList.remove('hidden');
+    
+    // Atualiza os valores dos definitivos
+    definitivoA.textContent = inputA.value;
+    definitivoB.textContent = inputB.value;
+    
+    // Esconde o botão salvar
+    btnSalvar.classList.add('hidden');
+    
+    // Mostra o badge de aviso
+    if (statusBadge) {
+        statusBadge.classList.remove('hidden');
+        statusBadge.innerText = mensagemStatus;
+    }
+}
+
 function fecharModal() {
     document.body.classList.remove('modal-aberto');
     document.getElementById('modal-apostas').classList.add('hidden');
@@ -730,3 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.getElementById('btn-fechar-modal').addEventListener('click', fecharModal);
 window.fecharModal = fecharModal;
+
+document.getElementById('btn-fechar-mensagem').addEventListener('click', () => {
+    document.getElementById('modal-mensagem').classList.add('hidden');
+});
