@@ -681,21 +681,27 @@ function congelarCard(card, mensagemStatus) {
     const statusBadge = card.querySelector('.status-badge');
     const definitivoA = card.querySelector('.definitivo-a');
     const definitivoB = card.querySelector('.definitivo-b');
+    // Adicione esta linha:
+    const containerPenaltis = card.querySelector('.container-penaltis');
 
-    // Esconde inputs e mostra textos definitivos
+    const valorA = inputA.dataset.valorOriginal || "";
+    const valorB = inputB.dataset.valorOriginal || "";
+
     inputA.classList.add('hidden');
     inputB.classList.add('hidden');
     definitivoA.classList.remove('hidden');
     definitivoB.classList.remove('hidden');
     
-    // Atualiza os valores dos definitivos
-    definitivoA.textContent = inputA.value;
-    definitivoB.textContent = inputB.value;
+    definitivoA.textContent = valorA;
+    definitivoB.textContent = valorB;
     
-    // Esconde o botão salvar
+    // Adicione esta lógica para os pênaltis:
+    if (containerPenaltis) {
+        containerPenaltis.classList.add('hidden');
+    }
+    
     btnSalvar.classList.add('hidden');
     
-    // Mostra o badge de aviso
     if (statusBadge) {
         statusBadge.classList.remove('hidden');
         statusBadge.innerText = mensagemStatus;
