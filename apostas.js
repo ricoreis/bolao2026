@@ -824,3 +824,7 @@ document.getElementById('btn-fechar-mensagem').addEventListener('click', () => {
     document.getElementById('modal-mensagem').classList.add('hidden');
     document.body.classList.remove('modal-aberto');
 });
+
+document.getElementById('btn-refresh').addEventListener('click', () => {
+    window.location.reload();
+});
