@@ -165,6 +165,9 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
         const card = template.content.cloneNode(true);
         const cardElement = card.querySelector('.card-jogo');
 
+        cardElement.dataset.dataJogo = jogo.data_jogo;
+        cardElement.dataset.jogoId = jogo.id;
+
         const dataLocal = new Date(jogo.data_jogo);
         const agora = new Date();
         const faltamMenosDeUmaHora = (dataLocal - agora) / (1000 * 60) < 60;
@@ -670,6 +673,36 @@ function abrirModalMensagem(titulo, texto) {
     document.getElementById('modal-mensagem').classList.remove('hidden');
     document.body.classList.add('modal-aberto');
 }
+
+function verificarCardsExpirados() {
+    const todosOsCards = document.querySelectorAll('.card-jogo'); 
+    const agora = Date.now();
+    const margemSeguranca = 60 * 60 * 1000; // 60 minutos
+
+    todosOsCards.forEach(card => {
+        // Pega a data que está no HTML do card
+        const dataJogoStr = card.dataset.dataJogo;
+        if (!dataJogoStr) return; // Se não tiver data, ignora
+
+        const dataJogo = new Date(dataJogoStr).getTime();
+
+        // Se o tempo passou e o card ainda tem o botão de salvar (significa que está aberto)
+        if (agora + margemSeguranca >= dataJogo) {
+            const btnSalvar = card.querySelector('.btn-salvar');
+            
+            // Só congela se ele ainda não estiver congelado (verifica se o btnSalvar ainda existe)
+            if (btnSalvar && !btnSalvar.classList.contains('hidden')) {
+                console.log("Auto-congelando card do jogo:", card.dataset.jogoId);
+                congelarCard(card, "Apostas Encerradas! Aguardando resultado");
+            }
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    verificarCardsExpirados();
+    setInterval(verificarCardsExpirados, 60000);
+});
 
 function congelarCard(card, mensagemStatus) {
     const inputA = card.querySelector('.input-a');
