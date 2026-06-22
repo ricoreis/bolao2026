@@ -475,8 +475,8 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
 
     if (agora + margemSeguranca >= dataJogo) {
         console.log("agora + margemSeguranca >= dataJogo");
-        congelarCard(cardElement, "O jogo começou! Aposta não permitida.");
-        abrirModalMensagem("Atenção", "Ops! O jogo já começou ou acabou. Não é mais permitido alterar.");
+        congelarCard(cardElement, "Apostas Encerradas! Aguardando resultado");
+        abrirModalMensagem("Atenção", "As apostas deste jogo estão encerradas.<br>Não dê mole nas próximas!");
         return;
     }
     console.log("NAO!!! agora + margemSeguranca >= dataJogo");
@@ -677,8 +677,9 @@ function congelarCard(card, mensagemStatus) {
     const statusBadge = card.querySelector('.status-badge');
     const definitivoA = card.querySelector('.definitivo-a');
     const definitivoB = card.querySelector('.definitivo-b');
-    // Adicione esta linha:
     const containerPenaltis = card.querySelector('.container-penaltis');
+
+    const btnVerApostas = card.querySelector('.ver-apostas');
 
     const valorA = inputA.dataset.valorOriginal || "";
     const valorB = inputB.dataset.valorOriginal || "";
@@ -687,11 +688,10 @@ function congelarCard(card, mensagemStatus) {
     inputB.classList.add('hidden');
     definitivoA.classList.remove('hidden');
     definitivoB.classList.remove('hidden');
-    
+
     definitivoA.textContent = valorA;
     definitivoB.textContent = valorB;
     
-    // Adicione esta lógica para os pênaltis:
     if (containerPenaltis) {
         containerPenaltis.classList.add('hidden');
     }
@@ -701,6 +701,10 @@ function congelarCard(card, mensagemStatus) {
     if (statusBadge) {
         statusBadge.classList.remove('hidden');
         statusBadge.innerText = mensagemStatus;
+    }
+
+    if (btnVerApostas) {
+        btnVerApostas.classList.remove('hidden');
     }
 }
 
