@@ -666,8 +666,9 @@ async function abrirModal(jogoId, nomeA, nomeB) {
 
 function abrirModalMensagem(titulo, texto) {
     document.getElementById('modal-titulo').innerText = titulo;
-    document.getElementById('modal-texto').innerText = texto;
+    document.getElementById('modal-texto').innerHTML = texto; 
     document.getElementById('modal-mensagem').classList.remove('hidden');
+    document.body.classList.add('modal-aberto');
 }
 
 function congelarCard(card, mensagemStatus) {
@@ -784,4 +785,5 @@ window.fecharModal = fecharModal;
 
 document.getElementById('btn-fechar-mensagem').addEventListener('click', () => {
     document.getElementById('modal-mensagem').classList.add('hidden');
+    document.body.classList.remove('modal-aberto');
 });
