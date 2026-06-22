@@ -739,6 +739,10 @@ function congelarCard(card, mensagemStatus) {
 
     if (btnVerApostas) {
         btnVerApostas.classList.remove('hidden');
+        const jogoId = card.dataset.jogoId;
+        const nomeTimeA = card.querySelector('.time-a').innerText;
+        const nomeTimeB = card.querySelector('.time-b').innerText;
+        btnVerApostas.onclick = () => abrirModal(jogoId, nomeTimeA, nomeTimeB);
     }
 }
 
