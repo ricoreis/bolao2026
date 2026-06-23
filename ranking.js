@@ -325,23 +325,6 @@ async function processarRanking(apostas, jogos, headers) {
                 //     }
                 // });
 
-                // ---------------------------------------------------------------------------
-
-                const acertou = (palpiteCamp === gabCamp && palpiteVice === gabVice);
-                const nomeCamp = paises.find(pais => pais.id === palpiteCamp)?.nome || "??";
-                const nomeVice = paises.find(pais => pais.id === palpiteVice)?.nome || "??";
-
-                usr['final_copa'] = `${acertou ? 'S' : 'N'} (${nomeCamp} x ${nomeVice})`;
-
-                if (acertou) {
-                    const regra = headers.find(h => h.nome_reduzido === 'FINAL');
-                    if (regra) {
-                        usr.pontos_totais += parseInt(regra.pontos || 0);
-                    } else {
-                        console.warn("Regra 'FINAL_COMPLETA' não encontrada nos headers!");
-                    }
-                }
-
                 // ----------------------------------------------------------------------
                 
                 // --- CAMPEAO CAINDO
@@ -436,20 +419,33 @@ async function processarRanking(apostas, jogos, headers) {
                     if (m.tipo === 'final') {
 
                         // --- FINAL DA COPA
-                        // --- TEMPORARIAMENTE FORA
-                        const palpiteCamp = p.campeao_id;
-                        const palpiteVice = p.vice_id;
-                        const gabCamp = gabaritoFinal.campeao_id;
-                        const gabVice = gabaritoFinal.vice_id;
+                        const palpiteCamp = parseInt(p.campeao_id);
+                        const palpiteVice = parseInt(p.vice_id);
+                        const gabCamp = parseInt(gabaritoFinal.campeao_id);
+                        const gabVice = parseInt(gabaritoFinal.vice_id);                   
 
-                        const acertou = (palpiteCamp == gabCamp && palpiteVice == gabVice);
+                        const acertouFinalistas = (palpiteCamp === gabCamp && palpiteVice === gabVice) || (palpiteCamp === gabVice && palpiteVice === gabCamp);
+
                         const nomeCamp = formatarValor(m.tabela, palpiteCamp, 'pais');
                         const nomeVice = formatarValor(m.tabela, palpiteVice, 'pais');
-                        
-                        usr[m.db] = `${acertou ? 'S' : 'N'} (${nomeCamp} x ${nomeVice})`;
-                        
-                        if (acertou) {
-                            usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
+
+                        const cor = acertouFinalistas ? "text-emerald-300" : "text-gray-400";
+                        const icone = acertouFinalistas 
+                            ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="${cor} text-lg"></iconify-icon>` 
+                            : `<iconify-icon icon="dashicons:no" class="${cor} text-lg"></iconify-icon>`;
+
+                        // <iconify-icon icon="mingcute:sandglass-line" class="text-gray-300/35 text-lg"></iconify-icon>
+
+                        usr[m.db] = `${icone} <span class="${cor}">${nomeCamp} x ${nomeVice}</span>`;
+
+                        if (acertouFinalistas) {
+                            const regraFinal = headers.find(h => h.nome_reduzido === 'FINAL'); 
+                            
+                            if (regraFinal) {
+                                usr.pontos_totais += parseInt(regraFinal.pontos || 0);
+                            } else {
+                                console.error("ERRO: Regra 'FINAL' não encontrada na tabela pontuacao!");
+                            }
                         }
 
                     } else {
@@ -474,6 +470,8 @@ async function processarRanking(apostas, jogos, headers) {
                             const icone = acertou 
                                 ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="${cor} text-lg"></iconify-icon>` 
                                 : `<iconify-icon icon="dashicons:no" class="${cor} text-lg"></iconify-icon>`;
+
+                            // <iconify-icon icon="mingcute:sandglass-line" class="text-gray-300/35 text-lg"></iconify-icon>
 
                             // Renderiza usando a mesma variável 'cor'
                             usr[m.db] = `${icone} <span class="text-xs ${cor} ml-1 whitespace-nowrap">${formatarValor(m.tabela, palpiteID, m.tipo)}</span>`;
