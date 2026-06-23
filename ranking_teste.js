@@ -265,7 +265,7 @@ async function processarRanking(apostas, jogos, headers) {
         const resG = await processarGrupos(usr.usuario_id, headers, 12);
 
         const iconeS = `<iconify-icon icon="material-symbols:check-circle-rounded" class="text-emerald-300 text-lg"></iconify-icon>`; 
-        const iconeN = `<iconify-icon icon="dashicons:no" class="text-red-400 text-lg"></iconify-icon>`; 
+        const iconeN = `<iconify-icon icon="dashicons:no" class="text-gray-300/35 text-lg"></iconify-icon>`; 
         const iconeP = `<iconify-icon icon="mingcute:sandglass-line" class="text-gray-300/35 text-lg"></iconify-icon>`; 
         const iconeHifen = `<span class="text-gray-500 text-lg font-bold">-</span>`;
 
