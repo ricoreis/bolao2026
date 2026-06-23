@@ -7,7 +7,7 @@ const btnsLogout = document.querySelectorAll('.btn-logout');
 
 const DB_CONFIG = {
     RESULTADOS: 'resultados_teste',
-    GRUPOS: 'grupos_teste',
+    GRUPOS: 'grupos',
     PAISES: 'paises',
     JOGADORES: 'jogadores',
     FASES: 'fases',
@@ -69,11 +69,11 @@ async function processarGrupos(usuarioId, regras, totalGrupos) {
     const { data: gabaritos } = await supabaseClient.from(DB_CONFIG.GRUPOS).select('*');
     const { data: palpiteDB } = await supabaseClient.from(DB_CONFIG.PALPITES).select('palpites_grupos').eq('usuario_id', usuarioId);
 
-    if (!gabaritos || !palpiteDB || palpiteDB.length === 0) return { total: 0, contagem: {1:0, 2:0, 3:0, 4:0, ALL1: 0, ALL2: 0, ALL3: 0, ALL4: 0, ALLG: 0, NULL1: true, NULL2: true, NULL3: true, NULL4: true} };
+    if (!gabaritos || !palpiteDB || palpiteDB.length === 0) return { total: 0, contagem: {1:0, 2:0, 3:0, 4:0, ALL1: 0, ALL2: 0, ALL3: 0, ALL4: 0, ALLG: 0} };
 
     const palpites = palpiteDB[0].palpites_grupos;
     let pontosGrupo = 0;
-    const contagem = { 1: 0, 2: 0, 3: 0, 4: 0, ALL1: 0, ALL2: 0, ALL3: 0, ALL4: 0, ALLG: 0, NULL1: true, NULL2: true, NULL3: true, NULL4: true };
+    const contagem = { 1: 0, 2: 0, 3: 0, 4: 0, ALL1: 0, ALL2: 0, ALL3: 0, ALL4: 0, ALLG: 0 };
     let gruposPerfeitos = 0;
 
     gabaritos.forEach(g => {
@@ -176,12 +176,13 @@ async function processarRanking(apostas, jogos, headers) {
     // });
 
     const [
-        { data: gabaritoBruto }, { data: paises }, { data: jogadores }, { data: fases }
+        { data: gabaritoBruto }, { data: paises }, { data: jogadores }, { data: fases }, { data: grupos },
     ] = await Promise.all([
         supabaseClient.from(DB_CONFIG.RESULTADOS).select('*').single(),
         supabaseClient.from(DB_CONFIG.PAISES).select('*'),
         supabaseClient.from(DB_CONFIG.JOGADORES).select('*'),
-        supabaseClient.from(DB_CONFIG.FASES).select('*')
+        supabaseClient.from(DB_CONFIG.FASES).select('*'),
+        supabaseClient.from(DB_CONFIG.GRUPOS).select('*')
     ]);
 
     const gabaritoFinal = sanitizarResultadoFinal(gabaritoBruto, jogos);
@@ -244,12 +245,28 @@ async function processarRanking(apostas, jogos, headers) {
 
     const usuarios = Object.values(rankingMap);
 
+    let algumGrupoIndefinido = false;
+    let gruposDefinidos = 0;
+
+    grupos.forEach(g => {
+        if (g.classificacao && typeof g.classificacao === 'object') {
+            const valores = Object.values(g.classificacao);
+            const temInvalido = valores.some(c => c === null || c === '');
+            if (temInvalido) {
+                algumGrupoIndefinido = true;
+            } else {
+                gruposDefinidos++;
+            }
+        }
+    });
+
     await Promise.all(usuarios.map(async (usr) => {
 
         const resG = await processarGrupos(usr.usuario_id, headers, 12);
 
         const iconeS = `<iconify-icon icon="material-symbols:check-circle-rounded" class="text-emerald-300 text-lg"></iconify-icon>`; 
-        const iconeN = `<iconify-icon icon="dashicons:no" class="text-gray-300/35 text-lg"></iconify-icon>`; 
+        const iconeN = `<iconify-icon icon="dashicons:no" class="text-red-400 text-lg"></iconify-icon>`; 
+        const iconeP = `<iconify-icon icon="mingcute:sandglass-line" class="text-gray-300/35 text-lg"></iconify-icon>`; 
         const iconeHifen = `<span class="text-gray-500 text-lg font-bold">-</span>`;
 
         usr.pontos_totais += resG.total;
@@ -257,11 +274,11 @@ async function processarRanking(apostas, jogos, headers) {
         usr['grupo_segundo'] = resG.contagem[2];
         usr['grupo_terceiro'] = resG.contagem[3];
         usr['grupo_quarto'] = resG.contagem[4];
-        
-        usr['grupo_todos_primeiros'] = resG.contagem.ALL1 ? iconeS : iconeN;
-        usr['grupo_todos_segundos'] = resG.contagem.ALL2 ? iconeS : iconeN;
-        usr['grupo_todos_terceiros'] = resG.contagem.ALL3 ? iconeS : iconeN;
-        usr['grupo_todos_quartos'] = resG.contagem.ALL4 ? iconeS : iconeN;
+
+        usr['grupo_todos_primeiros'] = gruposDefinidos - resG.contagem[1] > 0 ? iconeN : algumGrupoIndefinido ? iconeP : iconeS;
+        usr['grupo_todos_segundos'] = gruposDefinidos - resG.contagem[2] > 0 ? iconeN : algumGrupoIndefinido ? iconeP : iconeS;
+        usr['grupo_todos_terceiros'] = gruposDefinidos - resG.contagem[3] > 0 ? iconeN : algumGrupoIndefinido ? iconeP : iconeS;
+        usr['grupo_todos_quartos'] = gruposDefinidos - resG.contagem[4] > 0 ? iconeN : algumGrupoIndefinido ? iconeP : iconeS;
 
         usr['grupo_todos_exatos'] = resG.contagem.ALLG;
 

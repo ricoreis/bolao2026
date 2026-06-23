@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bolão 2026 - Ranking</title>
+    <title>Bolão 2026</title>
     <!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,13 +12,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    <link rel="apple-touch-icon" sizes="57x57" href="assets/icons/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="assets/icons/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="assets/icons/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="assets/icons/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="assets/icons/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="assets/icons/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="assets/icons/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="assets/icons/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="assets/icons/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="assets/icons/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="assets/icons/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="assets/icons/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
     <style>
         body { font-family: 'Quicksand', sans-serif; font-weight: 500; }
         h1,h2,h3 { font-family: 'Quicksand', sans-serif; font-weight: 300; }
         tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
         thead { border-spacing: 0; border-collapse: collapse; }
         thead th { background-clip: padding-box; }
-
         /* .col-pontuacao,  */
         /* .col-posicao,  */
         .col-placar_exato, 
@@ -33,22 +49,22 @@
         .col-brasil_fase_chega, 
         .col-brasil_gols_pro,
         .col-brasil_gols_contra,
-        .col-final_campeao,
-        .col-final_vice,
-        .col-final_terceiro,
-        .col-final_quarto,
-        /* .col-grupo_primeiro, */
-        /* .col-grupo_segundo, */
-        /* .col-grupo_terceiro, */
-        /* .col-grupo_quarto, */
-        /* .col-grupo_todos_primeiros, */
-        /* .col-grupo_todos_segundos, */
-        /* .col-grupo_todos_terceiros, */
-        /* .col-grupo_todos_quartos, */
-        /* .col-grupo_todos_exatos, */
+        /* .col-final_campeao, */
+        /* .col-final_vice, */
+        /* .col-final_terceiro, */
+        /* .col-final_quarto, */
+        .col-grupo_primeiro,
+        .col-grupo_segundo,
+        .col-grupo_terceiro,
+        .col-grupo_quarto,
+        .col-grupo_todos_primeiros,
+        .col-grupo_todos_segundos,
+        .col-grupo_todos_terceiros,
+        .col-grupo_todos_quartos,
+        .col-grupo_todos_exatos,
         .col-extra_pais_artilheiro,
-        .col-final_copa,
-        .col-final_pior,
+        /* .col-final_copa, */
+        /* .col-final_pior, */
         .col-extra_duelo,
         .col-placar_classificado_penaltis,
         .col-campeao_perde_grupos,
