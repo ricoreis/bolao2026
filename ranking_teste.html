@@ -35,48 +35,53 @@
         tbody tr:hover { background-color: rgba(255, 255, 255, 0.03); }
         thead { border-spacing: 0; border-collapse: collapse; }
         thead th { background-clip: padding-box; }
-        /* .col-pontuacao,  */
-        /* .col-posicao,  */
-        .col-placar_exato, 
-        .col-placar_saldo, 
-        .col-placar_vencedor, 
-        .col-placar_empate, 
-        .col-placar_exato_contrario, 
-        .col-placar_saldo_contrario, 
-        .col-placar_vencedor_contrario, 
-        .col-placar_gols, 
-        .col-brasil_primeiro_gol, 
-        .col-brasil_fase_chega, 
-        .col-brasil_gols_pro,
-        .col-brasil_gols_contra,
+
+        /* .col-placar_exato,  */
+        /* .col-placar_saldo,  */
+        /* .col-placar_vencedor,  */
+        /* .col-placar_empate,  */
+        /* .col-placar_exato_contrario,  */
+        /* .col-placar_saldo_contrario,  */
+        /* .col-placar_vencedor_contrario,  */
+        /* .col-placar_gols,  */
+
+        /* .col-brasil_primeiro_gol,  */
+        /* .col-brasil_fase_chega,  */
+        /* .col-brasil_gols_pro, */
+        /* .col-brasil_gols_contra, */
+        /* .col-extra_pais_artilheiro, */
+        /* .col-extra_duelo, */
+        /* .col-extra_total_gols, */
+        /* .col-placar_classificado_penaltis */
+
         /* .col-final_campeao, */
         /* .col-final_vice, */
         /* .col-final_terceiro, */
         /* .col-final_quarto, */
-        .col-grupo_primeiro,
-        .col-grupo_segundo,
-        .col-grupo_terceiro,
-        .col-grupo_quarto,
-        .col-grupo_todos_primeiros,
-        .col-grupo_todos_segundos,
-        .col-grupo_todos_terceiros,
-        .col-grupo_todos_quartos,
-        .col-grupo_todos_exatos,
-        .col-extra_pais_artilheiro,
         /* .col-final_copa, */
         /* .col-final_pior, */
-        .col-extra_duelo,
-        .col-placar_classificado_penaltis,
-        .col-campeao_perde_grupos,
-        .col-campeao_perde_16,
-        .col-campeao_perde_8,
-        .col-campeao_perde_4,
-        .col-campeao_perde_3,
-        .col-campeao_perde_final,
-        .col-extra_total_gols
-        {
+
+        /* .col-grupo_primeiro, */
+        /* .col-grupo_segundo, */
+        /* .col-grupo_terceiro, */
+        /* .col-grupo_quarto, */
+        /* .col-grupo_todos_primeiros, */
+        /* .col-grupo_todos_segundos, */
+        /* .col-grupo_todos_terceiros, */
+        /* .col-grupo_todos_quartos, */
+        /* .col-grupo_todos_exatos, */
+
+        /* .col-campeao_perde_grupos, */
+        /* .col-campeao_perde_16, */
+        /* .col-campeao_perde_8, */
+        /* .col-campeao_perde_4, */
+        /* .col-campeao_perde_3, */
+        /* .col-campeao_perde_final */
+        /* {
             display: none !important;
-        }
+        } */
+        .tab-hidden { display: none !important; }
+
         .scroll-custom::-webkit-scrollbar { width: 20px; height: 20px; }
         .scroll-custom::-webkit-scrollbar-track { background: #1f2937; }
         .scroll-custom::-webkit-scrollbar-thumb { background: #34d399; border: 5px solid #1f2937; border-radius: 12px; }
@@ -177,7 +182,7 @@
         </div>
     </nav>
 
-    <main class="max-w-none pt-36 md:pt-36 md:px-12 md:pb-12 h-full">
+    <main class="max-w-none pt-36 md:pt-36 md:px-12 pb-20 md:pb-28 h-full">
         <div id="participantes" class="flex p-12 hidden">
             <div id="container-participantes" class="grid grid-cols-3 w-full gap-6"></div>
         </div>
@@ -187,8 +192,8 @@
                         <thead class="sticky top-0 z-30 text-xs text-emerald-800 uppercase bg-gray-700">
                             <tr class="border-b border-gray-700">
                                 <th class="sticky min-w-[40px] max-w-[40px] w-[40px] left-0 md:min-w-[50px] md:max-w-[50px] md:w-[50px] md:left-0 z-20 bg-gray-700 text-emerald-400 px-1 md:px-4 text-center py-4 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)] col-posicao"></th>
-                                <th class="sticky min-w-[100px] max-w-[100px] w-[100px] left-[40px] md:min-w-[150px] md:max-w-[150px] md:w-[150px] md:left-[50px] z-20 bg-gray-700 text-emerald-400 px-1 md:px-4 py-4 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)] text-[10px] md:text-xs">Participantes</th>
-                                <th class="sticky min-w-[60px] max-w-[60px] w-[60px] left-[140px] md:min-w-[100px] md:max-w-[100px] md:w-[100px] md:left-[200px] z-20 bg-gray-700 text-emerald-400 px-1 md:px-4 py-4 text-center shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)] col-pontuacao">Pts</th>
+                                <th class="sticky min-w-[100px] max-w-[100px] w-[100px] left-[40px] md:min-w-[180px] md:max-w-[180px] md:w-[180px] md:left-[50px] z-20 bg-gray-700 text-emerald-400 px-1 md:px-4 py-4 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)] text-[10px] md:text-xs">Participantes</th>
+                                <th class="sticky min-w-[60px] max-w-[60px] w-[60px] left-[140px] md:min-w-[100px] md:max-w-[100px] md:w-[100px] md:left-[230px] z-20 bg-gray-700 text-emerald-400 px-1 md:px-4 py-4 text-center shadow-[2px_0_5px_-2px_rgba(0,0,0,0.5)] col-pontuacao">Pts</th>
                             </tr>
                         </thead>
                         <tbody id="container-ranking" class="divide-y divide-gray-700/50 text-sm">
@@ -198,6 +203,18 @@
             </div>
         </div>
     </main>
+
+    <div class="fixed bottom-0 left-0 w-full px-8 h-20 z-30 flex items-center bg-emerald-600">
+        <div class="mx-auto text-center">
+            <div class="flex flex-wrap justify-center w-full items-center border border-emerald-600 overflow-hidden rounded-full border-2" id="aba-selecao">
+                <button id="btn-PLACARES" class="btn-aba bg-emerald-400 pl-5 pr-3 py-1 h-12 flex items-center"><iconify-icon class="text-3xl text-white" icon="material-symbols:scoreboard"></iconify-icon></button>
+                <button id="btn-GRUPOS" class="btn-aba bg-emerald-700 px-3 py-1 h-12 flex items-center"><iconify-icon class="text-3xl text-white" icon="f7:sort-up"></iconify-icon></button>
+                <button id="btn-EXTRAS" class="btn-aba bg-emerald-700 px-3 py-1 h-12 flex items-center"><iconify-icon class="text-3xl text-white" icon="fa7-regular:soccer-ball"></iconify-icon></button>
+                <button id="btn-FINAL" class="btn-aba bg-emerald-700 px-3 py-1 h-12 flex items-center"><iconify-icon class="text-3xl text-white" icon="material-symbols:sports-score"></iconify-icon></button>
+                <button id="btn-FORA" class="btn-aba bg-emerald-700 pl-3 pr-5 py-1 h-12 flex items-center"><iconify-icon class="text-3xl text-white" icon="hugeicons:dead"></iconify-icon></button>
+            </div>
+        </div>
+    </div>
 
     <template id="template-participante">
         <div class="p-12 bg-gray-800 rounded-xl flex items-center justify-center border border-gray-700">
@@ -230,6 +247,6 @@
     </div> -->
 
     <script src="regras.js?v=1.0.1"></script>
-    <script type="module" src="ranking_teste.js?v=1.0.1"></script>
+    <script type="module" src="ranking_teste.js?v=202606231535"></script>
 </body>
 </html>

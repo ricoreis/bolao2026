@@ -46,6 +46,7 @@ async function carregarRanking() {
         const rankingFinal = await processarRanking(apostas, jogos, headers);
         
         renderizarTabela(rankingFinal, headers);
+        filtrarTab('PLACARES');
 
         if (loader) loader.classList.add('hidden');
         if (tabelaWrapper) tabelaWrapper.classList.remove('hidden');
@@ -324,56 +325,58 @@ async function processarRanking(apostas, jogos, headers) {
                 //         }
                 //     }
                 // });
+                // TEMPORARIAMENTE PENDENTE: PRECISA VER O CODIGO ACIMA
+                usr['placar_classificado_penaltis'] = iconeP;
 
                 // ----------------------------------------------------------------------
                 
                 // --- CAMPEAO CAINDO
                 // --- TEMPORARIAMENTE FORA
-                // const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
-                // colunas.forEach(c => usr[c] = '-'); 
+                const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
+                colunas.forEach(c => usr[c] = iconeP); 
 
-                // const pCamp = parseInt(p.campeao_id);
-                // const jogoFinal = jogos.find(j => parseInt(j.fase_id) === 7);
-                // const vencedorOficial = jogoFinal ? parseInt(jogoFinal.vencedor_final_id) : null;
+                const pCamp = parseInt(p.campeao_id);
+                const jogoFinal = jogos.find(j => parseInt(j.fase_id) === 7);
+                const vencedorOficial = jogoFinal ? parseInt(jogoFinal.vencedor_final_id) : null;
 
-                // if (pCamp > 0 && vencedorOficial > 0 && vencedorOficial !== null) {
+                if (pCamp > 0 && vencedorOficial > 0 && vencedorOficial !== null) {
 
-                //     const faseID = determinarFase(pCamp, jogos, fases);
-                //     const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
-                //     colunas.forEach(c => usr[c] = 'N1');
+                    const faseID = determinarFase(pCamp, jogos, fases);
+                    const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
+                    colunas.forEach(c => usr[c] = 'N1');
 
-                //     if (faseID === 1) usr["campeao_perde_grupos"] = 'S';
-                //     else if (faseID === 2) usr["campeao_perde_16"] = 'S';
-                //     else if (faseID === 3) usr["campeao_perde_8"] = 'S';
-                //     else if (faseID === 4) usr["campeao_perde_4"] = 'S';
-                //     else if (faseID === 5) usr["campeao_perde_3"] = 'S';
-                //     else if (faseID === 6) usr["campeao_perde_3"] = 'S';
-                //     else if (faseID === 7) {
-                //         if (vencedorOficial !== null && pCamp !== vencedorOficial) {
-                //             usr["campeao_perde_final"] = 'S';
-                //         } else {
-                //             usr["campeao_perde_final"] = 'N';
-                //         }
-                //     }
+                    if (faseID === 1) usr["campeao_perde_grupos"] = 'S';
+                    else if (faseID === 2) usr["campeao_perde_16"] = 'S';
+                    else if (faseID === 3) usr["campeao_perde_8"] = 'S';
+                    else if (faseID === 4) usr["campeao_perde_4"] = 'S';
+                    else if (faseID === 5) usr["campeao_perde_3"] = 'S';
+                    else if (faseID === 6) usr["campeao_perde_3"] = 'S';
+                    else if (faseID === 7) {
+                        if (vencedorOficial !== null && pCamp !== vencedorOficial) {
+                            usr["campeao_perde_final"] = 'S';
+                        } else {
+                            usr["campeao_perde_final"] = 'N';
+                        }
+                    }
 
-                //     const mapaRegras = [
-                //         { c: "campeao_perde_grupos", r: "CAMPGR" },
-                //         { c: "campeao_perde_16", r: "CAMP16" },
-                //         { c: "campeao_perde_8", r: "CAMP8" },
-                //         { c: "campeao_perde_4", r: "CAMP4" },
-                //         { c: "campeao_perde_3", r: "CAMP3" },
-                //         { c: "campeao_perde_final", r: "CAMPVICE" }
-                //     ];
+                    const mapaRegras = [
+                        { c: "campeao_perde_grupos", r: "CAMPGR" },
+                        { c: "campeao_perde_16", r: "CAMP16" },
+                        { c: "campeao_perde_8", r: "CAMP8" },
+                        { c: "campeao_perde_4", r: "CAMP4" },
+                        { c: "campeao_perde_3", r: "CAMP3" },
+                        { c: "campeao_perde_final", r: "CAMPVICE" }
+                    ];
 
-                //     mapaRegras.forEach(m => {
-                //         if (usr[m.c] === 'S') {
-                //             const regraObj = headers.find(h => h.nome_reduzido === m.r);
-                //             if (regraObj && regraObj.pontos) {
-                //                 usr.pontos_totais += parseInt(regraObj.pontos);
-                //             }
-                //         }
-                //     });
-                // }
+                    mapaRegras.forEach(m => {
+                        if (usr[m.c] === 'S') {
+                            const regraObj = headers.find(h => h.nome_reduzido === m.r);
+                            if (regraObj && regraObj.pontos) {
+                                usr.pontos_totais += parseInt(regraObj.pontos);
+                            }
+                        }
+                    });
+                }
 
                 // ----------------------------------------------------------------------
 
@@ -397,6 +400,8 @@ async function processarRanking(apostas, jogos, headers) {
                 // } else {
                 //     usr['extra_total_gols'] = `${palpiteGols} (Pendente)`;
                 // }
+                // TEMPORARIAMENTE PENDENTE: PRECISA VER O CODIGO ACIMA
+                usr['extra_total_gols'] = iconeP;
 
                 // ----------------------------------------------------------------------
 
@@ -414,7 +419,7 @@ async function processarRanking(apostas, jogos, headers) {
                     { db: 'extra_duelo', pal: 'duelo_gigantes', gab: 'duelo_gigantes', regra: 'CR7M10', tipo: 'bruto', tabela: null },
                     { db: 'final_copa', pal: 'final_custom', gab: 'final_custom', regra: 'FINAL_COMPLETA', tipo: 'final', tabela: paises }
                 ];
-
+                
                 mapaExtra.forEach(m => {
                     if (m.tipo === 'final') {
 
@@ -434,8 +439,6 @@ async function processarRanking(apostas, jogos, headers) {
                             ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="${cor} text-lg"></iconify-icon>` 
                             : `<iconify-icon icon="dashicons:no" class="${cor} text-lg"></iconify-icon>`;
 
-                        // <iconify-icon icon="mingcute:sandglass-line" class="text-gray-300/35 text-lg"></iconify-icon>
-
                         usr[m.db] = `${icone} <span class="${cor}">${nomeCamp} x ${nomeVice}</span>`;
 
                         if (acertouFinalistas) {
@@ -447,6 +450,7 @@ async function processarRanking(apostas, jogos, headers) {
                                 console.error("ERRO: Regra 'FINAL' não encontrada na tabela pontuacao!");
                             }
                         }
+                        usr[m.db] = iconeP;
 
                     } else {
                         // Lógica original para os outros campos...
@@ -471,8 +475,6 @@ async function processarRanking(apostas, jogos, headers) {
                                 ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="${cor} text-lg"></iconify-icon>` 
                                 : `<iconify-icon icon="dashicons:no" class="${cor} text-lg"></iconify-icon>`;
 
-                            // <iconify-icon icon="mingcute:sandglass-line" class="text-gray-300/35 text-lg"></iconify-icon>
-
                             // Renderiza usando a mesma variável 'cor'
                             usr[m.db] = `${icone} <span class="text-xs ${cor} ml-1 whitespace-nowrap">${formatarValor(m.tabela, palpiteID, m.tipo)}</span>`;
                             
@@ -480,7 +482,7 @@ async function processarRanking(apostas, jogos, headers) {
                                 usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
                             }
                         } else {
-                            usr[m.db] = "-";
+                            usr[m.db] = iconeP;
                         }
 
                     }
@@ -574,6 +576,7 @@ function renderizarTabela(dados, headers) {
         'final_pior',
         'final_copa',
         'extra_duelo',
+        'extra_pais_artilheiro',
     ];
 
     while (thead.children.length > 3) thead.removeChild(thead.lastChild);
@@ -690,6 +693,7 @@ function renderizarTabela(dados, headers) {
                     corBarra = "bg-emerald-600"; // 4 a 7
                 }
                 const porcentagem = Math.min((acertos / 12) * 100, 100);
+                const iconeP = `<iconify-icon icon="mingcute:sandglass-line" class="text-gray-300/35 text-lg"></iconify-icon>`; 
 
                 return `<td class="${classeColuna} px-4 py-3 text-center text-xs">
                     <div class="flex items-center justify-center gap-1 px-2">
@@ -697,7 +701,7 @@ function renderizarTabela(dados, headers) {
                             <!-- Aqui a classe é dinâmica -->
                             <div class="h-full ${corBarra} transition-all duration-500" style="width: ${porcentagem}%;"></div>
                         </div>
-                        <span class="text-xs font-medium w-4">${acertos}</span>
+                        <span class="text-xs font-medium w-4">${acertos > 0 ? acertos : iconeP}</span>
                     </div>
                 </td>`;
             }
@@ -707,13 +711,13 @@ function renderizarTabela(dados, headers) {
         }).join('');
 
         return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
-                <td class="sticky left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-1 md:px-4 py-3">
+                <td class="sticky min-w-[40px] max-w-[40px] w-[40px] left-0 md:min-w-[50px] md:max-w-[50px] md:w-[50px] md:left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-1 md:px-4 py-2 h-14">
                     ${posicao}º
                 </td>
-                <td class="sticky left-[40px] md:left-[50px] bg-gray-700 ${classeCor} px-1 md:px-4 py-3">
+                <td class="sticky min-w-[100px] max-w-[100px] w-[100px] left-[40px] md:min-w-[180px] md:max-w-[180px] md:w-[180px] md:left-[50px] bg-gray-700 ${classeCor} px-1 md:px-4 py-2">
                     ${usr.nome}
                 </td>
-                <td class="sticky left-[140px] md:left-[200px] text-center bg-gray-700 col-pontuacao font-bold px-1 md:px-4 py-3 ${classeCor}">
+                <td class="sticky min-w-[60px] max-w-[60px] w-[60px] left-[140px] md:min-w-[100px] md:max-w-[100px] md:w-[100px] md:left-[230px] text-center bg-gray-700 col-pontuacao font-bold px-1 md:px-4 py-2 ${classeCor}">
                     ${total ?? 0}
                 </td>
                 ${colunasDinamicas}
@@ -777,6 +781,70 @@ async function carregarTodasAsApostas() {
     }
     return todas;
 }
+
+const colunasPlacares = [
+    'placar_exato', 'placar_saldo', 'placar_vencedor', 'placar_empate',
+    'placar_exato_contrario', 'placar_saldo_contrario', 'placar_vencedor_contrario',
+    'placar_gols'
+];
+const colunasFinal = [
+    'final_campeao', 'final_vice', 'final_terceiro', 'final_quarto', 'final_copa', 'final_pior'
+];
+const colunasGrupos = [
+    'grupo_primeiro', 'grupo_segundo', 'grupo_terceiro', 'grupo_quarto',
+    'grupo_todos_primeiros', 'grupo_todos_segundos', 'grupo_todos_terceiros', 'grupo_todos_quartos',
+    'grupo_todos_exatos'
+];
+const colunasExtras = [
+    'brasil_primeiro_gol', 'brasil_fase_chega', 'brasil_gols_pro', 'brasil_gols_contra',
+    'extra_pais_artilheiro', 'extra_duelo', 'extra_total_gols', 'placar_classificado_penaltis',
+];
+const colunasFora = [
+    'campeao_perde_grupos', 'campeao_perde_16', 'campeao_perde_8', 'campeao_perde_4', 'campeao_perde_3', 'campeao_perde_final'
+];
+
+function filtrarTab(categoria) {
+    const botoes = document.querySelectorAll('.btn-aba');
+    botoes.forEach(btn => {
+        btn.classList.remove('bg-emerald-400');
+        btn.classList.add('bg-emerald-700');
+    });
+
+    const btnAtivo = document.getElementById(`btn-${categoria}`);
+    if (btnAtivo) {
+        btnAtivo.classList.remove('bg-emerald-700');
+        btnAtivo.classList.add('bg-emerald-400');
+    }
+
+    const todasColunas = [...colunasPlacares, ...colunasFinal, ...colunasGrupos, ...colunasExtras, ...colunasFora];
+    
+    // Esconde tudo
+    todasColunas.forEach(col => {
+        document.querySelectorAll(`.col-${col}`).forEach(el => el.classList.add('tab-hidden'));
+    });
+
+    // Mostra o selecionado
+    const mapas = {
+        'PLACARES': colunasPlacares, 'FINAL': colunasFinal,
+        'GRUPOS': colunasGrupos, 'EXTRAS': colunasExtras, 'FORA': colunasFora
+    };
+
+    if (mapas[categoria]) {
+        mapas[categoria].forEach(col => {
+            document.querySelectorAll(`.col-${col}`).forEach(el => el.classList.remove('tab-hidden'));
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const categorias = ['PLACARES', 'GRUPOS', 'FINAL', 'EXTRAS', 'FORA'];
+    categorias.forEach(cat => {
+        const btn = document.getElementById(`btn-${cat}`);
+        if (btn) {
+            btn.addEventListener('click', () => filtrarTab(cat));
+        }
+    });
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     carregarSaudacao();
