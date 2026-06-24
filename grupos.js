@@ -494,8 +494,13 @@ async function abrirModalClassificacao(grupo, titulo) {
                     const tr = document.createElement('tr');
                     tr.className = "border-b border-gray-800 hover:bg-gray-800/50";
                     tr.innerHTML = `
-                        <td class="py-3 px-4 ">${usuario.nome}</td> 
-                        <td class="py-3 px-4 text-right text-emerald-400">${ordem.join(' - ')}</td>
+                        <td class="py-3 px-4 ">
+                            <div>
+                                ${usuario.nome}
+                                <br>
+                                <span class="py-3 text-right text-emerald-400">${ordem.join(' - ')}</span>
+                            </div>
+                        </td> 
                     `;
                     lista.appendChild(tr);
                 }
