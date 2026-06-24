@@ -17,12 +17,12 @@ const STATUS_TRAVAS = {
     'vice_id': true,
     'terceiro_id': true,
     'quarto_id': true,
-    'pior_time_id': true,
-    'duelo_gigantes': true,
-    'artilheiro_pais_id': true,
-    'fase_brasil_id': true,  
-    'gols_feitos_brasil': true, 
-    'gols_sofridos_brasil': true
+    'pior_time_id': false,
+    'duelo_gigantes': false,
+    'artilheiro_pais_id': false,
+    'fase_brasil_id': false,  
+    'gols_feitos_brasil': false, 
+    'gols_sofridos_brasil': false
 };
 
 function showToast(mensagem) {
@@ -614,6 +614,7 @@ async function abrirModalCriterio(coluna, titulo, tipo) {
 
     tituloModal.innerText = titulo;
     document.body.classList.add('modal-aberto');
+    document.getElementById('modal-loader').classList.remove('hidden'); 
     document.getElementById('modal-apostas').classList.remove('hidden');
     lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
     
@@ -773,6 +774,7 @@ async function abrirModalCriterio(coluna, titulo, tipo) {
         }).join('');
     }
 
+    document.getElementById('modal-loader').classList.add('hidden');
 }
 
 async function abrirModalGols(coluna, titulo) {
@@ -784,6 +786,7 @@ async function abrirModalGols(coluna, titulo) {
     // 1. UI Inicial
     tituloModal.innerText = titulo;
     document.body.classList.add('modal-aberto');
+    document.getElementById('modal-loader').classList.remove('hidden'); 
     document.getElementById('modal-apostas').classList.remove('hidden');
     lista.innerHTML = '<tr><td class="p-4 text-center text-gray-400">Carregando...</td></tr>';
     containerMeuPalpite.classList.add('hidden');
@@ -859,6 +862,8 @@ async function abrirModalGols(coluna, titulo) {
             .map(d => gerarSecaoCriterio(d.valor, d.lista.map(n => ({ usuario: n }))))
             .join('');
     }
+
+    document.getElementById('modal-loader').classList.add('hidden');
 }
 
 function fecharModal() {

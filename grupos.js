@@ -15,10 +15,10 @@ function showToast(mensagem) {
 }
 
 const STATUS_TRAVAS = {
-    'A': true,
-    'B': true, 'C': true, 'D': true, 'E': true, 
-    'F': true, 'G': true, 'H': true, 'I': true, 
-    'J': true, 'K': true, 'L': true
+    'A': false,
+    'B': false, 'C': false, 'D': false, 'E': false, 
+    'F': false, 'G': false, 'H': false, 'I': false, 
+    'J': false, 'K': false, 'L': false
 };
 
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -347,8 +347,10 @@ function fecharModal() {
 
 async function abrirModalClassificacao(grupo, titulo) {
     document.body.classList.add('modal-aberto');
-
+    
+    document.getElementById('modal-loader').classList.remove('hidden'); 
     document.getElementById('modal-apostas').classList.remove('hidden');
+
     document.querySelector('#modal-apostas h3').textContent = titulo;
     const lista = document.getElementById('lista-apostas-modal');
 
@@ -481,6 +483,8 @@ async function abrirModalClassificacao(grupo, titulo) {
             el.style.backgroundColor = cores[i];
         }
     });
+
+    document.getElementById('modal-loader').classList.add('hidden');
 }
 
 function desenharBarra(canvas, stats, cores) {
