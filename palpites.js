@@ -111,41 +111,70 @@ function aplicarPenalidade(codigoRegra, nomeFase, faseId) {
 
 // --- FLUXO PRINCIPAL ---
 async function carregarDadosIniciais() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) { window.location.href = "index.html"; return; }
 
-    const [regras, gab, jogadores, fases, paises, userData, jogos] = await Promise.all([
-        supabaseClient.from('pontuacao').select('*'),
-        supabaseClient.from('resultados').select('*').eq('id', 1).single(),
-        supabaseClient.from('jogadores').select('id, nome, clube, posicao').order('nome'),
-        supabaseClient.from('fases').select('id, nome, codigo_regra').order('id'),
-        supabaseClient.from('paises').select('id, nome, elite').order('nome'),
-        supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single(),
-        supabaseClient.from('jogos').select('fase_id, time_a_id, time_b_id, vencedor_final_id')
-    ]);
+    const loader = document.getElementById('loader');
 
-    configRegras = regras.data || [];
-    gabaritoGlobal = gab.data;
-    listaFases = fases.data || [];
-    todosJogos = jogos.data || [];
-    
-    popularSelect('sel-fase', fases.data, (f) => f.nome);
-    // ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => popularSelect(id, paises.data, (p) => p.nome));
-    ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => {
-        popularSelectAgrupadoPaises(id, paises.data);
-    });
+    try {
 
-    popularSelect('sel-fase', fases.data, (f) => f.nome, 5);
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) { window.location.href = "index.html"; return; }
 
-    popularSelectAgrupado('sel-gol', jogadores.data);
-    
-    ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', validarSelecoesClassificacao);
-    });
+        const tempoMinimo = new Promise(resolve => setTimeout(resolve, 3000));
 
-    // configurarValidacaoSelecoes();
-    carregarPalpitesEComparar();
+        const [regras, gab, jogadores, fases, paises, userData, jogos] = await Promise.all([
+            supabaseClient.from('pontuacao').select('*'),
+            supabaseClient.from('resultados').select('*').eq('id', 1).single(),
+            supabaseClient.from('jogadores').select('id, nome, clube, posicao').order('nome'),
+            supabaseClient.from('fases').select('id, nome, codigo_regra').order('id'),
+            supabaseClient.from('paises').select('id, nome, elite').order('nome'),
+            supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single(),
+            supabaseClient.from('jogos').select('fase_id, time_a_id, time_b_id, vencedor_final_id'),
+            tempoMinimo
+        ]);
+
+        configRegras = regras.data || [];
+        gabaritoGlobal = gab.data;
+        listaFases = fases.data || [];
+        todosJogos = jogos.data || [];
+        
+        popularSelect('sel-fase', fases.data, (f) => f.nome);
+        // ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => popularSelect(id, paises.data, (p) => p.nome));
+        ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => {
+            popularSelectAgrupadoPaises(id, paises.data);
+        });
+
+        popularSelect('sel-fase', fases.data, (f) => f.nome, 5);
+
+        popularSelectAgrupado('sel-gol', jogadores.data);
+        
+        ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', validarSelecoesClassificacao);
+        });
+
+        // configurarValidacaoSelecoes();
+        carregarPalpitesEComparar();
+
+        if (loader) loader.classList.add('hidden');
+
+    } catch (error) {
+        
+        console.error("Erro ao carregar jogos:", error);
+        
+        // 4. Erro: mostra o feedback visual
+        if (loader) {
+            loader.innerHTML = `
+                <div class="text-center p-6">
+                    <iconify-icon class="text-5xl text-red-500" icon="material-symbols:error-outline"></iconify-icon>
+                    <p class="text-red-400 mt-4">Erro ao carregar jogos.</p>
+                    <button onclick="window.location.reload()" class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg text-sm">Tentar novamente</button>
+                </div>
+            `;
+        }
+
+    } finally {
+        if (loader) loader.classList.add('hidden');
+    }
 }
 
 function popularSelect(id, dados, formatter, idParaExcluir = null) {

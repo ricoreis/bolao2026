@@ -7,7 +7,7 @@ const btnsLogout = document.querySelectorAll('.btn-logout');
 
 const DB_CONFIG = {
     RESULTADOS: 'resultados_teste',
-    GRUPOS: 'grupos',
+    GRUPOS: 'grupos_teste',
     PAISES: 'paises',
     JOGADORES: 'jogadores',
     FASES: 'fases',

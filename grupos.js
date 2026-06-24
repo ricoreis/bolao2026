@@ -78,68 +78,96 @@ async function carregarEstrutura() {
 }
 
 async function carregarDados() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
+    const loader = document.getElementById('loader');
 
-    const [p, g, r] = await Promise.all([
-        supabaseClient.from('palpites').select('palpites_grupos').eq('usuario_id', user.id).single(),
-        supabaseClient.from('grupos').select('*'),
-        supabaseClient.from('pontuacao').select('*'),
-    ]);
+    try {
 
-    const TOTAL_GRUPOS = g.data ? g.data.length : 0;
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (!user) return;
 
-    document.querySelectorAll('.pontos-individuais').forEach(s => s.textContent = '');
+        const tempoMinimo = new Promise(resolve => setTimeout(resolve, 3000));
 
-    if (p.data?.palpites_grupos) {
-        Object.entries(p.data.palpites_grupos).forEach(([g, paises]) => {
-            Object.entries(paises).forEach(([pais, val]) => {
-                const el = document.querySelector(`.grp-input[data-grupo="${g}"][data-pais="${pais}"]`);
-                if (el) {
-                    el.value = val;
-                    
-                    // BUSCA PELO SPAN CORRETO (baseado na classe que definimos)
-                    const displaySpan = el.parentElement.querySelector('.grp-display');
-                    if (displaySpan) {
-                        displaySpan.textContent = val;
+        const [p, g, r] = await Promise.all([
+            supabaseClient.from('palpites').select('palpites_grupos').eq('usuario_id', user.id).single(),
+            supabaseClient.from('grupos').select('*'),
+            supabaseClient.from('pontuacao').select('*'),
+            tempoMinimo
+        ]);
+
+        const TOTAL_GRUPOS = g.data ? g.data.length : 0;
+
+        document.querySelectorAll('.pontos-individuais').forEach(s => s.textContent = '');
+
+        if (p.data?.palpites_grupos) {
+            Object.entries(p.data.palpites_grupos).forEach(([g, paises]) => {
+                Object.entries(paises).forEach(([pais, val]) => {
+                    const el = document.querySelector(`.grp-input[data-grupo="${g}"][data-pais="${pais}"]`);
+                    if (el) {
+                        el.value = val;
+                        
+                        // BUSCA PELO SPAN CORRETO (baseado na classe que definimos)
+                        const displaySpan = el.parentElement.querySelector('.grp-display');
+                        if (displaySpan) {
+                            displaySpan.textContent = val;
+                        }
                     }
-                }
+                });
             });
-        });
-    }
+        }
 
-    const contagemAcertos = { 1: 0, 2: 0, 3: 0, 4: 0 };
-    const gruposPerfeitos = [];
+        const contagemAcertos = { 1: 0, 2: 0, 3: 0, 4: 0 };
+        const gruposPerfeitos = [];
 
-    if (g.data) {
-        g.data.forEach(grupoDB => {
-            const card = document.getElementById(`card-grupo-${grupoDB.grupo}`);
-            if (!card) return;
+        if (g.data) {
+            g.data.forEach(grupoDB => {
+                const card = document.getElementById(`card-grupo-${grupoDB.grupo}`);
+                if (!card) return;
 
-            const gabarito = typeof grupoDB.classificacao === 'string' ? JSON.parse(grupoDB.classificacao) : grupoDB.classificacao;
-            const palpite = {};
-            card.querySelectorAll('.grp-input').forEach(i => palpite[i.dataset.pais] = parseInt(i.value) || 0);
+                const gabarito = typeof grupoDB.classificacao === 'string' ? JSON.parse(grupoDB.classificacao) : grupoDB.classificacao;
+                const palpite = {};
+                card.querySelectorAll('.grp-input').forEach(i => palpite[i.dataset.pais] = parseInt(i.value) || 0);
 
-            let acertosNoGrupo = 0;
-            Object.entries(palpite).forEach(([pais, pos]) => {
-                const inputEl = card.querySelector(`.grp-input[data-pais="${pais}"]`);
-                if (gabarito[pais] && pos === gabarito[pais]) {
-                    acertosNoGrupo++;
-                    inputEl.nextElementSibling.classList.remove("hidden");
-                    contagemAcertos[pos]++;
-                    const regra = r.data.find(reg => reg.nome_reduzido === `${pos}ºGRP`);
-                    if (inputEl) inputEl.nextElementSibling.textContent = `+${regra ? regra.pontos : 0}`;
-                }
+                let acertosNoGrupo = 0;
+                Object.entries(palpite).forEach(([pais, pos]) => {
+                    const inputEl = card.querySelector(`.grp-input[data-pais="${pais}"]`);
+                    if (gabarito[pais] && pos === gabarito[pais]) {
+                        acertosNoGrupo++;
+                        inputEl.nextElementSibling.classList.remove("hidden");
+                        contagemAcertos[pos]++;
+                        const regra = r.data.find(reg => reg.nome_reduzido === `${pos}ºGRP`);
+                        if (inputEl) inputEl.nextElementSibling.textContent = `+${regra ? regra.pontos : 0}`;
+                    }
+                });
+                if (acertosNoGrupo === 4) gruposPerfeitos.push(grupoDB.grupo);
             });
-            if (acertosNoGrupo === 4) gruposPerfeitos.push(grupoDB.grupo);
-        });
-    }
+        }
 
-    atualizarBoxBonus(contagemAcertos, gruposPerfeitos, r.data, TOTAL_GRUPOS);
+        atualizarBoxBonus(contagemAcertos, gruposPerfeitos, r.data, TOTAL_GRUPOS);
 
-    const btnSalvar = document.getElementById('btn-salvar');
-    if (btnSalvar && btnSalvar.disabled) {
-        alternarModoVisualizacao(true);
+        const btnSalvar = document.getElementById('btn-salvar');
+        if (btnSalvar && btnSalvar.disabled) {
+            alternarModoVisualizacao(true);
+        }
+
+        if (loader) loader.classList.add('hidden');
+
+    } catch (error) {
+        
+        console.error("Erro ao carregar jogos:", error);
+        
+        // 4. Erro: mostra o feedback visual
+        if (loader) {
+            loader.innerHTML = `
+                <div class="text-center p-6">
+                    <iconify-icon class="text-5xl text-red-500" icon="material-symbols:error-outline"></iconify-icon>
+                    <p class="text-red-400 mt-4">Erro ao carregar jogos.</p>
+                    <button onclick="window.location.reload()" class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg text-sm">Tentar novamente</button>
+                </div>
+            `;
+        }
+
+    } finally {
+        if (loader) loader.classList.add('hidden');
     }
 }
 

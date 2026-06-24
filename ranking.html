@@ -105,6 +105,15 @@
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans h-full">
 
+    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-gray-900 z-40">
+        <div class="flex flex-col items-center">
+            <div class="meu-pulso-lento">
+                <iconify-icon class="text-6xl text-emerald-500" icon="material-symbols:trophy"></iconify-icon>
+            </div>
+            <p class="text-emerald-500 mt-4 font-bold tracking-widest uppercase">Carregando Ranking...</p>
+        </div>
+    </div>
+
     <nav class="bg-gray-800 border-b border-gray-700 px-6 py-6 h-36 md:h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
         <div class="w-full sm:w-auto text-center sm:text-left">
             <div class="w-full sm:w-auto text-center sm:text-left flex justify-between">
@@ -222,15 +231,6 @@
             <span class="participante-nome uppercase text-2xl"></span>
         </div>
     </template>
-
-    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-gray-900 z-30">
-        <div class="flex flex-col items-center">
-            <div class="meu-pulso-lento">
-                <iconify-icon class="text-6xl text-emerald-500" icon="material-symbols:trophy"></iconify-icon>
-            </div>
-            <p class="text-emerald-500 mt-4 font-bold tracking-widest uppercase">Carregando Ranking...</p>
-        </div>
-    </div>
 
     <!-- <div class="fixed inset-0 flex items-center justify-center bg-gray-900 z-40">
         <div class="flex flex-col items-center">

@@ -49,6 +49,15 @@
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
 
+    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-gray-900 z-30">
+        <div class="flex flex-col items-center">
+            <div class="meu-pulso-lento">
+                <iconify-icon class="text-6xl text-emerald-500" icon="lucide-lab:soccer-pitch"></iconify-icon>
+            </div>
+            <p class="text-emerald-500 mt-4 font-bold tracking-widest uppercase">Carregando Jogos...</p>
+        </div>
+    </div>
+
     <nav class="bg-gray-800 border-b border-gray-700 px-6 py-6 h-36 md:h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
         <div class="w-full sm:w-auto text-center sm:text-left">
             <div class="w-full sm:w-auto text-center sm:text-left flex justify-between">
@@ -250,15 +259,6 @@
             <button id="btn-fechar-mensagem" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-lg transition-colors">
                 Beleza!
             </button>
-        </div>
-    </div>
-
-    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-gray-900 z-30">
-        <div class="flex flex-col items-center">
-            <div class="meu-pulso-lento">
-                <iconify-icon class="text-6xl text-emerald-500" icon="lucide-lab:soccer-pitch"></iconify-icon>
-            </div>
-            <p class="text-emerald-500 mt-4 font-bold tracking-widest uppercase">Carregando Jogos...</p>
         </div>
     </div>
 

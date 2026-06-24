@@ -39,9 +39,24 @@
         .scroll-custom::-webkit-scrollbar-thumb:hover { background: #10b981; border: 4px solid #1f2937; }
         .scroll-custom { scrollbar-width: thin; scrollbar-color: #34d399 #1f2937; }
         .modal-aberto { overflow: hidden; height: 100vh; }
+        @keyframes pulso {
+            0%, 100% { transform: scale(0.9); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        .meu-pulso-lento { display: inline-block; animation: pulso 2s ease-in-out infinite; }
+        .modal-aberto { overflow: hidden; height: 100vh; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
+
+    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-gray-900 z-40">
+        <div class="flex flex-col items-center">
+            <div class="meu-pulso-lento">
+                <iconify-icon class="text-6xl text-emerald-500" icon="mynaui:list-number"></iconify-icon>
+            </div>
+            <p class="text-emerald-500 mt-4 font-bold tracking-widest uppercase">Carregando Classificação...</p>
+        </div>
+    </div>
 
     <nav class="bg-gray-800 border-b border-gray-700 px-6 py-6 h-36 md:h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
         <div class="w-full sm:w-auto text-center sm:text-left">
@@ -155,7 +170,7 @@
 
             <div id="container-grupos" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
-            <div id="container-controle-apostas" class="fixed bottom-0 left-0 w-full px-8 py-4 bg-gray-900/85 border-t border-gray-700 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-50 hidden">
+            <div id="container-controle-apostas" class="fixed bottom-0 left-0 w-full px-8 py-4 bg-gray-900/85 border-t border-gray-700 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-30 hidden">
                 <div class="mx-auto text-center">
                     <button id="btn-salvar" class="w-full max-w-md px-8 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition shadow-lg">
                         Salvar
@@ -258,15 +273,6 @@
             </div>
         </div>
     </div>
-
-    <!-- <div id="loader" class="fixed inset-0 flex items-center justify-center bg-gray-900 z-30">
-        <div class="flex flex-col items-center">
-            <div class="meu-pulso-lento">
-                <iconify-icon class="text-6xl text-emerald-500" icon="lucide-lab:soccer-pitch"></iconify-icon>
-            </div>
-            <p class="text-emerald-500 mt-4 font-bold tracking-widest uppercase">Carregando Jogos...</p>
-        </div>
-    </div> -->
 
     <div id="toast" class="fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"></div>
     <script type="module" src="grupos.js?v=202606240820"></script>
