@@ -266,7 +266,7 @@ async function processarRanking(apostas, jogos, headers) {
         const resG = await processarGrupos(usr.usuario_id, headers, 12);
 
         const iconeS = `<iconify-icon icon="material-symbols:check-circle-rounded" class="text-emerald-300 text-lg"></iconify-icon>`; 
-        const iconeN = `<iconify-icon icon="dashicons:no" class="text-gray-300/35 text-lg"></iconify-icon>`; 
+        const iconeN = `<iconify-icon icon="dashicons:no" class="text-red-500/80 text-lg"></iconify-icon>`; 
         const iconeP = `<iconify-icon icon="mingcute:sandglass-line" class="text-gray-300/35 text-lg"></iconify-icon>`; 
         const iconeHifen = `<span class="text-gray-500 text-lg font-bold">-</span>`;
 
@@ -436,7 +436,7 @@ async function processarRanking(apostas, jogos, headers) {
 
                         const cor = acertouFinalistas ? "text-emerald-300" : "text-gray-400";
                         const icone = acertouFinalistas 
-                            ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="${cor} text-lg"></iconify-icon>` 
+                            ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="text-red-500/80 text-lg"></iconify-icon>` 
                             : `<iconify-icon icon="dashicons:no" class="${cor} text-lg"></iconify-icon>`;
 
                         usr[m.db] = `${icone} <span class="${cor}">${nomeCamp} x ${nomeVice}</span>`;
@@ -473,7 +473,7 @@ async function processarRanking(apostas, jogos, headers) {
                             // Aplica a cor tanto no ícone quanto no texto
                             const icone = acertou 
                                 ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="${cor} text-lg"></iconify-icon>` 
-                                : `<iconify-icon icon="dashicons:no" class="${cor} text-lg"></iconify-icon>`;
+                                : `<iconify-icon icon="dashicons:no" class="text-red-500/80 text-lg"></iconify-icon>`;
 
                             // Renderiza usando a mesma variável 'cor'
                             usr[m.db] = `${icone} <span class="text-xs ${cor} ml-1 whitespace-nowrap">${formatarValor(m.tabela, palpiteID, m.tipo)}</span>`;
