@@ -89,7 +89,7 @@ async function carregarDados() {
 
         const [p, g, r] = await Promise.all([
             supabaseClient.from('palpites').select('palpites_grupos').eq('usuario_id', user.id).single(),
-            supabaseClient.from('grupos').select('*'),
+            supabaseClient.from('grupos_teste').select('*'),
             supabaseClient.from('pontuacao').select('*'),
             tempoMinimo
         ]);
