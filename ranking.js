@@ -737,18 +737,22 @@ function renderizarTabela(dados, headers) {
 
         let classeCor = "";
         let corPosicao = "text-emerald-400";
+        let corLabel = "text-white";
         let iconPodio = "";
 
         if (usr.posicao === 1) {
             classeCor = "bg-yellow-500";
-            corPosicao = "text-yellow-400";
+            corPosicao = "text-yellow-200";
+            corLabel = "text-yellow-200";
             iconPodio = ' <iconify-icon icon="emojione:trophy"></iconify-icon>';
         } else if (usr.posicao === 2) {
             classeCor = "bg-gray-400";
-            corPosicao = "text-gray-300";
+            corPosicao = "text-gray-200";
+            corLabel = "text-gray-200";
         } else if (usr.posicao === 3) {
             classeCor = "bg-amber-800";
             corPosicao = "text-orange-400";
+            corLabel = "text-orange-400";
         }
 
         const colunasDinamicas = headersComFinal.map(h => {
@@ -800,13 +804,16 @@ function renderizarTabela(dados, headers) {
         }).join('');
 
         return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
-                <td class="sticky min-w-[40px] max-w-[40px] w-[40px] left-0 md:min-w-[50px] md:max-w-[50px] md:w-[50px] md:left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-1 md:px-4 py-2 h-14">
+                <td class="sticky min-w-[40px] max-w-[40px] w-[40px] left-0 md:min-w-[50px] md:max-w-[50px] md:w-[50px] md:left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-1 md:px-4 py-2 hidden md:table-cell">
                     ${posicao}º
                 </td>
-                <td class="sticky min-w-[100px] max-w-[100px] w-[100px] left-[40px] md:min-w-[180px] md:max-w-[180px] md:w-[180px] md:left-[50px] bg-gray-700 ${classeCor} px-1 md:px-4 py-2">
-                    ${usr.nome}
+                <td class="sticky min-w-[100px] max-w-[100px] w-[100px] left-0 md:min-w-[180px] md:max-w-[180px] md:w-[180px] md:left-[50px] bg-gray-700 ${classeCor} pl-3 pr-1 md:px-4 py-2">
+                    <span class="flex flex-col justify-center min-h-14 md:min-h-10">
+                        <span class="${corPosicao} text-[10px] block md:hidden">${posicao}º</span>
+                        <span class="${corLabel} text-left">${usr.nome}</span>
+                    <span>
                 </td>
-                <td class="sticky min-w-[60px] max-w-[60px] w-[60px] left-[140px] md:min-w-[100px] md:max-w-[100px] md:w-[100px] md:left-[230px] text-center bg-gray-700 col-pontuacao font-bold px-1 md:px-4 py-2 ${classeCor}">
+                <td class="sticky min-w-[50px] max-w-[50px] w-[50px] left-[100px] md:min-w-[100px] md:max-w-[100px] md:w-[100px] md:left-[230px] text-center bg-gray-700 col-pontuacao font-bold px-1 md:px-4 py-2 ${corPosicao} ${classeCor}">
                     ${total ?? 0}
                 </td>
                 ${colunasDinamicas}
