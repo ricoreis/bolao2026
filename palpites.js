@@ -13,10 +13,10 @@ let gabaritoGlobal = null;
 
 const STATUS_TRAVAS = {
     'primeiro_gol_brasil_id': false,
-    'campeao_id': true,
-    'vice_id': true,
-    'terceiro_id': true,
-    'quarto_id': true,
+    'campeao_id': false,
+    'vice_id': false,
+    'terceiro_id': false,
+    'quarto_id': false,
     'pior_time_id': false,
     'duelo_gigantes': false,
     'artilheiro_pais_id': false,
