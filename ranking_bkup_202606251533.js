@@ -6,17 +6,16 @@ document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
 
 const DB_CONFIG = {
-    RESULTADOS: 'resultados_teste',
-    GRUPOS: 'grupos_teste',
+    RESULTADOS: 'resultados',
+    GRUPOS: 'grupos',
     PAISES: 'paises',
     JOGADORES: 'jogadores',
     FASES: 'fases',
     APOSTAS: 'apostas',
     PONTUACAO: 'pontuacao',
-    JOGOS: 'jogos',
-    USUARIOS: 'usuarios',
-    PALPITES: 'palpites',
-    PARCIAIS: 'parciais'
+	JOGOS: 'jogos',
+	USUARIOS: 'usuarios',
+	PALPITES: 'palpites'
 };
 
 async function carregarRanking() {
@@ -137,7 +136,6 @@ async function processarParticipantes(usuarios) {
 async function processarRanking(apostas, jogos, headers) {
 
     const rankingMap = {};
-    const statusPaises = await obterStatusDosPaises();
 
     const { data: todosUsuarios } = await supabaseClient.from(DB_CONFIG.USUARIOS).select('*');
     // 1. Inicializa o map com TODOS os usuários (os 33)
@@ -178,29 +176,15 @@ async function processarRanking(apostas, jogos, headers) {
     //     });
     // });
 
-    // 1. Remova o DB_CONFIG.TEMPORARIOS daqui. 
-    // O Supabase não vai ser chamado para essa tabela, então o erro 401 morre aqui.
     const [
-        { data: gabaritoBruto }, 
-        { data: paises }, 
-        { data: jogadores }, 
-        { data: fases }, 
-        { data: grupos },
-        { data: temporarios }
+        { data: gabaritoBruto }, { data: paises }, { data: jogadores }, { data: fases }, { data: grupos },
     ] = await Promise.all([
         supabaseClient.from(DB_CONFIG.RESULTADOS).select('*').single(),
         supabaseClient.from(DB_CONFIG.PAISES).select('*'),
         supabaseClient.from(DB_CONFIG.JOGADORES).select('*'),
         supabaseClient.from(DB_CONFIG.FASES).select('*'),
-        supabaseClient.from(DB_CONFIG.GRUPOS).select('*'),
-        supabaseClient
-            .from(DB_CONFIG.PARCIAIS)
-            .select('id, fase_brasil_id, gols_feitos_brasil, gols_sofridos_brasil')
-            .eq('id', 1)
-            .single()
+        supabaseClient.from(DB_CONFIG.GRUPOS).select('*')
     ]);
-
-    // console.log("DADOS DO TEMPORARIOS (FIXO):", temporarios);
 
     const gabaritoFinal = sanitizarResultadoFinal(gabaritoBruto, jogos);
 
@@ -436,96 +420,42 @@ async function processarRanking(apostas, jogos, headers) {
                     { db: 'final_copa', pal: 'final_custom', gab: 'final_custom', regra: 'FINAL_COMPLETA', tipo: 'final', tabela: paises }
                 ];
                 
-                // console.log("CHAVES DO OBJETO TEMPORARIOS:", Object.keys(temporarios));
                 mapaExtra.forEach(m => {
                     if (m.tipo === 'final') {
-                        // 1. Definições Iniciais
+
+                        // --- FINAL DA COPA
                         const palpiteCamp = parseInt(p.campeao_id);
                         const palpiteVice = parseInt(p.vice_id);
                         const gabCamp = parseInt(gabaritoFinal.campeao_id);
-                        const gabVice = parseInt(gabaritoFinal.vice_id);
+                        const gabVice = parseInt(gabaritoFinal.vice_id);                   
 
-                        // 2. Verificar se a aposta ainda é possível
-                        // Um time está eliminado se estiver na lista 'statusPaises.eliminados'
-                        const campEliminado = statusPaises.eliminados.includes(palpiteCamp);
-                        const viceEliminado = statusPaises.eliminados.includes(palpiteVice);
-                        const apostaImpossivel = campEliminado || viceEliminado;
+                        const acertouFinalistas = (palpiteCamp === gabCamp && palpiteVice === gabVice) || (palpiteCamp === gabVice && palpiteVice === gabCamp);
 
-                        // 3. Verificar resultado oficial (se o jogo já ocorreu)
-                        const gabaritoDefinido = (gabCamp > 0 && gabVice > 0);
-                        const acertouFinalistas = gabaritoDefinido && 
-                            ((palpiteCamp === gabCamp && palpiteVice === gabVice) || (palpiteCamp === gabVice && palpiteVice === gabCamp));
-
-                        // 4. Renderização
                         const nomeCamp = formatarValor(m.tabela, palpiteCamp, 'pais');
                         const nomeVice = formatarValor(m.tabela, palpiteVice, 'pais');
 
-                        if (gabaritoDefinido) {
-                            // Se o jogo já aconteceu, mostra acerto ou erro
-                            const cor = acertouFinalistas ? "text-emerald-300" : "text-red-500/80";
-                            const icone = acertouFinalistas ? iconeS : iconeN;
-                            usr[m.db] = `${icone} <span class="${cor} whitespace-nowrap">${nomeCamp} x ${nomeVice}</span>`;
+                        const cor = acertouFinalistas ? "text-emerald-300" : "text-gray-400";
+                        const icone = acertouFinalistas 
+                            ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="text-red-500/80 text-lg"></iconify-icon>` 
+                            : `<iconify-icon icon="dashicons:no" class="${cor} text-lg"></iconify-icon>`;
+
+                        usr[m.db] = `${icone} <span class="${cor}">${nomeCamp} x ${nomeVice}</span>`;
+
+                        if (acertouFinalistas) {
+                            const regraFinal = headers.find(h => h.nome_reduzido === 'FINAL'); 
                             
-                            if (acertouFinalistas) {
-                                const regraFinal = headers.find(h => h.nome_reduzido === 'FINAL');
-                                usr.pontos_totais += parseInt(regraFinal?.pontos || 0);
+                            if (regraFinal) {
+                                usr.pontos_totais += parseInt(regraFinal.pontos || 0);
+                            } else {
+                                console.error("ERRO: Regra 'FINAL' não encontrada na tabela pontuacao!");
                             }
-                        } else if (apostaImpossivel) {
-                            // Se não aconteceu, mas já sabemos que um dos dois caiu -> Marca como erro (iconeN)
-                            usr[m.db] = `${iconeN} <span class="text-red-500/80 whitespace-nowrap">${nomeCamp} x ${nomeVice}</span>`;
-                        } else {
-                            // Se ainda é possível, mostra o palpite de forma neutra
-                            usr[m.db] = `${iconeP} <span class="text-xs text-gray-300/35 whitespace-nowrap">${nomeCamp} x ${nomeVice}</span>`;
                         }
-                    }
-                    else if (m.db === 'brasil_fase_chega' || m.db === 'brasil_gols_pro' || m.db === 'brasil_gols_contra') {
-                        const palpiteVal = p[m.pal];
-                        const gabaritoVal = gabaritoFinal[m.gab];
-                        
-                        // 1. Converter tudo para número para comparação segura
-                        const pVal = parseInt(palpiteVal || 0);
-                        const rVal = parseInt(
-                            m.db === 'brasil_gols_pro' ? (temporarios?.gols_feitos_brasil || 0) : 
-                            m.db === 'brasil_gols_contra' ? (temporarios?.gols_sofridos_brasil || 0) : 
-                            (temporarios?.fase_brasil_id || 0)
-                        );
+                        usr[m.db] = iconeP;
 
-                        // 2. Usar o formatarValor para nomes de fases (se for BRFASE)
-                        // Se o tipo for fase, ele busca o nome na tabela 'fases'
-                        const textoExibicao = (m.db === 'brasil_fase_chega') ? formatarValor(fases, pVal, 'fase') : pVal;
-                        
-                        // console.log(`DEBUG: ${m.db} | Palpite: ${pVal} | Real: ${rVal}`);
-                        // 3. Lógica de Status
-                        let status = 'PENDENTE';
-                        
-                        if (gabaritoVal != null && gabaritoVal !== '') {
-                            status = (String(pVal) === String(gabaritoVal)) ? 'ACERTOU' : 'ERROU';
-                        } 
-                        // Regra de Extravasamento (Aqui está o segredo para a Lara)
-                        else if (pVal < rVal) { 
-                            status = 'ERROU';
-                        }
-
-                        // 4. Renderização
-                        if (status === 'PENDENTE') {
-                            usr[m.db] = `${iconeP} <span class="text-xs text-gray-300/35 ml-1 whitespace-nowrap">${textoExibicao}</span>`;
-                        } else {
-                            const cor = (status === 'ACERTOU') ? "text-emerald-300" : "text-red-500/80";
-                            usr[m.db] = `${(status === 'ACERTOU') ? iconeS : iconeN} <span class="text-xs ${cor} ml-1 whitespace-nowrap">${textoExibicao}</span>`;
-                        }
-                    }
-                    else {
+                    } else {
                         // Lógica original para os outros campos...
                         const palpiteID = p[m.pal];
                         const gabaritoID = gabaritoFinal[m.gab];
-                        
-                        const nomePais = formatarValor(m.tabela, palpiteID, m.tipo);
-                        const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
-
-                        const colunasEliminaveis = ['final_campeao', 'final_vice', 'final_terceiro', 'final_quarto', 'final_pior'];
-                        const isEliminado = (m.tipo === 'pais' && palpiteID && statusPaises.eliminados.includes(parseInt(palpiteID)));
-
-                        let status = 'PENDENTE';
 
                         if (m.db === 'extra_duelo') {
                             const valoresValidos = ['CR7', 'MESSI', 'EMPATE'];
@@ -534,41 +464,25 @@ async function processarRanking(apostas, jogos, headers) {
                                 return;
                             }
                         }
-
-                        const safeTemporarios = temporarios || { fase_brasil_id: 0, gols_feitos_brasil: 0, gols_sofridos_brasil: 0 };
-
-                        // 1. LÓGICA DE STATUS
-                            if (m.db === 'final_pior') {
-                                if (!statusPaises.possiveisPior.includes(parseInt(palpiteID))) status = 'ERROU';
-                                else if (gabaritoID != null && gabaritoID !== '') status = acertou ? 'ACERTOU' : 'ERROU';
-                            } 
-                            else if (colunasEliminaveis.includes(m.db)) {
-                                // Regra específica para CAMP, VICE, TERC, QUAR
-                                if (isEliminado) status = 'ERROU';
-                                else if (gabaritoID != null && gabaritoID !== '') status = acertou ? 'ACERTOU' : 'ERROU';
-                            }
-                            else {
-                                // Regra geral (Artilheiro, Brasil, etc - IGNORES isEliminado)
-                                if (gabaritoID != null && gabaritoID !== '' && String(gabaritoID).trim() !== '') {
-                                    status = acertou ? 'ACERTOU' : 'ERROU';
-                                }
-                            }
-
-                        // 2. RENDERIZAÇÃO (Única para todos)
-                        if (status === 'PENDENTE') {
-                            usr[m.db] = `${iconeP} <span class="text-xs text-gray-300/35 ml-1 whitespace-nowrap">${nomePais}</span>`;
-                        } else {
-                            const isAcerto = (status === 'ACERTOU');
-                            const cor = isAcerto ? "text-emerald-300" : "text-red-500/80"; // Vermelho para erro
-                            const icone = isAcerto 
+                        if (gabaritoID !== null && gabaritoID !== undefined && String(gabaritoID).trim() !== '') {
+                            const acertou = (palpiteID != null && String(palpiteID) === String(gabaritoID));
+                            
+                            // Define a cor baseada no resultado
+                            const cor = acertou ? "text-emerald-300" : "text-gray-300/35";
+                            
+                            // Aplica a cor tanto no ícone quanto no texto
+                            const icone = acertou 
                                 ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="${cor} text-lg"></iconify-icon>` 
-                                : `<iconify-icon icon="dashicons:no" class="${cor} text-lg"></iconify-icon>`;
+                                : `<iconify-icon icon="dashicons:no" class="text-red-500/80 text-lg"></iconify-icon>`;
+
+                            // Renderiza usando a mesma variável 'cor'
+                            usr[m.db] = `${icone} <span class="text-xs ${cor} ml-1 whitespace-nowrap">${formatarValor(m.tabela, palpiteID, m.tipo)}</span>`;
                             
-                            usr[m.db] = `${icone} <span class="text-xs ${cor} ml-1 whitespace-nowrap">${nomePais}</span>`;
-                            
-                            if (isAcerto) {
+                            if (acertou) {
                                 usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
                             }
+                        } else {
+                            usr[m.db] = iconeP;
                         }
 
                     }
@@ -654,9 +568,6 @@ function renderizarTabela(dados, headers) {
 
     const colunasComIcones = [
         'brasil_primeiro_gol',
-        'brasil_fase_chega',
-        'brasil_gols_pro',
-        'brasil_gols_contra',
         'final_campeao',
         'final_vice',
         'final_terceiro',
@@ -838,22 +749,6 @@ function determinarFase(timeId, jogos, fases) {
     const faseMax = Math.max(...jogosTime.map(j => parseInt(j.fase_id || 0)));
     // console.log(`DEBUG FASE: Time ${timeId} | Fase Máxima encontrada: ${faseMax}`); // Log crítico
     return faseMax;
-}
-
-async function obterStatusDosPaises() {
-    const { data, error } = await supabaseClient
-        .from('eliminacao')
-        .select('pais_id, eliminado, possivel_pior');
-    
-    if (error) {
-        console.error("Erro ao buscar status:", error);
-        return { eliminados: [], possiveisPior: [] };
-    }
-
-    return {
-        eliminados: data.filter(i => i.eliminado).map(i => parseInt(i.pais_id)),
-        possiveisPior: data.filter(i => i.possivel_pior).map(i => parseInt(i.pais_id))
-    };
 }
 
 function sanitizarResultadoFinal(resultado, jogos) {
