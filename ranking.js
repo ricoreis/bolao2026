@@ -515,6 +515,38 @@ async function processarRanking(apostas, jogos, headers) {
                         }
                     }
                     else {
+
+                        if (m.db === 'extra_pais_artilheiro') {
+                            const palpiteID = parseInt(p[m.pal]);
+                            const gabaritoBruto = gabaritoFinal[m.gab];
+                            
+                            // Normaliza o array de artilheiros (garante que vira [id, id])
+                            const gabaritoArray = Array.isArray(gabaritoBruto) ? gabaritoBruto : 
+                                                (typeof gabaritoBruto === 'string' ? gabaritoBruto.replace(/[{}[\]]/g, '').split(',').map(Number) : [gabaritoBruto]);
+
+                            const nomePais = formatarValor(m.tabela, palpiteID, m.tipo);
+                            const acertou = gabaritoArray.includes(palpiteID);
+                            
+                            let status = 'PENDENTE';
+                            if (gabaritoBruto != null && String(gabaritoBruto).trim() !== '') {
+                                status = acertou ? 'ACERTOU' : 'ERROU';
+                            }
+
+                            // Renderização específica para artilheiro
+                            if (status === 'PENDENTE') {
+                                usr[m.db] = `${iconeP} <span class="text-xs text-gray-300/35 ml-1 whitespace-nowrap">${nomePais || '-'}</span>`;
+                            } else {
+                                const cor = (status === 'ACERTOU') ? "text-emerald-300" : "text-red-500/80";
+                                const icone = (status === 'ACERTOU') ? `<iconify-icon icon="material-symbols:check-circle-rounded" class="${cor} text-lg"></iconify-icon>` : `<iconify-icon icon="dashicons:no" class="${cor} text-lg"></iconify-icon>`;
+                                usr[m.db] = `${icone} <span class="text-xs ${cor} ml-1 whitespace-nowrap">${nomePais || '-'}</span>`;
+                                
+                                if (status === 'ACERTOU') {
+                                    usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
+                                }
+                            }
+                            return; // IMPORTANTE: sai do loop para não rodar a lógica genérica abaixo
+                        }
+                        
                         // Lógica original para os outros campos...
                         const palpiteID = p[m.pal];
                         const gabaritoID = gabaritoFinal[m.gab];
