@@ -129,6 +129,7 @@ async function carregarJogosEApostas() {
 
         // 2. Renderiza
         renderizarJogos(jogos, mapaApostas, ehPaginaFinais);
+        popularChaveamento(jogos, ehPaginaFinais);
         
         // 3. Sucesso: esconde o loader e mostra o conteúdo
         if (loader) loader.classList.add('hidden');
@@ -804,6 +805,88 @@ btnsLogout.forEach(botao => {
     });
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Verificação de segurança: a modal existe nesta página?
+    const modalChaveamento = document.getElementById('modal-chaveamento');
+    if (!modalChaveamento) return; // Se não existe, para o script aqui e não faz nada!
+
+    // Agora o restante do código só roda se a modal existir:
+    const brackets = ['bracket-1', 'bracket-2', 'bracket-3', 'bracket-4', 'bracket-finais'];
+    const botoes = ['abre-bracket-1', 'abre-bracket-2', 'abre-bracket-3', 'abre-bracket-4', 'abre-bracket-finais'];
+
+    function trocarBracket(idAlvo) {
+        // 1. Esconder todos os brackets
+        brackets.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
+
+        // 2. Resetar estilo de todos os botões (voltar para a cor padrão)
+        botoes.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                // Remove as classes de "ativo" (ajuste conforme seu CSS real)
+                btn.classList.remove('bg-emerald-400');
+                btn.classList.add('bg-emerald-700/75');
+            }
+        });
+
+        // 3. Mostrar o bracket alvo
+        const bracketAlvo = document.getElementById(idAlvo.replace('abre-', ''));
+        if (bracketAlvo) bracketAlvo.classList.remove('hidden');
+
+        // 4. Marcar o botão clicado como ativo
+        const btnClicado = document.getElementById(idAlvo);
+        if (btnClicado) {
+            btnClicado.classList.remove('bg-emerald-700/75');
+            btnClicado.classList.add('bg-emerald-400');
+        }
+    }
+
+    // 2. Eventos com verificação individual
+    botoes.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.addEventListener('click', () => trocarBracket(id));
+        }
+    });
+
+    document.getElementById('btn-fechar-chaveamento')?.addEventListener('click', () => {
+        modalChaveamento.classList.add('hidden');
+    });
+});
+
+// 1. Adicione a função no final do arquivo (ou onde preferir)
+function popularChaveamento(jogos, ehPaginaFinais) {
+
+    if (!ehPaginaFinais) return;
+
+    document.querySelectorAll('[id^="match-"]').forEach(matchElement => {
+        const matchId = matchElement.id.replace('match-', '');
+        const jogo = jogos.find(j => String(j.jogo_fifa) === String(matchId));
+
+        if (jogo) {
+            const atualizarTime = (seletor, paisId) => {
+                const container = matchElement.querySelector(seletor);
+                if (!container) return;
+                const img = container.querySelector('img');
+                const span = container.querySelector('span');
+
+                if (paisId) {
+                    img.src = `./assets/images/paises/${paisId}.svg`;
+                    img.classList.remove('hidden');
+                    span.classList.add('hidden');
+                } else {
+                    img.classList.add('hidden');
+                    span.classList.remove('hidden');
+                }
+            };
+            atualizarTime('.time-a', jogo.time_a_id);
+            atualizarTime('.time-b', jogo.time_b_id);
+        }
+    });
+}
+
 document.getElementById('modal-apostas').addEventListener('click', (e) => {
     // Se o elemento clicado for o fundo (e não o conteúdo interno), fecha
     if (e.target.id === 'modal-apostas') {
@@ -827,4 +910,22 @@ document.getElementById('btn-fechar-mensagem').addEventListener('click', () => {
 
 document.getElementById('btn-refresh').addEventListener('click', () => {
     window.location.reload();
+});
+
+document.getElementById('btn-fechar-chaveamento').addEventListener('click', () => {
+    document.body.classList.remove('modal-aberto');
+    document.getElementById('modal-chaveamento').classList.add('hidden');
+});
+
+document.getElementById('modal-chaveamento').addEventListener('click', (e) => {
+    // Se o elemento clicado for o fundo (e não o conteúdo interno), fecha
+    if (e.target.id === 'modal-chaveamento') {
+        document.body.classList.remove('modal-aberto');
+        document.getElementById('modal-chaveamento').classList.add('hidden');
+    }
+});
+
+document.getElementById('btn-chaveamento').addEventListener('click', () => {
+    document.body.classList.add('modal-aberto');
+    document.getElementById('modal-chaveamento').classList.remove('hidden');
 });
