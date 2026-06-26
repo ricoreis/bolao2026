@@ -691,7 +691,7 @@ async function abrirModalCriterio(coluna, titulo, tipo) {
             valorAposta = `${valorAposta} gol(s)`;
         } 
         else if (tipo === 'fixo' && coluna === 'duelo_gigantes') {
-            const labels = { 'CR7': 'Cristiano Ronaldo', 'MESSI': 'Lionel Messi', 'EMPATE': 'Empate' };
+            const labels = { 'Cristiano': 'Cristiano Ronaldo', 'Messi': 'Lionel Messi', 'Empate': 'Empate' };
             valorAposta = labels[valorAposta] || valorAposta;
         } 
         // Só busca no mapaItens se não for nenhum dos casos acima
@@ -708,7 +708,7 @@ async function abrirModalCriterio(coluna, titulo, tipo) {
         .map(a => {
             let valor = a[coluna];
             if (tipo === 'fixo' && coluna === 'duelo_gigantes') {
-                const labels = { 'CR7': 'Cristiano Ronaldo', 'MESSI': 'Lionel Messi', 'EMPATE': 'Empate' };
+                const labels = { 'Cristiano': 'Cristiano Ronaldo', 'Messi': 'Lionel Messi', 'Empate': 'Empate' };
                 valor = labels[valor] || valor;
             } else {
                 valor = mapaItens[valor] || 'ID Desconhecido';
