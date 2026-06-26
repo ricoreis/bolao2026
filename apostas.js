@@ -912,20 +912,28 @@ document.getElementById('btn-refresh').addEventListener('click', () => {
     window.location.reload();
 });
 
-document.getElementById('btn-fechar-chaveamento').addEventListener('click', () => {
-    document.body.classList.remove('modal-aberto');
-    document.getElementById('modal-chaveamento').classList.add('hidden');
-});
+const btnFecharChaveamento = document.getElementById('btn-fechar-chaveamento');
+const modalChaveamento = document.getElementById('modal-chaveamento');
+const btnChaveamento = document.getElementById('btn-chaveamento');
 
-document.getElementById('modal-chaveamento').addEventListener('click', (e) => {
-    // Se o elemento clicado for o fundo (e não o conteúdo interno), fecha
-    if (e.target.id === 'modal-chaveamento') {
+if(btnFecharChaveamento && modalChaveamento && btnChaveamento) {
+
+    btnFecharChaveamento.addEventListener('click', () => {
         document.body.classList.remove('modal-aberto');
-        document.getElementById('modal-chaveamento').classList.add('hidden');
-    }
-});
+        modalChaveamento.classList.add('hidden');
+    });
 
-document.getElementById('btn-chaveamento').addEventListener('click', () => {
-    document.body.classList.add('modal-aberto');
-    document.getElementById('modal-chaveamento').classList.remove('hidden');
-});
+    modalChaveamento.addEventListener('click', (e) => {
+        // Se o elemento clicado for o fundo (e não o conteúdo interno), fecha
+        if (e.target.id === 'modal-chaveamento') {
+            document.body.classList.remove('modal-aberto');
+            modalChaveamento.classList.add('hidden');
+        }
+    });
+
+    btnChaveamento.addEventListener('click', () => {
+        document.body.classList.add('modal-aberto');
+        modalChaveamento.classList.remove('hidden');
+    });
+
+}
