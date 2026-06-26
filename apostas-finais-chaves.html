@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bolão 2026</title>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script> -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <script type="module" src="auth-header.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="apple-touch-icon" sizes="57x57" href="assets/icons/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="assets/icons/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="assets/icons/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="assets/icons/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="assets/icons/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="assets/icons/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="assets/icons/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="assets/icons/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="assets/icons/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="assets/icons/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16x16.png">
+    <link rel="manifest" href="assets/icons/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="assets/icons/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+    <style>
+        body { font-family: 'Quicksand', sans-serif; font-weight: 500; }
+        h1,h2,h3 { font-family: 'Quicksand', sans-serif; font-weight: 300; }
+        #lista-apostas-modal tr:last-child { border-bottom: none !important; }
+        .scroll-custom::-webkit-scrollbar { width: 20px; height: 20px; }
+        .scroll-custom::-webkit-scrollbar-track { background: #1f2937; }
+        .scroll-custom::-webkit-scrollbar-thumb { background: #34d399; border: 5px solid #1f2937; border-radius: 12px; }
+        .scroll-custom::-webkit-scrollbar-thumb:hover { background: #10b981; border: 4px solid #1f2937; }
+        .scroll-custom { scrollbar-width: thin; scrollbar-color: #34d399 #1f2937; }
+        @keyframes pulso {
+            0%, 100% { transform: scale(0.9); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+        .meu-pulso-lento { display: inline-block; animation: pulso 2s ease-in-out infinite; }
+        .modal-aberto { overflow: hidden; height: 100vh; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen">
+
+    <div id="loader" class="fixed inset-0 flex items-center justify-center bg-gray-900 z-30">
+        <div class="flex flex-col items-center">
+            <div class="meu-pulso-lento">
+                <iconify-icon class="text-6xl text-emerald-500" icon="mdi:bracket"></iconify-icon>
+            </div>
+            <p class="text-emerald-500 mt-4 font-bold tracking-widest uppercase">Carregando Jogos...</p>
+        </div>
+    </div>
+
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-6 h-36 md:h-24 flex flex-col sm:flex-row justify-between items-center gap-4 fixed top-0 left-0 w-full z-50">
+        <div class="w-full sm:w-auto text-center sm:text-left">
+            <div class="w-full sm:w-auto text-center sm:text-left flex justify-between">
+                <h1 class="text-xl font-bold tracking-wide text-emerald-400">BOLÃO 2026</h1>
+                <button id="btn-logout" class="btn-logout block md:hidden bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition">
+                    Sair
+                </button>
+            </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-center gap-1 md:gap-3 p-1">
+            <div class="hidden group relative flex items-center justify-center">
+                <button onclick="window.location.href='dashboard.html'" class="cursor-pointer hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
+                    <iconify-icon class="text-2xl md:text-3xl" icon="material-symbols:dashboard-rounded"></iconify-icon>
+                </button>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Dashboard
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <button onclick="window.location.href='ranking.html'"  class="cursor-pointer text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
+                    <iconify-icon class="text-2xl md:text-3xl" icon="material-symbols:trophy"></iconify-icon>
+                </button>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Ranking
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <button onclick="window.location.href='pontuacao.html'"  class="cursor-pointer text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
+                    <iconify-icon class="text-2xl md:text-3xl" icon="icon-park-solid:checklist"></iconify-icon>
+                </button>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Pontuação
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <button onclick="window.location.href='palpites.html'" class="cursor-pointer text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
+                    <iconify-icon class="text-2xl md:text-3xl" icon="hugeicons:quiz-02"></iconify-icon>
+                </button>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Palpites
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <button onclick="window.location.href='grupos.html'" class="cursor-pointer hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
+                    <iconify-icon class="text-2xl md:text-3xl" icon="mynaui:list-number"></iconify-icon>
+                </button>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Classificação
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <button onclick="window.location.href='apostas-grupos.html'" class="cursor-pointer text-gray-400 hover:text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
+                    <iconify-icon class="text-2xl md:text-3xl" icon="lucide-lab:soccer-pitch"></iconify-icon>
+                </button>
+                <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Jogos
+                </span>
+            </div>
+            <div class="group relative flex items-center justify-center">
+                <button onclick="window.location.href='apostas-finais.html'" class="bg-emerald-600 text-white text-sm font-medium px-3 py-2 rounded-full transition size-10 md:size-12 flex items-center justify-center">
+                    <iconify-icon class="text-2xl md:text-3xl" icon="mdi:bracket"></iconify-icon>
+                </button>
+                <!-- <span class="absolute top-full mt-2 hidden group-hover:block w-max px-2 py-1 bg-gray-900 border border-emerald-600 text-white text-xs rounded-lg z-50">
+                    Mata-Mata
+                </span> -->
+            </div>
+        </div>
+
+        <div class="gap-3 items-center hidden md:flex">
+            <p id="saudacao-user" class="saudacao-user text-sm text-gray-400 mt-1 italic hidden md:block">Carregando...</p>
+            <button id="btn-logout" class="btn-logout bg-gray-700 hover:bg-red-600 text-white text-sm font-medium px-4 py-2 rounded-lg w-full sm:w-auto transition">
+                Sair
+            </button>
+        </div>
+    </nav>
+
+    <main class="max-w-3xl mx-auto px-4 py-8 space-y-6 pt-44 md:pt-36">
+
+        <h2 class="text-2xl uppercase font-semibold text-gray-300 pb-2 text-center">Fase Mata-Mata</h2>
+
+        <div class="text-sm font-light rounded-xl p-8 flex flex-row gap-4 border border-gray-200/15 items-center" id="instrucoes">
+            <iconify-icon class="text-5xl" icon="cuida:alert-outline"></iconify-icon>
+            <div class="flex flex-col gap-4">
+                <p>
+                    A aposta de cada jogo encerra faltando 1 hora para a partida.
+                </p>
+                <p>
+                    A pontuação dos placares desta etapa vale dobrado.
+                </p>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+
+            <div id="container-jogos" class="space-y-6">
+                <p class="text-gray-500 animate-pulse text-center py-8">Buscando chaveamento do mata-mata...</p>
+            </div>
+
+        </div>
+
+    </main>
+
+    <template id="template-jogo">
+        <div class="card-jogo bg-gray-800 border border-gray-700 rounded-xl px-4 py-8 flex flex-col gap-3">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div class="flex items-center justify-center w-full flex-col gap-4">
+
+                    <div class="flex items-center justify-center w-full flex flex-col gap-3">
+                        <span class="fase text-sm font-mono text-gray-300 uppercase"></span>
+                        <span class="data-jogo text-xs font-mono text-gray-500"></span>
+                    </div>
+                    <div class="flex items-center justify-center gap-3 grid grid-cols-12 w-full">
+                        <span class="time-a text-white col-span-3 text-right hidden md:block"></span>
+                        <div class="flex gap-4 col-span-12 md:col-span-6 items-center justify-center">
+                            <div class="w-12 flex flex-col">
+                                <img class="band-a w-12" src="" />
+                                <span class="sigla-a text-white text-center text-xs font-light flex md:hidden h-7 items-center justify-center"></span>
+                            </div>
+                            <div class="w-28 flex justify-center gap-1.5 items-center pb-7 md:pb-0">
+                                <input type="number" min="0" class="input-a w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
+                                <span class="definitivo-a w-12 h-10 text-center text-2xl flex items-center justify-center hidden"></span>
+                                <span class="w-4 text-center">x</span>
+                                <span class="definitivo-b w-12 h-10 text-center text-2xl flex items-center justify-center hidden"></span>
+                                <input type="number" min="0" class="input-b w-12 h-10 bg-gray-900 border border-gray-700 text-center rounded-lg font-bold text-lg text-emerald-400 focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div class="w-12 flex flex-col">
+                                <img class="band-b w-12" src="" />
+                                <span class="sigla-b text-white text-center text-xs font-light flex md:hidden h-7 items-center justify-center"></span>
+                            </div>
+                        </div>
+                        <span class="time-b text-white col-span-3 hidden md:block"></span>
+                    </div>
+                    <div class="container-penaltis bg-gray-900/50 rounded-full p-3 hidden w-full items-center justify-center flex gap-2 md:gap-4 flex-col md:flex-row">
+                        <span class="text-sm font-medium uppercase flex flex-row">
+                            Quem vence os pênaltis?
+                        </span>
+                        <div class="flex gap-4 items-center justify-center">
+                            <label class="flex items-center gap-2 cursor-pointer text-sm">
+                                <input type="radio" value="time_a_id" class="radio-penaltis-a">
+                                <span class="nome-time-a">Time A</span>
+                            </label>
+                            
+                            <label class="flex items-center gap-2 cursor-pointer text-sm">
+                                <input type="radio" value="time_b_id" class="radio-penaltis-b">
+                                <span class="nome-time-b">Time B</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex justify-center items-center gap-4 flex-col">
+                        <button class="ver-apostas bg-gray-700 hover:bg-gray-600 text-white font-bold px-4 py-2 rounded-lg transition text-sm hidden flex flex-row items-center gap-4">
+                            <iconify-icon class="text-2xl" icon="gg:user-list"></iconify-icon>
+                            <span>Ver Apostas</span>
+                        </button>
+                        <button class="btn-salvar hidden bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg transition text-sm">
+                            Salvar
+                        </button>
+                        <div class="status-badge bg-gray-900 text-gray-500 text-xs px-6 py-1 rounded-full font-light">
+                            Aguardando definição de chaves
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <div id="modal-apostas" class="fixed inset-0 z-[100] hidden bg-gray-900/80 flex items-center justify-center p-0 md:p-4">
+        <div class="bg-gray-800 w-full h-full md:h-auto md:max-w-md md:rounded-xl border border-gray-700 p-6 shadow-2xl relative flex flex-col max-h-none md:max-h-[90vh]">
+            <div class="flex flex-col items-center mb-4 flex-shrink-0">
+                <h3 class="text-lg font-bold text-emerald-400 w-full pb-4 text-center">Apostas</h3>
+                <div id="container-grafico" class="relative w-24 h-24 my-4">
+                    <canvas id="meuGraficoDonut"></canvas>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    </div>
+                </div>
+                <div class="flex gap-4 text-xs text-gray-400 mb-4">
+                    <span class="flex items-center gap-1">
+                        <i class="w-3 h-3 rounded-full bg-emerald-500"></i> 
+                        <span id="legenda-A">Time A</span>
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <i class="w-3 h-3 rounded-full bg-gray-600"></i> Empate
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <i class="w-3 h-3 rounded-full bg-emerald-100"></i> 
+                        <span id="legenda-B">Time B</span>
+                    </span>
+                </div>
+                <div id="meu-palpite-container" class="hidden w-full my-2 p-4 bg-emerald-900/20 border border-emerald-500/30 rounded-lg text-center flex items-center gap-4 justify-center">
+                    <p class="text-xs text-emerald-400 uppercase font-bold">Meu Palpite</p>
+                    <span id="meu-palpite-valor" class="text-xl font-bold text-white"></span>
+                </div>
+                <button id="btn-fechar-modal" class="text-gray-400 hover:text-white size-12 text-xl flex items-center justify-center absolute top-1 right-1">✕</button>
+            </div>
+            <div class="overflow-y-auto flex-1 scroll-custom pr-2">
+                <table class="w-full text-left text-sm text-gray-300">
+                    <tbody id="lista-apostas-modal"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-mensagem" class="fixed inset-0 z-[200] hidden bg-gray-900/80 flex items-center justify-center p-0 md:p-4">
+        <div class="bg-gray-800 w-full md:w-[400px] md:rounded-xl border border-gray-700 p-6 shadow-2xl relative flex flex-col items-center text-center">
+            <iconify-icon class="text-7xl text-emerald-500" icon="mdi:whistle-outline"></iconify-icon>
+            <h3 id="modal-titulo" class="text-lg font-bold text-emerald-400 mb-4">Opa!</h3>
+            <p id="modal-texto" class="text-gray-300 mb-6 font-medium"></p>
+            <button id="btn-fechar-mensagem" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                Beleza!
+            </button>
+        </div>
+    </div>
+
+    <div id="modal-chaveamento" class="fixed inset-0 z-[200] hiden bg-gray-900/80 flex items-center justify-center p-0 md:p-4">
+        <div class="bg-gray-800 w-full h-full md:h-auto max-h-none md:max-h-[90vh] min-h-[90vh] md:w-[400px] md:rounded-xl border border-gray-700 p-6 shadow-2xl relative flex flex-col items-center text-center">
+            <div class="flex flex-col items-center mb-4 flex-shrink-0 w-full flex-1">
+                <h3 class="text-lg font-bold text-emerald-400 w-full pb-4 text-center">Chaveamento</h3>
+                <button id="btn-fechar-chaveamento" class="text-gray-400 hover:text-white size-12 text-xl flex items-center justify-center absolute top-1 right-1">✕</button>
+                <div class="relative w-full h-full flex flex-1 overflow-scroll scroll-custom">
+
+                    <div class="flex flex-col gap-[10px] absolute top-[0px] left-[0px]">
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/1.svg" />
+                        </div>
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/2.svg" />
+                        </div>
+                        <div class="absolute w-[20px] top-[15px] left-[40px]">
+                            <span class="flex w-full h-[40px] border border-l-0 border-emerald-400/50">&nbsp;</span>
+                        </div>
+                        <div class="absolute w-[20px] top-[0] left-[60px]">
+                            <span class="flex w-full h-[35px] border-b border-emerald-400/50">&nbsp;</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-[10px] absolute top-[90px] left-[0px]">
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/3.svg" />
+                        </div>
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/4.svg" />
+                        </div>
+                        <div class="absolute w-[20px] top-[15px] left-[40px]">
+                            <span class="flex w-full h-[40px] border border-l-0 border-emerald-400/50">&nbsp;</span>
+                        </div>
+                        <div class="absolute w-[20px] top-[0] left-[60px]">
+                            <span class="flex w-full h-[35px] border-b border-emerald-400/50">&nbsp;</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-[10px] absolute top-[180px] left-[0px]">
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/5.svg" />
+                        </div>
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/6.svg" />
+                        </div>
+                        <div class="absolute w-[20px] top-[15px] left-[40px]">
+                            <span class="flex w-full h-[40px] border border-l-0 border-emerald-400/50">&nbsp;</span>
+                        </div>
+                        <div class="absolute w-[20px] top-[0] left-[60px]">
+                            <span class="flex w-full h-[35px] border-b border-emerald-400/50">&nbsp;</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-[10px] absolute top-[270px] left-[0px]">
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/7.svg" />
+                        </div>
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/8.svg" />
+                        </div>
+                        <div class="absolute w-[20px] top-[15px] left-[40px]">
+                            <span class="flex w-full h-[40px] border border-l-0 border-emerald-400/50">&nbsp;</span>
+                        </div>
+                        <div class="absolute w-[20px] top-[0] left-[60px]">
+                            <span class="flex w-full h-[35px] border-b border-emerald-400/50">&nbsp;</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-[10px] absolute top-[360px] left-[0px]">
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/9.svg" />
+                        </div>
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/10.svg" />
+                        </div>
+                        <div class="absolute w-[20px] top-[15px] left-[40px]">
+                            <span class="flex w-full h-[40px] border border-l-0 border-emerald-400/50">&nbsp;</span>
+                        </div>
+                        <div class="absolute w-[20px] top-[0] left-[60px]">
+                            <span class="flex w-full h-[35px] border-b border-emerald-400/50">&nbsp;</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-[10px] absolute top-[450px] left-[0px]">
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/11.svg" />
+                        </div>
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/12.svg" />
+                        </div>
+                        <div class="absolute w-[20px] top-[15px] left-[40px]">
+                            <span class="flex w-full h-[40px] border border-l-0 border-emerald-400/50">&nbsp;</span>
+                        </div>
+                        <div class="absolute w-[20px] top-[0] left-[60px]">
+                            <span class="flex w-full h-[35px] border-b border-emerald-400/50">&nbsp;</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-[10px] absolute top-[540px] left-[0px]">
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/13.svg" />
+                        </div>
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/14.svg" />
+                        </div>
+                        <div class="absolute w-[20px] top-[15px] left-[40px]">
+                            <span class="flex w-full h-[40px] border border-l-0 border-emerald-400/50">&nbsp;</span>
+                        </div>
+                        <div class="absolute w-[20px] top-[0] left-[60px]">
+                            <span class="flex w-full h-[35px] border-b border-emerald-400/50">&nbsp;</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-[10px] absolute top-[630px] left-[0px]">
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/15.svg" />
+                        </div>
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <img class="h-full" src="assets/images/paises/16.svg" />
+                        </div>
+                        <div class="absolute w-[20px] top-[15px] left-[40px]">
+                            <span class="flex w-full h-[40px] border border-l-0 border-emerald-400/50">&nbsp;</span>
+                        </div>
+                        <div class="absolute w-[20px] top-[0] left-[60px]">
+                            <span class="flex w-full h-[35px] border-b border-emerald-400/50">&nbsp;</span>
+                        </div>
+                    </div>
+
+                    <!-- <div class="flex flex-col gap-[10px] absolute top-[45px] left-[70px]">
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <span class="w-[40px] h-full border border-emerald-400/50"></span>
+                        </div>
+                        <div class="w-[40px] h-[30px] flex flex-row items-start">
+                            <span class="w-[40px] h-full border border-emerald-400/50"></span>
+                        </div>
+                        <div class="absolute w-[15px] top-[15px] left-[40px]">
+                            <span class="flex w-full h-[40px] border border-l-0 border-emerald-400/50">&nbsp;</span>
+                        </div>
+                    </div> -->
+
+                
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- <div class="fixed bottom-0 left-0 w-full py-4 bg-gray-900/85 border-t border-gray-700 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-20">
+        <div class="max-w-3xl mx-auto text-center flex justify-end items-center px-4">
+            <button id="btn-refresh" class="bg-emerald-600 hover:bg-emerald-400 flex size-10 rounded-full items-center justify-center">
+                <iconify-icon icon="mdi:refresh" class="text-3xl"></iconify-icon>
+            </button>
+        </div>
+    </div> -->
+
+    <button id="btn-refresh" class="fixed bottom-5 right-5 bg-emerald-600 hover:bg-emerald-400 flex size-12 rounded-full items-center justify-center">
+        <iconify-icon icon="mdi:refresh" class="text-3xl"></iconify-icon>
+    </button>
+
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+    <!-- <div id="toast" class="fixed bottom-5 right-5 text-white px-5 py-3 rounded-lg shadow-xl font-medium translate-y-20 opacity-0 transition-all duration-300"></div> -->
+    <script src="regras.js"></script>
+    <script type="module" src="apostas.js?v=202606240845"></script>
+</body>
+</html>
