@@ -676,23 +676,23 @@ function abrirModalMensagem(titulo, texto) {
 }
 
 function verificarCardsExpirados() {
-    const todosOsCards = document.querySelectorAll('.card-jogo'); 
+    const todosOsCards = document.querySelectorAll('.card-jogo');
+    if (todosOsCards.length === 0) {
+        console.log("Ainda não há cards para congelar.");
+        return;
+    }
     const agora = Date.now();
-    const margemSeguranca = 60 * 60 * 1000; // 60 minutos
+    const margemSeguranca = 60 * 60 * 1000;
 
     todosOsCards.forEach(card => {
         console.log("congelou card");
-        // Pega a data que está no HTML do card
         const dataJogoStr = card.dataset.dataJogo;
-        if (!dataJogoStr) return; // Se não tiver data, ignora
+        if (!dataJogoStr) return;
 
         const dataJogo = new Date(dataJogoStr).getTime();
 
-        // Se o tempo passou e o card ainda tem o botão de salvar (significa que está aberto)
         if (agora + margemSeguranca >= dataJogo) {
             const btnSalvar = card.querySelector('.btn-salvar');
-            
-            // Só congela se ele ainda não estiver congelado (verifica se o btnSalvar ainda existe)
             if (btnSalvar && !btnSalvar.classList.contains('hidden')) {
                 console.log("Auto-congelando card do jogo:", card.dataset.jogoId);
                 congelarCard(card, "Apostas Encerradas! Aguardando resultado");
