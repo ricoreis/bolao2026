@@ -681,6 +681,7 @@ function verificarCardsExpirados() {
     const margemSeguranca = 60 * 60 * 1000; // 60 minutos
 
     todosOsCards.forEach(card => {
+        console.log("congelou card");
         // Pega a data que está no HTML do card
         const dataJogoStr = card.dataset.dataJogo;
         if (!dataJogoStr) return; // Se não tiver data, ignora
