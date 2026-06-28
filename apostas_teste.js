@@ -1,12 +1,12 @@
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
+const DB_CONFIG = {
+    JOGOS: 'jogos_espelho',
+};
+
 // Variável global para armazenar as regras do banco
 let configRegras = [];
-
-const DB_CONFIG = {
-    JOGOS: 'jogos',
-};
 
 // const btnLogout = document.getElementById('btn-logout');
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -251,7 +251,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             // Se fase_id > 1 (Mata-mata), multiplicador é 2, senão é 1
             const multiplicador = (jogo.fase_id > 1) ? 2 : 1;
             
-            const resultado = calcularPontosRegulares(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, multiplicador);
+            const resultado = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, multiplicador);
             const pontos = resultado.total; // Pega apenas o número para exibir            
             
             // LOGICA NOVA DE CORES:
@@ -267,7 +267,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             divInfo.innerHTML = `
                 <div class="text-gray-400">Placar Oficial: ${jogo.gols_a} x ${jogo.gols_b}</div>
                 <div class="text-sm rounded-full px-2 py-1 w-fit ${corPontos}">
-                    ${pontos == 0 ? "-" : pontos > 0 ? "+" + pontos : pontos} ${multiplicador > 1 ? "<span class='text-xs'>dobrado!</span>" : "" }
+                    ${pontos == 0 ? "-" : pontos > 0 ? "+" + pontos : pontos}
                 </div>
             `;
             cardElement.appendChild(divInfo);
@@ -323,37 +323,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                 inputA.classList.add("opacity-0", "cursor-auto");
                 inputB.classList.add("opacity-0", "cursor-auto");
             }
-
-            const containerPenaltis = document.querySelector('.container-penaltis');
-
-            if (containerPenaltis) {
-                // Verifica se o PAI já tem a nossa marca de "já renderizado"
-                const pai = containerPenaltis.parentNode;
-                if (pai.dataset.renderizado === 'true') {
-                    return; // Já fizemos o trabalho, não toca em nada!
-                }
-
-                const radioMarcado = containerPenaltis.querySelector('input[type="radio"]:checked');
-                
-                if (radioMarcado) {
-                    const nomeTime = radioMarcado.nextElementSibling.innerText;
-                    
-                    // Esconde o container
-                    containerPenaltis.classList.add('hidden');
-                    
-                    // Cria a div
-                    const divConfirmacao = document.createElement('div');
-                    divConfirmacao.className = "texto-aposta-final bg-gray-800 p-2 text-center text-sm";
-                    divConfirmacao.innerHTML = `Aposta nos pênaltis: <b>${nomeTime}</b>`;
-                    
-                    // Insere no pai
-                    pai.appendChild(divConfirmacao);
-                    
-                    // MARCA O PAI como processado
-                    pai.dataset.renderizado = 'true';
-                }
-            }
-            
         } 
         else {
             // ESTADO: PODE EDITAR
@@ -457,17 +426,9 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                 const timeVencedor = (jogo.penaltis_vencedor_id === jogo.time_a_id) ? jogo.time_a.nome : jogo.time_b.nome;
                 const acertou = aposta?.penaltis_vencedor_id === jogo.penaltis_vencedor_id;
                 
-                const resultadoPenaltis = calcularPontosPenaltis(aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, configRegras);
-                const pontosPenaltis = resultadoPenaltis.pontos;
-
-                const corPenaltis = "bg-amber-400 text-gray-800 font-bold";
-
                 mensagemHTML = acertou 
-                    ? `<div class="flex gap-2 w-full justify-center items-center">
-                        <span class="text-gray-400">Você acertou ${timeVencedor} vencendo nos pênaltis!</span>
-                        <div class="text-sm rounded-full px-2 py-1 w-fit ${corPenaltis}">+${pontosPenaltis}</div>
-                    </div>`
-                    : `<span class="text-red-400">Você não acertou o vencedor dos penaltis.</span>`;
+                    ? `<span class="text-gray-400">Você acertou: ${timeVencedor} venceu nos pênaltis!</span>`
+                    : `<span class="text-red-400">Você apostou em pênaltis, mas não acertou o vencedor.</span>`;
             } else if (aposta?.penaltis_vencedor_id) {
                 // mensagemHTML = `<span class="text-gray-400 italic">Você apostou em pênaltis, mas o jogo foi decidido no tempo normal.</span>`;
             }
@@ -478,6 +439,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                 divResultado.innerHTML = mensagemHTML;
                 cardElement.appendChild(divResultado);
             }
+
 
             } else {
                 card.querySelector('.nome-time-a').innerText = jogo.time_a?.nome || 'Time A';
