@@ -445,13 +445,33 @@ async function processarRanking(apostas, jogos, headers) {
                         const gabCamp = parseInt(gabaritoFinal.campeao_id);
                         const gabVice = parseInt(gabaritoFinal.vice_id);
 
+                        // Mapeamento dinâmico dos lados da chave (A ou B)
+                        const ladoA_ids = [73, 74, 75, 77, 81, 82, 83, 84];
+                        const ladoB_ids = [76, 78, 79, 80, 85, 86, 87, 88];
+                        const timeLadoMapa = {};
+
+                        jogos.forEach(jogo => {
+                            if (ladoA_ids.includes(jogo.jogo_fifa)) {
+                                timeLadoMapa[jogo.time_a_id] = 'A';
+                                timeLadoMapa[jogo.time_b_id] = 'A';
+                            } else if (ladoB_ids.includes(jogo.jogo_fifa)) {
+                                timeLadoMapa[jogo.time_a_id] = 'B';
+                                timeLadoMapa[jogo.time_b_id] = 'B';
+                            }
+                        });
+
                         // 2. Verificar se a aposta ainda é possível
-                        // Um time está eliminado se estiver na lista 'statusPaises.eliminados'
                         const campEliminado = statusPaises.eliminados.includes(palpiteCamp);
                         const viceEliminado = statusPaises.eliminados.includes(palpiteVice);
-                        const apostaImpossivel = campEliminado || viceEliminado;
+                        
+                        // Regra nova: times do mesmo lado não podem fazer a final
+                        const ladoCamp = timeLadoMapa[palpiteCamp];
+                        const ladoVice = timeLadoMapa[palpiteVice];
+                        const finalImpossivelMesmoLado = (ladoCamp && ladoVice) && (ladoCamp === ladoVice);
 
-                        // 3. Verificar resultado oficial (se o jogo já ocorreu)
+                        const apostaImpossivel = campEliminado || viceEliminado || finalImpossivelMesmoLado;
+
+                        // 3. Verificar resultado oficial
                         const gabaritoDefinido = (gabCamp > 0 && gabVice > 0);
                         const acertouFinalistas = gabaritoDefinido && 
                             ((palpiteCamp === gabCamp && palpiteVice === gabVice) || (palpiteCamp === gabVice && palpiteVice === gabCamp));
@@ -461,7 +481,6 @@ async function processarRanking(apostas, jogos, headers) {
                         const nomeVice = formatarValor(m.tabela, palpiteVice, 'pais');
 
                         if (gabaritoDefinido) {
-                            // Se o jogo já aconteceu, mostra acerto ou erro
                             const cor = acertouFinalistas ? "text-emerald-300" : "text-red-500/80";
                             const icone = acertouFinalistas ? iconeS : iconeN;
                             usr[m.db] = `${icone} <span class="${cor} whitespace-nowrap">${nomeCamp} x ${nomeVice}</span>`;
@@ -471,11 +490,10 @@ async function processarRanking(apostas, jogos, headers) {
                                 usr.pontos_totais += parseInt(regraFinal?.pontos || 0);
                             }
                         } else if (apostaImpossivel) {
-                            // Se não aconteceu, mas já sabemos que um dos dois caiu -> Marca como erro (iconeN)
-                            usr[m.db] = `${iconeN} <span class="text-red-500/80 whitespace-nowrap">${nomeCamp} x ${nomeVice}</span>`;
+                            // Se um caiu ou a final é impossível pelo chaveamento, mostra como erro
+                            usr[m.db] = `${iconeN} <span class="text-red-500/80 whitespace-nowrap">${nomeCamp} : ${nomeVice}</span>`;
                         } else {
-                            // Se ainda é possível, mostra o palpite de forma neutra
-                            usr[m.db] = `${iconeP} <span class="text-xs text-gray-300/35 whitespace-nowrap">${nomeCamp} x ${nomeVice}</span>`;
+                            usr[m.db] = `${iconeP} <span class="text-xs text-gray-300/35 whitespace-nowrap">${nomeCamp} : ${nomeVice}</span>`;
                         }
                     }
                     else if (m.db === 'brasil_fase_chega' || m.db === 'brasil_gols_pro' || m.db === 'brasil_gols_contra') {
