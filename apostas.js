@@ -265,7 +265,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             const divInfo = document.createElement('div');
             divInfo.className = "p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-2 items-center justify-center mt-1.5";
             divInfo.innerHTML = `
-                <div class="text-gray-400">Placar Final: ${jogo.gols_a} x ${jogo.gols_b}</div>
+                <div class="text-gray-400">Placar Final: ${jogo.gols_a} x ${jogo.gols_b} ${jogo.penaltis_a != null && jogo.penaltis_b != null ? '(pen.'+ jogo.penaltis_a + 'x' + jogo.penaltis_b + ')' : ''}</div>
                 <div class="text-sm rounded-full px-2 py-1 w-fit ${corPontos}">
                     ${pontos == 0 ? "-" : pontos > 0 ? "+" + pontos : pontos} ${multiplicador > 1 ? "<span class='text-xs'>dobrado!</span>" : "" }
                 </div>
