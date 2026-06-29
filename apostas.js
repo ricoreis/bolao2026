@@ -465,18 +465,18 @@ async function salvarAposta(jogoId, cardElement, ehPaginaFinais) {
     const margemSeguranca = 60 * 60 * 1000; // 60 minutos * 60 segundos * 1000ms
 
     // DEBUG CORRIGIDO
-    console.log("Horário Local (Agora):", new Date(agora).toLocaleString());
-    console.log("Horário Jogo (Banco):", new Date(dataJogo).toLocaleString());
-    console.log("Diferença (segundos):", (dataJogo - agora) / 1000);
+    // console.log("Horário Local (Agora):", new Date(agora).toLocaleString());
+    // console.log("Horário Jogo (Banco):", new Date(dataJogo).toLocaleString());
+    // console.log("Diferença (segundos):", (dataJogo - agora) / 1000);
     // -----------------------
 
     if (agora + margemSeguranca >= dataJogo) {
-        console.log("agora + margemSeguranca >= dataJogo");
+        // console.log("agora + margemSeguranca >= dataJogo");
         congelarCard(cardElement, "Apostas Encerradas! Aguardando resultado");
         abrirModalMensagem("Atenção", "As apostas deste jogo estão encerradas.<br>Não dê mole nas próximas!");
         return;
     }
-    console.log("NAO!!! agora + margemSeguranca >= dataJogo");
+    // console.log("NAO!!! agora + margemSeguranca >= dataJogo");
 
     const inputA = cardElement.querySelector('.input-a');
     const inputB = cardElement.querySelector('.input-b');
@@ -671,7 +671,7 @@ function abrirModalMensagem(titulo, texto) {
 function verificarCardsExpirados() {
     const todosOsCards = document.querySelectorAll('.card-jogo');
     if (todosOsCards.length === 0) {
-        console.log("Ainda não há cards para congelar.");
+        // console.log("Ainda não há cards para congelar.");
         return;
     }
     const agora = Date.now();
@@ -685,8 +685,9 @@ function verificarCardsExpirados() {
         const dataJogo = new Date(dataJogoStr).getTime();
 
         if (agora + margemSeguranca >= dataJogo) {
+            console.log(dataJogoStr);
             const btnSalvar = card.querySelector('.btn-salvar');
-            if (btnSalvar && !btnSalvar.classList.contains('hidden')) {
+            if (btnSalvar) {
                 console.log("Auto-congelando card do jogo:", card.dataset.jogoId);
                 congelarCard(card, "Apostas Encerradas! Aguardando resultado");
             }

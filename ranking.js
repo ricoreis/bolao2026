@@ -321,33 +321,32 @@ async function processarRanking(apostas, jogos, headers) {
 
                 // ---------------------------------------------------------------------------
 
-                // TEMPORARIAMENTE FORA
-                // --- LÓGICA DO PENAL (Simplificada e direto na fonte) ---
-                // apostas.forEach(aposta => {
-                //     const jogo = jogos.find(j => String(j.id) === String(aposta.jogo_id));
-                //     const usr = rankingMap[aposta.usuario_id];
-                    
-                //     if (usr['placar_classificado_penaltis'] === undefined) {
-                //         usr['placar_classificado_penaltis'] = 0;
-                //     }
-                    
-                //     if (jogo && jogo.penaltis_vencedor_id && aposta.penaltis_vencedor_id) {
-                //         const acertou = (parseInt(aposta.penaltis_vencedor_id) === parseInt(jogo.penaltis_vencedor_id));
-                        
-                //         if (acertou) {
-                //             usr['placar_classificado_penaltis'] += 1;
-                //             const regraPenal = headers.find(h => h.nome_reduzido === 'PENAL');
-                //             if (regraPenal) usr.pontos_totais += parseInt(regraPenal.pontos || 0);
-                //         }
-                //     }
-                // });
-                // TEMPORARIAMENTE PENDENTE: PRECISA VER O CODIGO ACIMA
-                usr['placar_classificado_penaltis'] = iconeP;
+                // --- LÓGICA DO PENAL
+                usr.penaltis_acertos_count = 0; 
+                usr.penaltis_computado_flag = false;
+                jogos.forEach(jogo => {
+                    if (jogo.penaltis_vencedor_id) {
+                        const apostaUsuario = apostas.find(a => a.jogo_id === jogo.id && a.usuario_id === usr.usuario_id);                      
+                        if (apostaUsuario && parseInt(apostaUsuario.penaltis_vencedor_id) === parseInt(jogo.penaltis_vencedor_id)) {
+                            usr.penaltis_acertos_count += 1;
+                        }
+                    }
+                });
+                if (usr.penaltis_acertos_count > 0 && !usr.penaltis_computado_flag) {
+                    const regraPenal = headers.find(h => h.nome_reduzido === 'PENAL');
+                    const pontosPorAcerto = parseInt(regraPenal?.pontos || 0);
+                    usr.pontos_totais += (usr.penaltis_acertos_count * pontosPorAcerto);
+                    usr.penaltis_computado_flag = true;
+                }
+                // if(usr.penaltis_acertos_count > 0) {
+                    usr['placar_classificado_penaltis'] = usr.penaltis_acertos_count;
+                // } else {
+                    // usr['placar_classificado_penaltis'] = iconeP;
+                // }
 
                 // ----------------------------------------------------------------------
                 
                 // --- CAMPEAO CAINDO
-                // --- TEMPORARIAMENTE FORA
                 const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
                 colunas.forEach(c => usr[c] = iconeP); 
 
