@@ -265,7 +265,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             const divInfo = document.createElement('div');
             divInfo.className = "p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-2 items-center justify-center mt-1.5";
             divInfo.innerHTML = `
-                <div class="text-gray-400">Placar Oficial: ${jogo.gols_a} x ${jogo.gols_b}</div>
+                <div class="text-gray-400">Placar Final: ${jogo.gols_a} x ${jogo.gols_b}</div>
                 <div class="text-sm rounded-full px-2 py-1 w-fit ${corPontos}">
                     ${pontos == 0 ? "-" : pontos > 0 ? "+" + pontos : pontos} ${multiplicador > 1 ? "<span class='text-xs'>dobrado!</span>" : "" }
                 </div>
@@ -309,10 +309,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                     btnVerApostas.classList.add("hidden");
                 }
             }
-            // const confrontoDefinido = jogo.time_a && jogo.time_b;
-            // else if (!jogo.time_a || !jogo.time_b) {
             else if (!confrontoDefinido) {
-                // Estado 3: Sem confronto definido (Aguardando chaves)
                 if (jogo.fase_id > 1) {
                     statusBadge.classList.remove("hidden");
                     inputA.classList.add("hidden");
@@ -324,34 +321,44 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                 inputB.classList.add("opacity-0", "cursor-auto");
             }
 
-            const containerPenaltis = document.querySelector('.container-penaltis');
+            const containerPenaltis = card.querySelector('.container-penaltis');
+            const valorA = parseInt(inputA.value);
+            const valorB = parseInt(inputB.value);
 
-            if (containerPenaltis) {
-                // Verifica se o PAI já tem a nossa marca de "já renderizado"
+            if (containerPenaltis && valorA === valorB && !isNaN(valorA)) {
                 const pai = containerPenaltis.parentNode;
-                if (pai.dataset.renderizado === 'true') {
-                    return; // Já fizemos o trabalho, não toca em nada!
-                }
+                
+                // Verifica marcação de renderização
+                if (pai.dataset.renderizado === 'true') return;
 
                 const radioMarcado = containerPenaltis.querySelector('input[type="radio"]:checked');
+
+                const penaltiVencedorId = jogo.penaltis_vencedor_id;
+                const apostaVencedorId = aposta.penaltis_vencedor_id;
                 
-                if (radioMarcado) {
-                    const nomeTime = radioMarcado.nextElementSibling.innerText;
-                    
-                    // Esconde o container
+                if (apostaVencedorId) {
+
+                    let nomeTime = "";
+                    if (apostaVencedorId == jogo.time_a.id) {
+                        nomeTime = jogo.time_a.nome;
+                    } else if (apostaVencedorId == jogo.time_b.id) {
+                        nomeTime = jogo.time_b.nome;
+                    }
+
                     containerPenaltis.classList.add('hidden');
                     
-                    // Cria a div
-                    const divConfirmacao = document.createElement('div');
-                    divConfirmacao.className = "texto-aposta-final bg-gray-800 p-2 text-center text-sm";
-                    divConfirmacao.innerHTML = `Aposta nos pênaltis: <b>${nomeTime}</b>`;
-                    
-                    // Insere no pai
-                    pai.appendChild(divConfirmacao);
-                    
-                    // MARCA O PAI como processado
+                    if(faltamMenosDeUmaHora && !jogoOcorrido) {
+                        const divConfirmacao = document.createElement('div');
+                        divConfirmacao.className = "texto-aposta-final text-gray-400 text-center text-xs";
+                        divConfirmacao.innerHTML = `Aposta nos pênaltis: <span class="text-white">${nomeTime}</span>`;
+                        pai.appendChild(divConfirmacao);
+                    }
                     pai.dataset.renderizado = 'true';
                 }
+
+            } else if (containerPenaltis && (valorA !== valorB)) {
+                // Se não é empate, garantimos que o container de pênaltis fique escondido
+                containerPenaltis.classList.add('hidden');
             }
             
         } 
@@ -360,62 +367,6 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             statusBadge.classList.add("hidden");
             btnSalvar.onclick = (e) => salvarAposta(jogo.id, cardElement, ehPaginaFinais);
         }
-
-        // if (jogoOcorrido) {
-        //     inputA.disabled = true;
-        //     inputB.disabled = true;
-        //     btnSalvar.disabled = true;
-        //     inputA.classList.add("hidden");
-        //     inputB.classList.add("hidden");
-        //     definitivoA.classList.remove("hidden");
-        //     definitivoB.classList.remove("hidden");
-        //     statusBadge.classList.add("hidden");
-        //     btnVerApostas.classList.remove("hidden"); // MOSTRA O BOTÃO
-        //     btnVerApostas.onclick = () => abrirModal(jogo.id, jogo.time_a.nome, jogo.time_b.nome);
-        // }
-        // else if ((dataLocal - agora) / (1000 * 60) < 60) {
-        //     inputA.disabled = true;
-        //     inputB.disabled = true;
-        //     btnSalvar.disabled = true;
-        //     inputA.classList.add("opacity-50", "cursor-not-allowed", "hidden");
-        //     inputB.classList.add("opacity-50", "cursor-not-allowed", "hidden");
-        //     definitivoA.classList.remove("hidden");
-        //     definitivoB.classList.remove("hidden");
-            
-        //     if (confrontoDefinido) {
-        //         btnSalvar.classList.add("hidden");
-        //         statusBadge.classList.remove("hidden");
-        //         statusBadge.innerText = "Apostas Encerradas! Aguardando resultado";
-
-        //         btnVerApostas.classList.remove("hidden");
-        //         btnVerApostas.onclick = () => abrirModal(jogo.id, jogo.time_a.nome, jogo.time_b.nome);
-        //     } else {
-        //         btnVerApostas.classList.add("hidden");
-        //         statusBadge.classList.remove("hidden");
-        //         statusBadge.innerText = "Aguardando definição de chaves";
-        //     }
-        // } 
-        // else if (!jogo.time_a || !jogo.time_b) {
-        //     if (jogo.fase_id > 1) {
-        //         statusBadge.classList.remove("hidden");
-        //         inputA.classList.add("hidden");
-        //         inputB.classList.add("hidden");
-        //     } else {
-        //         statusBadge.classList.add("hidden");
-        //     }
-        //     inputA.disabled = true;
-        //     inputB.disabled = true;
-        //     btnSalvar.disabled = true;
-        //     inputA.classList.add("opacity-0", "cursor-auto");
-        //     inputB.classList.add("opacity-0", "cursor-auto");
-        //     btnSalvar.classList.add("hidden");
-        // } 
-        // else {
-        //     statusBadge.classList.add("hidden");
-        //     btnSalvar.onclick = (e) => salvarAposta(jogo.id, cardElement, ehPaginaFinais);
-        // }
-
-
 
         // --- Lógica de Pênaltis ---
         const containerPenaltis = card.querySelector('.container-penaltis');
@@ -451,33 +402,33 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                 const divResultado = document.createElement('div');
                 divResultado.className = "mt-2 p-2 bg-gray-800 rounded text-center text-xs";
 
-            let mensagemHTML = "";
+                let mensagemHTML = "";
 
-            if (jogo.penaltis_vencedor_id) {
-                const timeVencedor = (jogo.penaltis_vencedor_id === jogo.time_a_id) ? jogo.time_a.nome : jogo.time_b.nome;
-                const acertou = aposta?.penaltis_vencedor_id === jogo.penaltis_vencedor_id;
-                
-                const resultadoPenaltis = calcularPontosPenaltis(aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, configRegras);
-                const pontosPenaltis = resultadoPenaltis.pontos;
+                if (jogo.penaltis_vencedor_id) {
+                    const timeVencedor = (jogo.penaltis_vencedor_id === jogo.time_a_id) ? jogo.time_a.nome : jogo.time_b.nome;
+                    const acertou = aposta?.penaltis_vencedor_id === jogo.penaltis_vencedor_id;
+                    
+                    const resultadoPenaltis = calcularPontosPenaltis(aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, configRegras);
+                    const pontosPenaltis = resultadoPenaltis.pontos;
 
-                const corPenaltis = "bg-amber-400 text-gray-800 font-bold";
+                    const corPenaltis = "bg-amber-400 text-gray-800 font-bold";
 
-                mensagemHTML = acertou 
-                    ? `<div class="flex gap-2 w-full justify-center items-center">
-                        <span class="text-gray-400">Você acertou ${timeVencedor} vencendo nos pênaltis!</span>
-                        <div class="text-sm rounded-full px-2 py-1 w-fit ${corPenaltis}">+${pontosPenaltis}</div>
-                    </div>`
-                    : `<span class="text-red-400">Você não acertou o vencedor dos penaltis.</span>`;
-            } else if (aposta?.penaltis_vencedor_id) {
-                // mensagemHTML = `<span class="text-gray-400 italic">Você apostou em pênaltis, mas o jogo foi decidido no tempo normal.</span>`;
-            }
+                    mensagemHTML = acertou 
+                        ? `<div class="flex gap-2 w-full justify-center items-center">
+                            <span class="text-gray-400 text-xs">Você acertou ${timeVencedor} vencendo nos pênaltis!</span>
+                            <div class="text-sm rounded-full px-2 py-1 w-fit ${corPenaltis}">+${pontosPenaltis}</div>
+                        </div>`
+                        : `<span class="text-red-400 text-xs">Você não acertou o vencedor dos pênaltis.</span>`;
+                } else if (aposta?.penaltis_vencedor_id) {
+                    mensagemHTML = `<span class="text-gray-600 text-xs">Jogo não foi para pênaltis.</span>`;
+                }
 
-            if (mensagemHTML !== "") {
-                const divResultado = document.createElement('div');
-                divResultado.className = "mt-2 p-2 rounded text-center text-xs";
-                divResultado.innerHTML = mensagemHTML;
-                cardElement.appendChild(divResultado);
-            }
+                if (mensagemHTML !== "") {
+                    const divResultado = document.createElement('div');
+                    divResultado.className = "mt-2 p-2 rounded text-center text-xs";
+                    divResultado.innerHTML = mensagemHTML;
+                    cardElement.appendChild(divResultado);
+                }
 
             } else {
                 card.querySelector('.nome-time-a').innerText = jogo.time_a?.nome || 'Time A';
@@ -486,7 +437,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                 const checkEmpate = () => {
                     const vA = parseInt(inputA.value);
                     const vB = parseInt(inputB.value);
-                    if (!isNaN(vA) && !isNaN(vB) && vA === vB) {
+                    if (!isNaN(vA) && !isNaN(vB) && vA === vB && !estaBloqueado) {
                         containerPenaltis.classList.remove('hidden');
                     } else {
                         containerPenaltis.classList.add('hidden');
