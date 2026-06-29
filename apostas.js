@@ -678,14 +678,14 @@ function verificarCardsExpirados() {
     const margemSeguranca = 60 * 60 * 1000;
 
     todosOsCards.forEach(card => {
-        console.log("congelou card");
+        // console.log("congelou card");
         const dataJogoStr = card.dataset.dataJogo;
         if (!dataJogoStr) return;
 
         const dataJogo = new Date(dataJogoStr).getTime();
 
         if (agora + margemSeguranca >= dataJogo) {
-            console.log(dataJogoStr);
+            // console.log(dataJogoStr);
             const btnSalvar = card.querySelector('.btn-salvar');
             if (btnSalvar) {
                 console.log("Auto-congelando card do jogo:", card.dataset.jogoId);
@@ -740,6 +740,28 @@ function congelarCard(card, mensagemStatus) {
         const nomeTimeB = card.querySelector('.time-b').innerText;
         btnVerApostas.onclick = () => abrirModal(jogoId, nomeTimeA, nomeTimeB);
     }
+
+    if (containerPenaltis && valorA === valorB && !isNaN(valorA)) {
+        const pai = containerPenaltis.parentNode;
+        if (pai.dataset.renderizado === 'true') return;
+
+        const radioMarcado = containerPenaltis.querySelector('input[type="radio"]:checked');
+
+        if (radioMarcado) {
+
+            const labelDoRadio = radioMarcado.nextElementSibling; 
+            const nomeTime = labelDoRadio ? labelDoRadio.innerText : "Time Selecionado";
+
+            containerPenaltis.classList.add('hidden');
+            
+            const divConfirmacao = document.createElement('div');
+            divConfirmacao.className = "texto-aposta-final text-gray-400 text-center text-xs";
+            divConfirmacao.innerHTML = `Aposta nos pênaltis: <span class="text-white">${nomeTime}</span>`;
+            pai.appendChild(divConfirmacao);
+            pai.dataset.renderizado = 'true';
+        }
+    }
+
 }
 
 function fecharModal() {
@@ -772,26 +794,6 @@ function configurarBandeira(card, seletor, time) {
         imgElement.src = ""; // Boa prática limpar o src antigo
     }
 }
-
-// document.addEventListener("visibilitychange", () => {
-//     if (document.visibilityState === "visible") {
-//         verificarJogosExpirados();
-//     }
-// });
-
-// async function verificarJogosExpirados() {
-//     const { data: jogos } = await supabaseClient.from('jogos').select('id, data_jogo');
-    
-//     jogos.forEach(jogo => {
-//         if (new Date() >= new Date(jogo.data_jogo)) {
-//             const inputs = document.querySelectorAll(`[data-jogo-id="${jogo.id}"]`);
-//             inputs.forEach(input => input.disabled = true);
-//             console.log(`Jogo ${jogo.id} bloqueado por expiração.`);
-//         }
-//     });
-// }
-
-// btnLogout.addEventListener('click', async () => { await supabaseClient.auth.signOut(); window.location.href = "index.html"; });
 
 btnsLogout.forEach(botao => {
     botao.addEventListener('click', async () => { 
