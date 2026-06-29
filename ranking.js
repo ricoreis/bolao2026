@@ -16,7 +16,8 @@ const DB_CONFIG = {
     JOGOS: 'jogos',
     USUARIOS: 'usuarios',
     PALPITES: 'palpites',
-    PARCIAIS: 'parciais'
+    PARCIAIS: 'parciais',
+    ELIMINACAO: 'eliminacao'
 };
 
 async function carregarRanking() {
@@ -186,7 +187,8 @@ async function processarRanking(apostas, jogos, headers) {
         { data: jogadores }, 
         { data: fases }, 
         { data: grupos },
-        { data: temporarios }
+        { data: temporarios },
+        { data: eliminacao }
     ] = await Promise.all([
         supabaseClient.from(DB_CONFIG.RESULTADOS).select('*').single(),
         supabaseClient.from(DB_CONFIG.PAISES).select('*'),
@@ -197,10 +199,9 @@ async function processarRanking(apostas, jogos, headers) {
             .from(DB_CONFIG.PARCIAIS)
             .select('id, fase_brasil_id, gols_feitos_brasil, gols_sofridos_brasil')
             .eq('id', 1)
-            .single()
+            .single(),
+        supabaseClient.from('eliminacao').select('*')
     ]);
-
-    // console.log("DADOS DO TEMPORARIOS (FIXO):", temporarios);
 
     const gabaritoFinal = sanitizarResultadoFinal(gabaritoBruto, jogos);
 
@@ -351,27 +352,28 @@ async function processarRanking(apostas, jogos, headers) {
                 colunas.forEach(c => usr[c] = iconeP); 
 
                 const pCamp = parseInt(p.campeao_id);
-                const jogoFinal = jogos.find(j => parseInt(j.fase_id) === 7);
-                const vencedorOficial = jogoFinal ? parseInt(jogoFinal.vencedor_final_id) : null;
+                const elim = eliminacao.find(e => parseInt(e.pais_id) === pCamp);
 
-                if (pCamp > 0 && vencedorOficial > 0 && vencedorOficial !== null) {
+                if (elim && elim.eliminado === true) {
+                    const faseID = parseInt(elim.fase_id);
+                    
+                    // Reseta status para N1 (não pontuou)
+                    colunas.forEach(c => usr[c] = iconeHifen);
 
-                    const faseID = determinarFase(pCamp, jogos, fases);
-                    const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
-                    colunas.forEach(c => usr[c] = 'N1');
+                    // Mapeia a fase para a coluna correspondente
+                    const map = {
+                        1: "campeao_perde_grupos",
+                        2: "campeao_perde_16",
+                        3: "campeao_perde_8",
+                        4: "campeao_perde_4",
+                        5: "campeao_perde_3",
+                        6: "campeao_perde_3"
+                    };
 
-                    if (faseID === 1) usr["campeao_perde_grupos"] = 'S';
-                    else if (faseID === 2) usr["campeao_perde_16"] = 'S';
-                    else if (faseID === 3) usr["campeao_perde_8"] = 'S';
-                    else if (faseID === 4) usr["campeao_perde_4"] = 'S';
-                    else if (faseID === 5) usr["campeao_perde_3"] = 'S';
-                    else if (faseID === 6) usr["campeao_perde_3"] = 'S';
-                    else if (faseID === 7) {
-                        if (vencedorOficial !== null && pCamp !== vencedorOficial) {
-                            usr["campeao_perde_final"] = 'S';
-                        } else {
-                            usr["campeao_perde_final"] = 'N';
-                        }
+                    const coluna = map[faseID] || (faseID === 7 ? "campeao_perde_final" : null);
+
+                    if (coluna) {
+                        usr[coluna] = "eliminado";
                     }
 
                     const mapaRegras = [
@@ -384,13 +386,25 @@ async function processarRanking(apostas, jogos, headers) {
                     ];
 
                     mapaRegras.forEach(m => {
-                        if (usr[m.c] === 'S') {
+                        if (usr[m.c] === "eliminado" && !usr[`pontuou_${m.r}`]) {
                             const regraObj = headers.find(h => h.nome_reduzido === m.r);
                             if (regraObj && regraObj.pontos) {
                                 usr.pontos_totais += parseInt(regraObj.pontos);
+                                usr[`pontuou_${m.r}`] = true;
                             }
                         }
                     });
+
+                    const nomePais = paises.find(p => p.id === pCamp)?.nome || "Desconhecido";
+
+                    if (coluna) {
+                        // Adicionamos o nome ao lado do ícone
+                        usr[coluna] = `<div class="flex gap-2 text-red-500/80 justify-center">
+                            <iconify-icon icon="hugeicons:dead" class=" text-2xl"></iconify-icon>
+                            <span class="text-xs flex items-center">${nomePais}</span>
+                        </div>`;
+                    }
+
                 }
 
                 // ----------------------------------------------------------------------
@@ -898,7 +912,7 @@ function determinarFase(timeId, jogos, fases) {
 
 async function obterStatusDosPaises() {
     const { data, error } = await supabaseClient
-        .from('eliminacao')
+        .from(DB_CONFIG.ELIMINACAO)
         .select('pais_id, eliminado, possivel_pior');
     
     if (error) {
