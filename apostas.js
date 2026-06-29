@@ -407,6 +407,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                 if (jogo.penaltis_vencedor_id) {
                     const timeVencedor = (jogo.penaltis_vencedor_id === jogo.time_a_id) ? jogo.time_a.nome : jogo.time_b.nome;
                     const acertou = aposta?.penaltis_vencedor_id === jogo.penaltis_vencedor_id;
+                    const apostouPenaltis = aposta?.penaltis_vencedor_id !== null;
                     
                     const resultadoPenaltis = calcularPontosPenaltis(aposta.penaltis_vencedor_id, jogo.penaltis_vencedor_id, configRegras);
                     const pontosPenaltis = resultadoPenaltis.pontos;
@@ -418,7 +419,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
                             <span class="text-gray-400 text-xs">Você acertou ${timeVencedor} vencendo nos pênaltis!</span>
                             <div class="text-sm rounded-full px-2 py-1 w-fit ${corPenaltis}">+${pontosPenaltis}</div>
                         </div>`
-                        : `<span class="text-red-400 text-xs">Você não acertou o vencedor dos pênaltis.</span>`;
+                        : apostouPenaltis ? `<span class="text-red-400 text-xs">Você não acertou o vencedor dos pênaltis.</span>` : '';
                 } else if (aposta?.penaltis_vencedor_id) {
                     mensagemHTML = `<span class="text-gray-600 text-xs">Jogo não foi para pênaltis.</span>`;
                 }
