@@ -234,10 +234,10 @@ async function processarRanking(apostas, jogos, headers) {
                 if (!usr) return; 
 
                 let mult = (parseInt(jogo.id) > 72) ? 2 : 1;
-                const res = calcularPontos(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, headers, mult);
+                const res = calcularPontosRegulares(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, headers, mult);
                 // console.log(res);
 
-                if (aposta.usuario_id === "874f9d4e-8583-4494-bfc4-4b981406426c") {
+                if (aposta.usuario_id === "1ee31366-adbc-43f2-ae82-9610284cbc29") {
                     // console.log(`Jogo ${jogo.id} | ${usr.nome} | Aposta: ${aposta.gols_a}x${aposta.gols_b} (${jogo.gols_a}x${jogo.gols_b}) | Pts: ${res.total} | Exato: ${res.exato} | Saldo: ${res.saldo} | Venc: ${res.venc} | Empate: ${res.empate}`);
                 }
 
