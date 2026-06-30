@@ -1,7 +1,7 @@
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("apostas antigo");
+console.log("apostas 20260630 1500");
 
 // Variável global para armazenar as regras do banco
 let configRegras = [];
