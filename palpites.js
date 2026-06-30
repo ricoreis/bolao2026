@@ -2,6 +2,8 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
+console.log("palpites 20260630 1500");
+
 // const btnLogout = document.getElementById('btn-logout');
 const btnsLogout = document.querySelectorAll('.btn-logout');
 const toast = document.getElementById('toast');
@@ -765,7 +767,7 @@ async function abrirModalCriterio(coluna, titulo, tipo) {
             labels: dadosFinais.map(i => i[0]),
             datasets: [{
                 data: dadosFinais.map(i => i[1]),
-                backgroundColor: coresParaUso, // <--- AQUI ESTAVA O ERRO (mudamos de hexCores para coresParaUso)
+                backgroundColor: coresParaUso,
                 borderWidth: 0,
                 cutout: '75%'
             }]

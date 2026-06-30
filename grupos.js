@@ -1,6 +1,8 @@
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
+console.log("grupos 20260630 1500");
+
 function showToast(mensagem) {
     const toast = document.getElementById('toast');
     if (toast) {

@@ -1,6 +1,8 @@
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
+console.log("pontuacao 20260630 1500");
+
 const btnsLogout = document.querySelectorAll('.btn-logout');
 
 // Função de busca e renderização
