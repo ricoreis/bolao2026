@@ -2,6 +2,8 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
+console.log("ranking 20260630 1500");
+
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
 
