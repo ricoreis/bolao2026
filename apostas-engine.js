@@ -1,7 +1,7 @@
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("apostas 20260630 1900");
+console.log("apostas 20260630 2030");
 
 // Variável global para armazenar as regras do banco
 let configRegras = [];
@@ -179,6 +179,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
         cardElement.dataset.dataJogo = jogo.data_jogo;
         cardElement.dataset.jogoId = jogo.id;
+        cardElement.dataset.jogoPassou = jogo.gols_a !== null && jogo.gols_b !== null;
 
         const dataLocal = new Date(jogo.data_jogo);
         const agora = new Date();
@@ -266,7 +267,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             if (pontos < 0) corPontos = "bg-red-400 text-gray-800 font-bold";
 
             const divInfo = document.createElement('div');
-            divInfo.className = "p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-2 items-center justify-center mt-1.5";
+            divInfo.className = "placar-final p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-2 items-center justify-center mt-1.5";
             divInfo.innerHTML = `
                 <div class="text-gray-400">Placar Final: ${jogo.gols_a} x ${jogo.gols_b} ${jogo.penaltis_a != null && jogo.penaltis_b != null ? '(pen.'+ jogo.penaltis_a + 'x' + jogo.penaltis_b + ')' : ''}</div>
                 <div class="${houveAposta ? '' : 'hidden'} text-sm rounded-full px-2 py-1 w-fit ${corPontos}">
@@ -710,7 +711,7 @@ function verificarCardsExpirados() {
             // console.log(dataJogoStr);
             const btnSalvar = card.querySelector('.btn-salvar');
             if (btnSalvar) {
-                console.log("Auto-congelando card do jogo:", card.dataset.jogoId);
+                // console.log("Auto-congelando card do jogo:", card.dataset.jogoId);
                 congelarCard(card, "Apostas Encerradas! Aguardando resultado");
             }
         }
@@ -750,7 +751,7 @@ function congelarCard(card, mensagemStatus) {
     
     btnSalvar.classList.add('hidden');
     
-    if (statusBadge) {
+    if (statusBadge && card.dataset.jogoPassou !== "true") {
         statusBadge.classList.remove('hidden');
         statusBadge.innerText = mensagemStatus;
     }
