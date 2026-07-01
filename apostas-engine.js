@@ -1,7 +1,7 @@
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("apostas 20260630 1500");
+console.log("apostas 20260630 1900");
 
 // Variável global para armazenar as regras do banco
 let configRegras = [];
@@ -168,7 +168,12 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
     let faseAtualRegistrada = "";
 
     jogos.forEach(jogo => {
-        const aposta = mapaApostas ? mapaApostas[jogo.id] : null;
+        let aposta = mapaApostas ? mapaApostas[jogo.id] : null;
+
+        if (!aposta) {
+            aposta = { penaltis_vencedor_id: null, gols_a: null, gols_b: null };
+        }
+
         const card = template.content.cloneNode(true);
         const cardElement = card.querySelector('.card-jogo');
 
@@ -248,19 +253,15 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
         toggleSalvar(inputA, inputB, btnSalvar);
 
-        // Cálculo dinâmico com Multiplicador
+        const houveAposta = aposta.gols_a !== null && aposta.gols_b !== null;
+
         if (jogo.gols_a !== null && jogo.gols_b !== null && aposta) {
-            // Se fase_id > 1 (Mata-mata), multiplicador é 2, senão é 1
             const multiplicador = (jogo.fase_id > 1) ? 2 : 1;
             
             const resultado = calcularPontosRegulares(aposta.gols_a, aposta.gols_b, jogo.gols_a, jogo.gols_b, configRegras, multiplicador);
-            const pontos = resultado.total; // Pega apenas o número para exibir            
-            
-            // LOGICA NOVA DE CORES:
-            // pontos > 0: verde/âmbar (ganhou)
-            // pontos === 0: cinza (neutro)
-            // pontos < 0: vermelho (perdeu - se existir essa regra)
-            let corPontos = "bg-gray-700 text-gray-400"; // Cor para ZERO
+            const pontos = resultado.total;
+
+            let corPontos = "bg-gray-700 text-gray-400";
             if (pontos > 0) corPontos = "bg-amber-400 text-gray-800 font-bold";
             if (pontos < 0) corPontos = "bg-red-400 text-gray-800 font-bold";
 
@@ -268,14 +269,25 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             divInfo.className = "p-2 bg-gray-900/50 rounded-full text-center text-xs flex flex-row gap-2 items-center justify-center mt-1.5";
             divInfo.innerHTML = `
                 <div class="text-gray-400">Placar Final: ${jogo.gols_a} x ${jogo.gols_b} ${jogo.penaltis_a != null && jogo.penaltis_b != null ? '(pen.'+ jogo.penaltis_a + 'x' + jogo.penaltis_b + ')' : ''}</div>
-                <div class="text-sm rounded-full px-2 py-1 w-fit ${corPontos}">
+                <div class="${houveAposta ? '' : 'hidden'} text-sm rounded-full px-2 py-1 w-fit ${corPontos}">
                     ${pontos == 0 ? "-" : pontos > 0 ? "+" + pontos : pontos} ${multiplicador > 1 ? "<span class='text-xs'>dobrado!</span>" : "" }
                 </div>
             `;
             cardElement.appendChild(divInfo);
+
         }
 
         const estaBloqueado = jogoOcorrido || faltamMenosDeUmaHora || !confrontoDefinido;
+
+        if(estaBloqueado && !houveAposta) {
+            const divFaltou = document.createElement('div');
+            divFaltou.className = "p-2 rounded-full text-red-400 text-center text-xs flex flex-row gap-2 items-center justify-center mt-1.5";
+            divFaltou.innerHTML = `
+                <iconify-icon class="text-3xl" icon="hugeicons:sad-01"></iconify-icon>
+                <div class="text-sm">Você não apostou neste jogo!</div>
+            `;
+            cardElement.appendChild(divFaltou);
+        }
 
         if (estaBloqueado) {
             // DESABILITA TUDO
@@ -335,8 +347,8 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
                 const radioMarcado = containerPenaltis.querySelector('input[type="radio"]:checked');
 
-                const penaltiVencedorId = jogo.penaltis_vencedor_id;
-                const apostaVencedorId = aposta.penaltis_vencedor_id;
+                const penaltiVencedorId = jogo?.penaltis_vencedor_id;
+                const apostaVencedorId = aposta?.penaltis_vencedor_id;
                 
                 if (apostaVencedorId) {
 
@@ -387,7 +399,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
             radioB.name = nomeGrupo;
 
             // Adicione isso logo após configurar o radio (radioA/radioB):
-            if (aposta && aposta.penaltis_vencedor_id) {
+            if (aposta && aposta?.penaltis_vencedor_id) {
                 // Guarda o valor que veio do banco no radio button
                 if (parseInt(radioA.value) === aposta.penaltis_vencedor_id) radioA.checked = true;
                 if (parseInt(radioB.value) === aposta.penaltis_vencedor_id) radioB.checked = true;
@@ -406,7 +418,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
                 let mensagemHTML = "";
 
-                if (jogo.penaltis_vencedor_id) {
+                if (jogo?.penaltis_vencedor_id) {
                     const timeVencedor = (jogo.penaltis_vencedor_id === jogo.time_a_id) ? jogo.time_a.nome : jogo.time_b.nome;
                     const acertou = aposta?.penaltis_vencedor_id === jogo.penaltis_vencedor_id;
                     const apostouPenaltis = aposta?.penaltis_vencedor_id !== null;
