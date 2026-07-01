@@ -1,7 +1,7 @@
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("apostas 20260630 2030");
+console.log("apostas 20260701 0030");
 
 // Variável global para armazenar as regras do banco
 let configRegras = [];
@@ -280,7 +280,7 @@ function renderizarJogos(jogos, mapaApostas, ehPaginaFinais) {
 
         const estaBloqueado = jogoOcorrido || faltamMenosDeUmaHora || !confrontoDefinido;
 
-        if(estaBloqueado && !houveAposta) {
+        if( (jogoOcorrido || faltamMenosDeUmaHora) && !houveAposta ) {
             const divFaltou = document.createElement('div');
             divFaltou.className = "p-2 rounded-full text-red-400 text-center text-xs flex flex-row gap-2 items-center justify-center mt-1.5";
             divFaltou.innerHTML = `
