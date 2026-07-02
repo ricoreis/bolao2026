@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("ranking 20260630 1500");
+console.log("ranking 20260701 2200");
 
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -202,10 +202,15 @@ async function processarRanking(apostas, jogos, headers) {
             .select('id, fase_brasil_id, gols_feitos_brasil, gols_sofridos_brasil')
             .eq('id', 1)
             .single(),
-        supabaseClient.from('eliminacao').select('*')
+        supabaseClient.from(DB_CONFIG.ELIMINACAO).select('*')
     ]);
 
     const gabaritoFinal = sanitizarResultadoFinal(gabaritoBruto, jogos);
+    const timesEliminados = eliminacao
+        .filter(e => e.eliminado === true)
+        .map(e => e.pais_id);
+
+    const liderArtilharia = Math.max(...eliminacao.map(e => e.artilheiro || 0));
 
     const formatarValor = (tabela, id, tipo) => {
         if (id == null) return "Sem palpite";
@@ -552,8 +557,7 @@ async function processarRanking(apostas, jogos, headers) {
                         if (m.db === 'extra_pais_artilheiro') {
                             const palpiteID = parseInt(p[m.pal]);
                             const gabaritoBruto = gabaritoFinal[m.gab];
-                            
-                            // Normaliza o array de artilheiros (garante que vira [id, id])
+
                             const gabaritoArray = Array.isArray(gabaritoBruto) ? gabaritoBruto : 
                                                 (typeof gabaritoBruto === 'string' ? gabaritoBruto.replace(/[{}[\]]/g, '').split(',').map(Number) : [gabaritoBruto]);
 
@@ -561,8 +565,17 @@ async function processarRanking(apostas, jogos, headers) {
                             const acertou = gabaritoArray.includes(palpiteID);
                             
                             let status = 'PENDENTE';
+
                             if (gabaritoBruto != null && String(gabaritoBruto).trim() !== '') {
                                 status = acertou ? 'ACERTOU' : 'ERROU';
+                            } else {
+                                const meuArtilheiro = eliminacao
+                                    .filter(e => e.pais_id === palpiteID)
+                                    .map(e => e.artilheiro)[0] || 0;
+                                // console.log(usr.nome + ": " + meuArtilheiro + " (id: " + palpiteID + ") / lider: " + liderArtilharia);
+                                if (timesEliminados.includes(palpiteID) && (liderArtilharia > meuArtilheiro)) {
+                                    status = 'ERROU';
+                                }
                             }
 
                             // Renderização específica para artilheiro
@@ -577,7 +590,7 @@ async function processarRanking(apostas, jogos, headers) {
                                     usr.pontos_totais += parseInt(headers.find(h => h.nome_reduzido === m.regra)?.pontos || 0);
                                 }
                             }
-                            return; // IMPORTANTE: sai do loop para não rodar a lógica genérica abaixo
+                            return;
                         }
                         
                         // Lógica original para os outros campos...
