@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("ranking 20260701 2200");
+console.log("ranking 20260701 2330");
 
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -875,6 +875,12 @@ function renderizarTabela(dados, headers) {
                         <span class="text-xs font-medium w-4">${acertos > 0 ? acertos : iconeP}</span>
                     </div>
                 </td>`;
+            }
+
+            // 3. Colunas de grupo
+            const colunasNegativos = ['placar_exato_contrario', 'placar_saldo_contrario', 'placar_vencedor_contrario'];
+            if (colunasNegativos.includes(h.coluna_db)) {
+                return `<td class="${classeColuna} px-4 py-3 text-center text-xs text-red-500/80">${valor ?? 0}</td>`;
             }
 
             // 4. Restante
