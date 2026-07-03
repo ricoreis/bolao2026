@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("ranking 202607022330");
+console.log("ranking 202607022350");
 
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
