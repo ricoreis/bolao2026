@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("palpites 20260630 1500");
+console.log("palpites 20260702 2200");
 
 // const btnLogout = document.getElementById('btn-logout');
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -354,19 +354,44 @@ function exibirPontos(palpite, gabarito, totalGolsCalculado, totalGolsOficial) {
     ];
 
     map.forEach(item => {
+        // 1. Caso: Aposta NULA (Não exibe nada)
+        if (item.g === null || item.g === undefined || item.g === "") {
+            const el = document.getElementById(item.id);
+            if (el) {
+                el.textContent = '';
+                el.classList.add("hidden"); // Garante que fique invisível
+            }
+            return; // Pula para o próximo item
+        }
+
+        // 2. Cálculo da pontuação
         const pBase = RegrasExtras.obterPontos(item.pts, configRegras);
         let pontos = 0;
+        
+        // Verifica se o jogo já tem gabarito (se item.res ou campo similar existir)
+        const temGabarito = (item.g !== null && item.g !== undefined);
+
         if (item.tipo === 'simples') pontos = RegrasExtras.calcularSimples(extrair(item.p), extrair(item.g), pBase);
         else if (item.tipo === 'duelo') pontos = RegrasExtras.calcularDueloGigantes(item.p, item.g, pBase);
         else if (item.tipo === 'total') pontos = RegrasExtras.calcularTotalGols(item.p, item.g, pBase);
-        
+
+        // 3. Renderização
         const el = document.getElementById(item.id);
         if (el) {
-            el.textContent = `${pontos > 0 ? '+' : ''}${pontos}`;
-            el.className = `hidden text-sm text-gray-800 mt-1 rounded-full px-2 py-1 w-fit h-fit ${pontos > 0 ? 'bg-amber-400' : 'bg-red-400'}`;
-            if (pontos != 0) {
-                el.classList.remove("hidden")
-                // console.log(pontos + "");
+            el.classList.remove("hidden");
+            
+            if (temGabarito && pontos === 0) {
+                // Caso: Tem gabarito mas errou (Exibe o traço)
+                el.textContent = '-';
+                el.className = "text-sm mt-1 rounded-full px-2 py-1 w-fit h-fit text-gray-400 bg-gray-700";
+            } else if (pontos > 0) {
+                // Caso: Acertou (Exibe os pontos)
+                el.textContent = '+' + pontos;
+                el.className = "text-sm mt-1 rounded-full px-2 py-1 w-fit h-fit text-gray-800 bg-amber-400";
+            } else {
+                // Caso: Jogo ainda não ocorreu (Exibe pontos zero ou neutro)
+                el.textContent = '0';
+                el.className = "text-sm mt-1 rounded-full px-2 py-1 w-fit h-fit text-gray-400 bg-gray-800";
             }
         }
     });
