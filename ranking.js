@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("ranking 20260701 2330");
+console.log("ranking 202607022330");
 
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -25,6 +25,9 @@ const DB_CONFIG = {
 async function carregarRanking() {
     const loader = document.getElementById('loader');
     const tabelaWrapper = document.getElementById('tabela-wrapper');
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    const meuUsuarioId = user ? user.id : null;
 
     try {
         // Criamos o tempo mínimo de 3 segundos
@@ -49,7 +52,7 @@ async function carregarRanking() {
         await processarParticipantes(usuarios);
         const rankingFinal = await processarRanking(apostas, jogos, headers);
         
-        renderizarTabela(rankingFinal, headers);
+        renderizarTabela(rankingFinal, headers, meuUsuarioId);
         filtrarTab('PLACARES');
 
         if (loader) loader.classList.add('hidden');
@@ -715,7 +718,7 @@ async function processarRanking(apostas, jogos, headers) {
 
 }
 
-function renderizarTabela(dados, headers) {
+function renderizarTabela(dados, headers, meuUsuarioId) {
     const thead = document.querySelector('thead tr');
     const tbody = document.getElementById('container-ranking');
     if (!thead || !tbody) return;
@@ -833,24 +836,27 @@ function renderizarTabela(dados, headers) {
             corLabel = "text-orange-400";
         }
 
+        const meuHighlight = usr.usuario_id == meuUsuarioId ? 'bg-gray-600/25' : '';
+        const meuHighlightNome = usr.usuario_id == meuUsuarioId ? 'bg-gray-600/90' : '';
+
         const colunasDinamicas = headersComFinal.map(h => {
             let valor = usr[h.coluna_db];
             const classeColuna = `col-${h.coluna_db}`;
 
             // Alinhamento à esquerda para colunas de ícones
             if (colunasComIcones.includes(h.coluna_db)) {
-                return `<td class="${classeColuna} px-4 py-3 text-left text-xs"><span class="flex items-center gap-1">${valor ?? '-'}</span></td>`;
+                return `<td class="${classeColuna} px-4 py-3 text-left text-xs ${meuHighlight}"><span class="flex items-center gap-1">${valor ?? '-'}</span></td>`;
             }
 
             // 1. Lógica específica para a FINAL
             if (h.coluna_db === 'final_copa') {
-                return `<td class="${classeColuna} px-4 py-3 text-center text-xs whitespace-nowrap font-medium text-white">${valor}</td>`;
+                return `<td class="${classeColuna} px-4 py-3 text-center text-xs whitespace-nowrap font-medium text-white ${meuHighlight}">${valor}</td>`;
             }
             
             // 2. Colunas de penalidade
             const colunasCamp = ['campeao_perde_grupos', 'campeao_perde_16', 'campeao_perde_8', 'campeao_perde_4', 'campeao_perde_3', 'campeao_perde_final'];
             if (colunasCamp.includes(h.coluna_db)) {
-                return `<td class="${classeColuna} px-4 py-3 text-center text-xs">${valor ?? 'N'}</td>`;
+                return `<td class="${classeColuna} px-4 py-3 text-center text-xs ${meuHighlight}">${valor ?? 'N'}</td>`;
             }
 
             // 3. Colunas de grupo
@@ -866,10 +872,9 @@ function renderizarTabela(dados, headers) {
                 const porcentagem = Math.min((acertos / 12) * 100, 100);
                 const iconeP = `<iconify-icon icon="mingcute:sandglass-line" class="text-gray-300/35 text-lg"></iconify-icon>`; 
 
-                return `<td class="${classeColuna} px-4 py-3 text-center text-xs">
+                return `<td class="${classeColuna} px-4 py-3 text-center text-xs ${meuHighlight}">
                     <div class="flex items-center justify-center gap-1 px-2">
                         <div class="w-8 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                            <!-- Aqui a classe é dinâmica -->
                             <div class="h-full ${corBarra} transition-all duration-500" style="width: ${porcentagem}%;"></div>
                         </div>
                         <span class="text-xs font-medium w-4">${acertos > 0 ? acertos : iconeP}</span>
@@ -880,24 +885,24 @@ function renderizarTabela(dados, headers) {
             // 3. Colunas de grupo
             const colunasNegativos = ['placar_exato_contrario', 'placar_saldo_contrario', 'placar_vencedor_contrario'];
             if (colunasNegativos.includes(h.coluna_db)) {
-                return `<td class="${classeColuna} px-4 py-3 text-center text-xs text-red-500/80">${valor ?? 0}</td>`;
+                return `<td class="${classeColuna} px-4 py-3 text-center text-xs text-red-500/80 ${meuHighlight}">${valor ?? 0}</td>`;
             }
 
             // 4. Restante
-            return `<td class="${classeColuna} px-4 py-3 text-center text-xs">${valor ?? 0}</td>`;
+            return `<td class="${classeColuna} px-4 py-3 text-center text-xs ${meuHighlight}">${valor ?? 0}</td>`;
         }).join('');
 
         return `<tr class="border-b border-gray-700 hover:bg-gray-700/20">
-                <td class="sticky min-w-[40px] max-w-[40px] w-[40px] left-0 md:min-w-[50px] md:max-w-[50px] md:w-[50px] md:left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-1 md:px-4 py-2 hidden md:table-cell">
+                <td class="sticky min-w-[40px] max-w-[40px] w-[40px] left-0 md:min-w-[50px] md:max-w-[50px] md:w-[50px] md:left-0 text-center bg-gray-700 col-posicao ${corPosicao} ${classeCor} font-bold text-xs px-1 md:px-4 py-2 hidden md:table-cell ${posicao > 3 ? meuHighlightNome : ''}">
                     ${posicao}º
                 </td>
-                <td class="sticky min-w-[100px] max-w-[100px] w-[100px] left-0 md:min-w-[180px] md:max-w-[180px] md:w-[180px] md:left-[50px] bg-gray-700 ${classeCor} pl-3 pr-1 md:px-4 py-2">
+                <td class="sticky min-w-[100px] max-w-[100px] w-[100px] left-0 md:min-w-[180px] md:max-w-[180px] md:w-[180px] md:left-[50px] bg-gray-700 ${classeCor} pl-3 pr-1 md:px-4 py-2 ${posicao > 3 ? meuHighlightNome : ''}">
                     <span class="flex flex-col justify-center min-h-14 md:min-h-10">
                         <span class="${corPosicao} text-[10px] block md:hidden">${posicao}º</span>
                         <span class="${corLabel} text-left">${usr.nome}</span>
                     <span>
                 </td>
-                <td class="sticky min-w-[50px] max-w-[50px] w-[50px] left-[100px] md:min-w-[100px] md:max-w-[100px] md:w-[100px] md:left-[230px] text-center bg-gray-700 col-pontuacao font-bold px-1 md:px-4 py-2 ${corPosicao} ${classeCor}">
+                <td class="sticky min-w-[50px] max-w-[50px] w-[50px] left-[100px] md:min-w-[100px] md:max-w-[100px] md:w-[100px] md:left-[230px] text-center bg-gray-700 col-pontuacao font-bold px-1 md:px-4 py-2 ${corPosicao} ${classeCor} ${posicao > 3 ? meuHighlightNome : ''}">
                     ${total ?? 0}
                 </td>
                 ${colunasDinamicas}
