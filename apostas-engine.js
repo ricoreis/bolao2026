@@ -1,7 +1,7 @@
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("apostas 20260701 0030");
+console.log("apostas 202607032130");
 
 // Variável global para armazenar as regras do banco
 let configRegras = [];
@@ -831,8 +831,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!modalChaveamento) return; // Se não existe, para o script aqui e não faz nada!
 
     // Agora o restante do código só roda se a modal existir:
-    const brackets = ['bracket-1', 'bracket-2', 'bracket-3', 'bracket-4', 'bracket-finais'];
-    const botoes = ['abre-bracket-1', 'abre-bracket-2', 'abre-bracket-3', 'abre-bracket-4', 'abre-bracket-finais'];
+    const brackets = ['bracket-1', 'bracket-2', 'bracket-3', 'bracket-4', 'bracket-oitavas-1', 'bracket-oitavas-2', 'bracket-finais'];
+    const botoes = ['abre-bracket-1', 'abre-bracket-2', 'abre-bracket-3', 'abre-bracket-4', 'abre-bracket-oitavas-1', 'abre-bracket-oitavas-2', 'abre-bracket-finais'];
 
     function trocarBracket(idAlvo) {
         // 1. Esconder todos os brackets
@@ -870,6 +870,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', () => trocarBracket(id));
         }
     });
+
+    trocarBracket('abre-bracket-oitavas-1');
 
     document.getElementById('btn-fechar-chaveamento')?.addEventListener('click', () => {
         modalChaveamento.classList.add('hidden');
