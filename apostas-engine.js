@@ -596,9 +596,16 @@ async function abrirModal(jogoId, nomeA, nomeB) {
     document.getElementById('modal-apostas').classList.remove('hidden');
     
     const { data: { user } } = await supabaseClient.auth.getUser();
+
+    const { data: jogoData } = await supabaseClient
+        .from('jogos')
+        .select('time_a_id, time_b_id')
+        .eq('id', jogoId)
+        .single();
+
     const { data: apostas } = await supabaseClient
         .from('apostas')
-        .select('gols_a, gols_b, usuarios(nome, id)')
+        .select('gols_a, gols_b, penaltis_vencedor_id, usuarios(nome, id)')
         .eq('jogo_id', jogoId);
 
     const minhaAposta = apostas?.find(a => a.usuarios?.id === user?.id);
@@ -663,12 +670,27 @@ async function abrirModal(jogoId, nomeA, nomeB) {
                     ${titulo}
                 </span>
             </td></tr>
-            ${listaApostas.map(a => `
+            ${listaApostas.map(a => {
+                let infoPenaltis = '';
+                if (a.penaltis_vencedor_id) {
+                    const vencedorNome = (parseInt(a.penaltis_vencedor_id) === parseInt(jogoData.time_a_id)) 
+                        ? nomeA 
+                        : (parseInt(a.penaltis_vencedor_id) === parseInt(jogoData.time_b_id) ? nomeB : 'Erro');
+                    infoPenaltis = `<div class="text-[10px] text-gray-500 uppercase italic font-normal">
+                                        Pen.: ${vencedorNome}
+                                    </div>`;
+                }
+                return `
                 <tr class="border-b border-gray-700/65 ${a.usuarios?.id === user?.id ? 'bg-emerald-900/20' : ''}">
                     <td class="px-3 py-3 ${a.usuarios?.id === user?.id ? 'text-emerald-400' : 'text-gray-200'}">${a.usuarios?.nome || 'Anon'}</td>
-                    <td class="px-3 py-3 text-center text-emerald-400 font-bold">${a.gols_a} x ${a.gols_b}</td>
+                    <td class="px-3 py-3 text-center text-emerald-400 font-bold">
+                        <div class="flex flex-col justify-center items-center">
+                            <div>${a.gols_a} x ${a.gols_b}</div>
+                            ${infoPenaltis ? infoPenaltis: ''}
+                        </div>
+                    </td>
                 </tr>
-            `).join('')}
+            `}).join('')}
             <tr><td colspan="2" class="h-16"></td></tr>
         `;
     };
