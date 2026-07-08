@@ -1,7 +1,7 @@
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("apostas 202607032130");
+console.log("apostas 202607081000");
 
 // Variável global para armazenar as regras do banco
 let configRegras = [];
@@ -25,7 +25,7 @@ function toggleSalvar(inputA, inputB, btnSalvar, containerPenaltis = null) {
     const originalB = inputB.dataset.valorOriginal;
     const atualA = inputA.value;
     const atualB = inputB.value;
-    
+
     // 1. Verifica se os campos estão preenchidos (evita salvar campos em branco)
     const estaPreenchido = (atualA !== "" && atualB !== "");
     
@@ -827,6 +827,17 @@ function rolarParaUltimoResultado() {
         behavior: 'smooth'
     });
 }
+
+function validarGols(input) {
+    // console.log("validando gols");
+    input.value = input.value.replace(/[^0-9]/g, '');
+    if (input.value < 0) {
+        // console.log("validando gols negativo");
+        input.value = 0;
+    }
+}
+
+window.validarGols = validarGols;
 
 function configurarBandeira(card, seletor, time) {
     const imgElement = card.querySelector(seletor);
