@@ -904,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    trocarBracket('abre-bracket-oitavas-1');
+    trocarBracket('abre-bracket-finais');
 
     document.getElementById('btn-fechar-chaveamento')?.addEventListener('click', () => {
         modalChaveamento.classList.add('hidden');
