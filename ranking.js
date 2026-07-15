@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("ranking 202607141700");
+console.log("ranking 202607151700");
 
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -144,6 +144,9 @@ async function processarRanking(apostas, jogos, headers) {
 
     const rankingMap = {};
     const statusPaises = (await obterStatusDosPaises()) || { eliminados: [], finalistas: [], disputa34: [] };
+
+    const finalistasIDs = statusPaises.finalistas; // Já são os dois IDs da fase 7
+    // console.log(finalistasIDs);
 
     const { data: todosUsuarios } = await supabaseClient.from(DB_CONFIG.USUARIOS).select('*');
     // 1. Inicializa o map com TODOS os usuários (os 33)
@@ -362,20 +365,26 @@ async function processarRanking(apostas, jogos, headers) {
                 const estaDisputandoTerceiro = (elim && faseID === 5); // Perdeu semi, vai pro 6
                 const estaFinalista = (elim && faseID === 7);         // Venceu semi, vai pro 7
 
-                // 1. Estados Pendentes (França na fase 5, Espanha na fase 7)
-                if (estaDisputandoTerceiro || estaFinalista) {
-                    // APENAS marque como pendente as colunas que você quer, mas NÃO dê return.
+                // 1. Estados Pendentes
+                if (estaDisputandoTerceiro) { // Remova 'estaFinalista' daqui
                     colunas.forEach(c => {
-                        // Só sobrescreve se a coluna ainda estiver com o ícone padrão ou vazia
                         if (usr[c] === iconeP || !usr[c]) {
                             usr[c] = iconeP;
                         }
                     });
-                    // REMOVA o 'return' daqui!
+                }
+
+                // 2. Se for Finalista, vamos marcar com um ícone de "vivo" (ou deixar vazio/limpo)
+                if (estaFinalista) {
+                    colunas.forEach(c => {
+                        // Se for finalista, ele não "perdeu" em nenhuma fase anterior
+                        // Você pode deixar vazio ou colocar um ícone de "vivo" se quiser
+                        usr[c] = iconeHifen; 
+                    });
                 }
 
                 // if (elim && elim.eliminado === true) {
-                if (estaEliminadoDefinitivo || faseID === 6) {
+                if (estaEliminadoDefinitivo || faseID === 6 || faseID === 7) {
                     // const faseID = parseInt(elim.fase_id);
                     
                     // Reseta status para N1 (não pontuou)
@@ -497,18 +506,24 @@ async function processarRanking(apostas, jogos, headers) {
                         // 2. Verificar se a aposta ainda é possível
                         const campEliminado = statusPaises.eliminados.includes(palpiteCamp);
                         const viceEliminado = statusPaises.eliminados.includes(palpiteVice);
-                        
+
+                        // NOVA LÓGICA DE TRAVA PARA A FINAL:
+                        // Um palpite de final (1º/2º) é impossível se algum time estiver na disputa de 3º/4º (fase 6)
+                        const campDisputa34 = statusPaises.disputa34.includes(palpiteCamp);
+                        const viceDisputa34 = statusPaises.disputa34.includes(palpiteVice);
+
                         // Regra nova: times do mesmo lado não podem fazer a final
                         const ladoCamp = timeLadoMapa[palpiteCamp];
                         const ladoVice = timeLadoMapa[palpiteVice];
                         const finalImpossivelMesmoLado = (ladoCamp && ladoVice) && (ladoCamp === ladoVice);
 
-                        const apostaImpossivel = campEliminado || viceEliminado || finalImpossivelMesmoLado;
+                        // A aposta agora também é impossível se os times estiverem na disputa de 3º/4º
+                        const apostaImpossivel = campEliminado || viceEliminado || campDisputa34 || viceDisputa34 || finalImpossivelMesmoLado;
 
                         // 3. Verificar resultado oficial
-                        const gabaritoDefinido = (gabCamp > 0 && gabVice > 0);
+                        const gabaritoDefinido = (finalistasIDs.length === 2); 
                         const acertouFinalistas = gabaritoDefinido && 
-                            ((palpiteCamp === gabCamp && palpiteVice === gabVice) || (palpiteCamp === gabVice && palpiteVice === gabCamp));
+                            (finalistasIDs.includes(palpiteCamp) && finalistasIDs.includes(palpiteVice));
 
                         // 4. Renderização
                         const nomeCamp = formatarValor(m.tabela, palpiteCamp, 'pais');
