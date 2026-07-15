@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("palpites 20260702 2200");
+console.log("palpites 202607151000");
 
 // const btnLogout = document.getElementById('btn-logout');
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -12,6 +12,7 @@ let configRegras = [];
 let listaFases = [];
 let todosJogos = [];
 let gabaritoGlobal = null;
+let eliminacaoGlobal = [];
 
 const STATUS_TRAVAS = {
     'primeiro_gol_brasil_id': false,
@@ -123,7 +124,7 @@ async function carregarDadosIniciais() {
 
         const tempoMinimo = new Promise(resolve => setTimeout(resolve, 3000));
 
-        const [regras, gab, jogadores, fases, paises, userData, jogos] = await Promise.all([
+        const [regras, gab, jogadores, fases, paises, userData, jogos, eliminacao] = await Promise.all([
             supabaseClient.from('pontuacao').select('*'),
             supabaseClient.from('resultados').select('*').eq('id', 1).single(),
             supabaseClient.from('jogadores').select('id, nome, clube, posicao').order('nome'),
@@ -131,6 +132,7 @@ async function carregarDadosIniciais() {
             supabaseClient.from('paises').select('id, nome, elite').order('nome'),
             supabaseClient.from('usuarios').select('nome').eq('id', session.user.id).single(),
             supabaseClient.from('jogos').select('fase_id, time_a_id, time_b_id, vencedor_final_id'),
+            supabaseClient.from('eliminacao').select('*'), // <--- ADICIONE ESTA LINHA
             tempoMinimo
         ]);
 
@@ -138,7 +140,8 @@ async function carregarDadosIniciais() {
         gabaritoGlobal = gab.data;
         listaFases = fases.data || [];
         todosJogos = jogos.data || [];
-        
+        eliminacaoGlobal = eliminacao.data || []; // <--- ADICIONE ESTA LINHA
+
         popularSelect('sel-fase', fases.data, (f) => f.nome);
         // ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => popularSelect(id, paises.data, (p) => p.nome));
         ['sel-campeao', 'sel-vice', 'sel-terceiro', 'sel-quarto', 'sel-pior', 'sel-artilheiro-pais'].forEach(id => {
@@ -319,7 +322,7 @@ async function carregarPalpitesEComparar() {
         inputGols.disabled = true; // Assim o usuário sabe que é automático
 
         if (gabaritoGlobal) {
-            exibirPontos(p, gabaritoGlobal, totalGolsCalculado, totalGolsOficial);
+            exibirPontos(p, gabaritoGlobal, totalGolsCalculado, totalGolsOficial, eliminacaoGlobal);
             verificarPenalidadeCampeao(p.campeao_id);
 
             // LÓGICA NOVA: Só mostra se houver elementos filhos em 'lista-bonus'
@@ -336,7 +339,7 @@ async function carregarPalpitesEComparar() {
     }
 }
 
-function exibirPontos(palpite, gabarito, totalGolsCalculado, totalGolsOficial) {
+function exibirPontos(palpite, gabarito, totalGolsCalculado, totalGolsOficial, eliminacaoData) {
     const extrair = (val) => (val && typeof val === 'object' && 'id' in val) ? parseInt(val.id) : parseInt(val);
     const map = [
         { id: 'pts-gol-brasil', p: palpite.primeiro_gol_brasil_id, g: gabarito.primeiro_gol_brasil_id, pts: 'BRGOL', tipo: 'simples' },
@@ -353,48 +356,83 @@ function exibirPontos(palpite, gabarito, totalGolsCalculado, totalGolsOficial) {
         { id: 'pts-total-gols', p: totalGolsCalculado, g: gabarito.total_gols, pts: 'ALLGOLS', tipo: 'total' }
     ];
 
-    map.forEach(item => {
-        // 1. Caso: Aposta NULA (Não exibe nada)
-        if (item.g === null || item.g === undefined || item.g === "") {
+map.forEach(item => {
+    // 1. Identificação inicial
+    const pID = extrair(item.p);
+    
+    // Lista de campos que NÃO são países e NÃO passam pela trava de eliminação
+    const camposIsentosDeTrava = [
+        'pts-gols-pro', 'pts-gols-contra', 'pts-total-gols', 
+        'pts-cr7-messi', 'pts-gol-brasil', 'pts-artilheiro', 'pts-fase-brasil', 'pts-pior' // <-- ADICIONEI AQUI
+    ];
+
+    // 2. Lógica de Trava (apenas para campos de países)
+    if (!camposIsentosDeTrava.includes(item.id)) {
+        if (isNaN(pID)) return; // Ignora se o ID for inválido em campos de país
+
+        const elim = eliminacaoData.find(e => parseInt(e.pais_id) === pID);
+        const estaEliminado = elim ? elim.eliminado : false;
+        const faseAtual = elim ? parseInt(elim.fase_id) : 0; // 6 = 3/4 lugar, 7 = Final
+
+        let estaImpossivel = false;
+        if (estaEliminado) estaImpossivel = true;
+        if (faseAtual === 7 && ['pts-terceiro', 'pts-quarto'].includes(item.id)) estaImpossivel = true;
+        if (faseAtual === 6 && ['pts-campeao', 'pts-vice'].includes(item.id)) estaImpossivel = true;
+
+        if (estaImpossivel) {
             const el = document.getElementById(item.id);
             if (el) {
-                el.textContent = '';
-                el.classList.add("hidden"); // Garante que fique invisível
-            }
-            return; // Pula para o próximo item
-        }
-
-        // 2. Cálculo da pontuação
-        const pBase = RegrasExtras.obterPontos(item.pts, configRegras);
-        let pontos = 0;
-        
-        // Verifica se o jogo já tem gabarito (se item.res ou campo similar existir)
-        const temGabarito = (item.g !== null && item.g !== undefined);
-
-        if (item.tipo === 'simples') pontos = RegrasExtras.calcularSimples(extrair(item.p), extrair(item.g), pBase);
-        else if (item.tipo === 'duelo') pontos = RegrasExtras.calcularDueloGigantes(item.p, item.g, pBase);
-        else if (item.tipo === 'total') pontos = RegrasExtras.calcularTotalGols(item.p, item.g, pBase);
-
-        // 3. Renderização
-        const el = document.getElementById(item.id);
-        if (el) {
-            el.classList.remove("hidden");
-            
-            if (temGabarito && pontos === 0) {
-                // Caso: Tem gabarito mas errou (Exibe o traço)
                 el.textContent = '-';
                 el.className = "text-sm mt-1 rounded-full px-2 py-1 w-fit h-fit text-gray-400 bg-gray-700";
-            } else if (pontos > 0) {
-                // Caso: Acertou (Exibe os pontos)
-                el.textContent = '+' + pontos;
-                el.className = "text-sm mt-1 rounded-full px-2 py-1 w-fit h-fit text-gray-800 bg-amber-400";
-            } else {
-                // Caso: Jogo ainda não ocorreu (Exibe pontos zero ou neutro)
-                el.textContent = '0';
-                el.className = "text-sm mt-1 rounded-full px-2 py-1 w-fit h-fit text-gray-400 bg-gray-800";
+                el.classList.remove("hidden");
             }
+            return; // Interrompe o processamento deste item
         }
-    });
+    }
+
+    // 3. Verifica Aposta NULA
+    if (item.g === null || item.g === undefined || item.g === "") {
+        const el = document.getElementById(item.id);
+        if (el) {
+            el.textContent = '';
+            el.classList.add("hidden");
+        }
+        return;
+    }
+
+    // 4. Cálculo da pontuação
+    const pBase = RegrasExtras.obterPontos(item.pts, configRegras);
+    let pontos = 0;
+    const temGabarito = (item.g !== null && item.g !== undefined);
+
+    if (item.tipo === 'duelo') {
+        pontos = RegrasExtras.calcularDueloGigantes(item.p, item.g, pBase);
+    } else if (item.id === 'pts-artilheiro') {
+        const gabArray = Array.isArray(item.g) ? item.g : (typeof item.g === 'string' ? JSON.parse(item.g) : [item.g]);
+        const palpiteID = extrair(item.p);
+        pontos = (palpiteID && gabArray.includes(palpiteID)) ? pBase : 0;
+    } else if (item.tipo === 'simples') {
+        pontos = RegrasExtras.calcularSimples(extrair(item.p), extrair(item.g), pBase);
+    } else if (item.tipo === 'total') {
+        pontos = RegrasExtras.calcularTotalGols(item.p, item.g, pBase);
+    }
+
+    // 5. Renderização
+    const el = document.getElementById(item.id);
+    if (el) {
+        el.classList.remove("hidden");
+        if (temGabarito && pontos === 0) {
+            el.textContent = '-';
+            el.className = "text-sm mt-1 rounded-full px-2 py-1 w-fit h-fit text-gray-400 bg-gray-700";
+        } else if (pontos > 0) {
+            el.textContent = '+' + pontos;
+            el.className = "text-sm mt-1 rounded-full px-2 py-1 w-fit h-fit text-gray-800 bg-amber-400";
+        } else {
+            el.textContent = '0';
+            el.className = "text-sm mt-1 rounded-full px-2 py-1 w-fit h-fit text-gray-400 bg-gray-800";
+        }
+    }
+});
 
     // Lógica para o total de gols (único span)
     const elPts = document.getElementById('pts-total-gols');
@@ -855,11 +893,14 @@ async function abrirModalGols(coluna, titulo) {
     // 3. BUSCA ÚNICA (Resolve o erro do Identifier e melhora performance)
     const userId = (await supabaseClient.auth.getUser()).data.user.id;
     
-    const [resPalpites, resUsuarios, resMeuPalpite] = await Promise.all([
+    const [resPalpites, resUsuarios, resMeuPalpite, eliminacao] = await Promise.all([
         supabaseClient.from('palpites').select(`usuario_id, ${coluna}`),
         supabaseClient.from('usuarios').select('id, nome'),
-        supabaseClient.from('palpites').select(coluna).eq('usuario_id', userId).single()
+        supabaseClient.from('palpites').select(coluna).eq('usuario_id', userId).single(),
+        supabaseClient.from('eliminacao').select('*')
     ]);
+
+    eliminacaoGlobal = eliminacao.data || [];
 
     const apostas = resPalpites.data;
     const mapaUsuarios = Object.fromEntries(resUsuarios.data.map(u => [u.id, u.nome]));
