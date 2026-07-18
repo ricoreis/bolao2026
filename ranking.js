@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("ranking 202607171800");
+console.log("ranking 202607172200");
 
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -353,88 +353,63 @@ async function processarRanking(apostas, jogos, headers) {
 
                 // ----------------------------------------------------------------------
                 
-                // --- CAMPEAO CAINDO
+// --- CAMPEAO CAINDO
                 const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
-                colunas.forEach(c => usr[c] = iconeP); 
-
+                
                 const pCamp = parseInt(p.campeao_id);
                 const elim = eliminacao.find(e => parseInt(e.pais_id) === pCamp);
-
                 const faseID = elim ? parseInt(elim.fase_id) : 0;
-                const estaEliminadoDefinitivo = (elim && elim.eliminado === true && faseID <= 4); 
-                const estaDisputandoTerceiro = (elim && faseID === 5); // Perdeu semi, vai pro 6
-                const estaFinalista = (elim && faseID === 7);         // Venceu semi, vai pro 7
 
-                // 1. Estados Pendentes
-                if (estaDisputandoTerceiro) { // Remova 'estaFinalista' daqui
-                    colunas.forEach(c => {
-                        if (usr[c] === iconeP || !usr[c]) {
-                            usr[c] = iconeP;
-                        }
-                    });
-                }
+                const gabCampReal = gabaritoFinal?.campeao_id ? parseInt(gabaritoFinal.campeao_id) : null;
+                
+                // Condições de Punição
+                const ehEliminadoAntes = (elim && elim.eliminado === true && faseID < 7);
+                const estaEmDisputaTerceiro = (faseID === 6);
+                const perdeuFinal = (gabCampReal && faseID === 7 && pCamp !== gabCampReal);
 
-                // 2. Se for Finalista, vamos marcar com um ícone de "vivo" (ou deixar vazio/limpo)
-                if (estaFinalista) {
-                    colunas.forEach(c => {
-                        // Se for finalista, ele não "perdeu" em nenhuma fase anterior
-                        // Você pode deixar vazio ou colocar um ícone de "vivo" se quiser
-                        usr[c] = iconeHifen; 
-                    });
-                }
-
-                // if (elim && elim.eliminado === true) {
-                if (estaEliminadoDefinitivo || faseID === 6) {
-                    // const faseID = parseInt(elim.fase_id);
-                    
-                    // Reseta status para N1 (não pontuou)
+                if (ehEliminadoAntes || estaEmDisputaTerceiro || perdeuFinal) {
+                    // Reseta status para ícone de "-"
                     colunas.forEach(c => usr[c] = iconeHifen);
 
-                    // Mapeia a fase para a coluna correspondente
+                    // Mapeia a fase
                     const map = {
-                        1: "campeao_perde_grupos",
-                        2: "campeao_perde_16",
-                        3: "campeao_perde_8",
-                        4: "campeao_perde_4",
-                        5: "campeao_perde_3",
-                        6: "campeao_perde_3"
+                        1: "campeao_perde_grupos", 2: "campeao_perde_16", 3: "campeao_perde_8",
+                        4: "campeao_perde_4", 5: "campeao_perde_3", 6: "campeao_perde_3", 7: "campeao_perde_final"
                     };
 
-                    const coluna = map[faseID] || (faseID === 7 ? "campeao_perde_final" : null);
-
+                    const coluna = map[faseID];
                     if (coluna) {
                         usr[coluna] = "eliminado";
-                    }
-
-                    const mapaRegras = [
-                        { c: "campeao_perde_grupos", r: "CAMPGR" },
-                        { c: "campeao_perde_16", r: "CAMP16" },
-                        { c: "campeao_perde_8", r: "CAMP8" },
-                        { c: "campeao_perde_4", r: "CAMP4" },
-                        { c: "campeao_perde_3", r: "CAMP3" },
-                        { c: "campeao_perde_final", r: "CAMPVICE" }
-                    ];
-
-                    mapaRegras.forEach(m => {
-                        if (usr[m.c] === "eliminado" && !usr[`pontuou_${m.r}`]) {
-                            const regraObj = headers.find(h => h.nome_reduzido === m.r);
-                            if (regraObj && regraObj.pontos) {
-                                usr.pontos_totais += parseInt(regraObj.pontos);
-                                usr[`pontuou_${m.r}`] = true;
+                        
+                        // Pontuação
+                        const mapaRegras = [
+                            { c: "campeao_perde_grupos", r: "CAMPGR" }, { c: "campeao_perde_16", r: "CAMP16" },
+                            { c: "campeao_perde_8", r: "CAMP8" }, { c: "campeao_perde_4", r: "CAMP4" },
+                            { c: "campeao_perde_3", r: "CAMP3" }, { c: "campeao_perde_final", r: "CAMPVICE" }
+                        ];
+                        mapaRegras.forEach(m => {
+                            if (usr[m.c] === "eliminado" && !usr[`pontuou_${m.r}`]) {
+                                const regraObj = headers.find(h => h.nome_reduzido === m.r);
+                                if (regraObj?.pontos) {
+                                    usr.pontos_totais += parseInt(regraObj.pontos);
+                                    usr[`pontuou_${m.r}`] = true;
+                                }
                             }
-                        }
-                    });
+                        });
 
-                    const nomePais = paises.find(p => p.id === pCamp)?.nome || "Desconhecido";
-
-                    if (coluna) {
-                        // Adicionamos o nome ao lado do ícone
+                        const nomePais = paises.find(p => p.id === pCamp)?.nome || "Desconhecido";
                         usr[coluna] = `<div class="flex gap-2 text-red-500/80 justify-center">
                             <iconify-icon icon="hugeicons:dead" class=" text-2xl"></iconify-icon>
                             <span class="text-xs flex items-center">${nomePais}</span>
                         </div>`;
                     }
-
+                } else {
+                    // ESTA É A TRAVA QUE FALTAVA
+                    // Se não foi eliminado, não perdeu final e não é terceiro, ele está "vivo"
+                    // Marcamos com iconeP (pendente) caso ainda não tenha sido definido
+                    colunas.forEach(c => {
+                        if (usr[c] !== "eliminado") usr[c] = iconeP;
+                    });
                 }
 
                 // ----------------------------------------------------------------------
