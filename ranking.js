@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("ranking 202607151800");
+console.log("ranking 202607171800");
 
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -52,7 +52,7 @@ async function carregarRanking() {
         await processarParticipantes(usuarios);
         const rankingFinal = await processarRanking(apostas, jogos, headers);
         
-        renderizarTabela(rankingFinal, headers, meuUsuarioId);
+        renderizarTabela(rankingFinal, headers, meuUsuarioId, jogos);
         filtrarTab('PLACARES');
 
         if (loader) loader.classList.add('hidden');
@@ -440,27 +440,37 @@ async function processarRanking(apostas, jogos, headers) {
                 // ----------------------------------------------------------------------
 
                 // --- GOLS
-                // --- TEMPORARIAMENTE FORA
-                // const apostasDoUsuario = apostas.filter(a => String(a.usuario_id) === String(usr.usuario_id));
-                // const palpiteGols = apostasDoUsuario.reduce((soma, a) => soma + (a.gols_a || 0) + (a.gols_b || 0), 0);
+                const gabCampFinal = gabaritoFinal?.campeao_id;
 
-                // const gabGols = jogos
-                //     .filter(j => j.gols_a !== null && j.gols_b !== null)
-                //     .reduce((soma, j) => soma + j.gols_a + j.gols_b, 0);
+                if (gabCampFinal != null && gabCampFinal !== '') {
+                    // 1. Cálculos de acerto unitário
+                    const totalGolsCopa = jogos.reduce((soma, j) => soma + (j.gols_a || 0) + (j.gols_b || 0), 0);
+                    let golsAcertadosPeloUsuario = 0;
+                    const apostasDoUsuario = apostas.filter(a => String(a.usuario_id) === String(usr.usuario_id));
+                    
+                    jogos.forEach(jogo => {
+                        if (jogo.gols_a === null || jogo.gols_b === null) return;
+                        const palpite = apostasDoUsuario.find(a => String(a.jogo_id) === String(jogo.id));
+                        if (palpite) {
+                            golsAcertadosPeloUsuario += Math.min(palpite.gols_a || 0, jogo.gols_a) + Math.min(palpite.gols_b || 0, jogo.gols_b);
+                        }
+                    });
 
-                // if (gabGols > 0) {
-                //     const dif = Math.abs(palpiteGols - gabGols);
-                //     const regraAllGols = headers.find(h => h.nome_reduzido === 'ALLGOLS');
+                    // 2. Cálculo do Bônus (Multiplicador 50)
+                    const MULTIPLIER = 50;
+                    const rawBonus = (golsAcertadosPeloUsuario / totalGolsCopa) * MULTIPLIER;
+                    const bonusFinal = Math.floor(rawBonus) + ((rawBonus - Math.floor(rawBonus)) >= 0.5 ? 1 : 0);
+
+                    // 3. ATUALIZAÇÃO RESTRITA:
+                    // Soma apenas no total de pontos, preservando o valor original de usr.acertos_gols
+                    usr.pontos_totais += bonusFinal;
                     
-                //     const pontosBonus = regraAllGols ? parseInt(regraAllGols.pontos || 30) : 30;
-                    
-                //     usr.pontos_totais += (dif === 0 ? pontosBonus : -dif);
-                //     usr['extra_total_gols'] = `${palpiteGols} (${dif === 0 ? 'Cravou' : -dif})`;
-                // } else {
-                //     usr['extra_total_gols'] = `${palpiteGols} (Pendente)`;
-                // }
-                // TEMPORARIAMENTE PENDENTE: PRECISA VER O CODIGO ACIMA
-                usr['extra_total_gols'] = iconeP;
+                    // Atualiza apenas a coluna de exibição informativa
+                    usr['extra_total_gols'] = `${bonusFinal} <span class="rounded-full px-3 py-2 bg-white/25 text-black ml-2 text-[11px]">${Math.round(golsAcertadosPeloUsuario/totalGolsCopa*100)}%</span>`;
+                } else {
+                    // Mantém o estado pendente sem tocar em nenhuma métrica
+                    usr['extra_total_gols'] = iconeP; 
+                }
 
                 // ----------------------------------------------------------------------
 
@@ -735,7 +745,10 @@ async function processarRanking(apostas, jogos, headers) {
 
 }
 
-function renderizarTabela(dados, headers, meuUsuarioId) {
+function renderizarTabela(dados, headers, meuUsuarioId, jogos) {
+
+    const totalGolsCopa = jogos.reduce((soma, j) => soma + (j.gols_a || 0) + (j.gols_b || 0), 0);
+
     const thead = document.querySelector('thead tr');
     const tbody = document.getElementById('container-ranking');
     if (!thead || !tbody) return;
@@ -778,7 +791,7 @@ function renderizarTabela(dados, headers, meuUsuarioId) {
 
         th.innerHTML = `
             <div class="flex items-center ${alinhamento} gap-1 group cursor-help">
-                <span class="whitespace-nowrap">${h.nome_reduzido}</span>
+                <span class="whitespace-nowrap">${h.nome_reduzido} ${h.nome_reduzido==="ALLGOLS" ? "("+totalGolsCopa+")" : ""}</span>
                 <iconify-icon icon="material-symbols:info-outline" class="text-emerald-500 text-xl"></iconify-icon>
                 <div class="absolute top-full mt-2 hidden group-hover:block w-48 p-2 bg-gray-900 border border-emerald-600 text-white text-sm rounded-lg z-50 normal-case font-normal shadow-xl text-center">
                     ${textoPontos > 0 ? "+" : ""}${textoPontos}
@@ -938,7 +951,7 @@ function obterExplicacao(nomeReduzido) {
         'placar_exato_contrario': 'Acerto do placar exato em jogos do mata-mata.',
         'placar_saldo_contrario': 'Acerto do saldo de gols em jogos do mata-mata.',
         'placar_vencedor_contrario': 'Acerto do vencedor em jogos do mata-mata.',
-        'placar_gols': 'Pontuação baseada no total de gols previstos.'
+        'placar_gols': 'Pontuação baseada no percentual de gols acertados e reais vezes o multiplicador.'
     };
     
     return explicacoes[nomeReduzido] || 'Regra de pontuação específica desta etapa.';
@@ -1007,7 +1020,7 @@ async function carregarTodasAsApostas() {
 const colunasPlacares = [
     'placar_exato', 'placar_saldo', 'placar_vencedor', 'placar_empate',
     'placar_exato_contrario', 'placar_saldo_contrario', 'placar_vencedor_contrario',
-    'placar_gols'
+    'placar_gols', 'extra_total_gols'
 ];
 const colunasFinal = [
     'final_campeao', 'final_vice', 'final_terceiro', 'final_quarto', 'final_copa', 'final_pior'
@@ -1019,7 +1032,7 @@ const colunasGrupos = [
 ];
 const colunasExtras = [
     'brasil_primeiro_gol', 'brasil_fase_chega', 'brasil_gols_pro', 'brasil_gols_contra',
-    'extra_pais_artilheiro', 'extra_duelo', 'extra_total_gols', 'placar_classificado_penaltis',
+    'extra_pais_artilheiro', 'extra_duelo', 'placar_classificado_penaltis',
 ];
 const colunasFora = [
     'campeao_perde_grupos', 'campeao_perde_16', 'campeao_perde_8', 'campeao_perde_4', 'campeao_perde_3', 'campeao_perde_final'
