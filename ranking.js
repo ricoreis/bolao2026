@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("ranking 202607172200");
+console.log("ranking 202607172230");
 
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -353,7 +353,7 @@ async function processarRanking(apostas, jogos, headers) {
 
                 // ----------------------------------------------------------------------
                 
-// --- CAMPEAO CAINDO
+                // --- CAMPEAO CAINDO
                 const colunas = ["campeao_perde_grupos", "campeao_perde_16", "campeao_perde_8", "campeao_perde_4", "campeao_perde_3", "campeao_perde_final"];
                 
                 const pCamp = parseInt(p.campeao_id);
@@ -404,11 +404,21 @@ async function processarRanking(apostas, jogos, headers) {
                         </div>`;
                     }
                 } else {
-                    // ESTA É A TRAVA QUE FALTAVA
-                    // Se não foi eliminado, não perdeu final e não é terceiro, ele está "vivo"
-                    // Marcamos com iconeP (pendente) caso ainda não tenha sido definido
+                    // SE NÃO FOI ELIMINADO E NÃO PERDEU A FINAL:
                     colunas.forEach(c => {
-                        if (usr[c] !== "eliminado") usr[c] = iconeP;
+                        // 1. Se o palpite já é o campeão oficial, marca como sucesso (iconeS)
+                        if (gabCampReal && pCamp === gabCampReal) {
+                            usr[c] = iconeHifen;
+                        } 
+                        // 2. Se a Copa ACABOU (gabCampReal existe) mas o time não foi eliminado e não é o campeão
+                        // então ele é um "finalista vencido" ou outro caso que encerrou: usa iconeHifen
+                        else if (gabCampReal) {
+                            usr[c] = iconeHifen;
+                        }
+                        // 3. SE A COPA AINDA NÃO ACABOU: iconeP para todo mundo que não foi eliminado
+                        else {
+                            usr[c] = iconeP;
+                        }
                     });
                 }
 
