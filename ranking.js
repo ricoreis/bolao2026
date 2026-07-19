@@ -2,7 +2,7 @@ import { RegrasExtras } from './regras-extras.js';
 import { supabaseClient } from './supabase-config.js';
 import { carregarSaudacao } from './auth-header.js';
 
-console.log("ranking 202607172230");
+console.log("ranking 202607190830");
 
 document.addEventListener('DOMContentLoaded', carregarRanking);
 const btnsLogout = document.querySelectorAll('.btn-logout');
@@ -581,28 +581,41 @@ async function processarRanking(apostas, jogos, headers) {
                         if (m.db === 'extra_pais_artilheiro') {
                             const palpiteID = parseInt(p[m.pal]);
                             const gabaritoBruto = gabaritoFinal[m.gab];
-
-                            const gabaritoArray = Array.isArray(gabaritoBruto) ? gabaritoBruto : 
-                                                (typeof gabaritoBruto === 'string' ? gabaritoBruto.replace(/[{}[\]]/g, '').split(',').map(Number) : [gabaritoBruto]);
-
-                            const nomePais = formatarValor(m.tabela, palpiteID, m.tipo);
-                            const acertou = gabaritoArray.includes(palpiteID);
+                            const acertou = (gabaritoBruto != null && String(gabaritoBruto).includes(String(palpiteID)));
                             
+                            // 1. Definições de estado
+                            const info = eliminacao.find(e => parseInt(e.pais_id) === palpiteID);
+                            
+                            // A trava real: Só quem está na final (7) ainda pode fazer gols hoje. 
+                            // Quem disputou o 3º lugar (jogo 103) JÁ ACABOU, então não conta mais.
+                            const estaNaFinal = (parseInt(info?.fase_id) === 7);
+                            
+                            // O líder atual (França) também é PENDENTE, mesmo não jogando mais, 
+                            // porque o artilheiro dele é o que todos precisam bater.
+                            const golsDoMeuPais = info?.artilheiro || 0;
+                            const ehLiderAtual = (golsDoMeuPais === liderArtilharia);
+
+                            // O time só é PENDENTE se ele ainda vai jogar (Final) OU se ele é o próprio líder
+                            const aindaPodeMudar = estaNaFinal || ehLiderAtual;
+                            
+                            // Se ele não é finalista, não é o líder e não acertou o artilheiro -> ERROU.
+                            const estaFora = !aindaPodeMudar && !acertou;
+
                             let status = 'PENDENTE';
 
                             if (gabaritoBruto != null && String(gabaritoBruto).trim() !== '') {
                                 status = acertou ? 'ACERTOU' : 'ERROU';
-                            } else {
-                                const meuArtilheiro = eliminacao
-                                    .filter(e => e.pais_id === palpiteID)
-                                    .map(e => e.artilheiro)[0] || 0;
-                                // console.log(usr.nome + ": " + meuArtilheiro + " (id: " + palpiteID + ") / lider: " + liderArtilharia);
-                                if (timesEliminados.includes(palpiteID) && (liderArtilharia > meuArtilheiro)) {
-                                    status = 'ERROU';
-                                }
+                            }
+                            else if (estaFora) {
+                                status = 'ERROU';
+                            }
+                            else {
+                                status = 'PENDENTE';
                             }
 
-                            // Renderização específica para artilheiro
+                            // 3. Renderização (mantida a sua estrutura)
+                            const nomePais = formatarValor(m.tabela, palpiteID, m.tipo);
+                            
                             if (status === 'PENDENTE') {
                                 usr[m.db] = `${iconeP} <span class="text-xs text-gray-300/35 ml-1 whitespace-nowrap">${nomePais || '-'}</span>`;
                             } else {
